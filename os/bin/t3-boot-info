@@ -1,0 +1,60 @@
+#!/usr/bin/python3 -I
+"""Root helper (pkexec, polkit org.t3.boot-info, no password): what this computer can boot, as JSON.
+GRUB menu entries (grub.cfg is root-only), the T3 boot settings, and the firmware (EFI) boot entries."""
+import json, re, subprocess
+from pathlib import Path
+
+CFG = Path("/etc/default/grub.d/zz-t3-boot.cfg")
+
+
+def grub_entries():
+    out = []
+    try:
+        text = Path("/boot/grub/grub.cfg").read_text(errors="replace")
+    except OSError:
+        return out
+    for m in re.finditer(r"^menuentry '((?:[^'\\]|\\.)*)'.*?\$menuentry_id_option '([^']+)'", text, re.M):
+        title, mid = m.group(1).replace("'\\''", "'"), m.group(2)
+        if mid == "uefi-firmware":
+            continue
+        out.append({"id": mid, "title": title,
+                    "kind": "windows" if "windows" in title.lower() else "t3" if mid.startswith("gnulinux") else "other",
+                    # per-kernel and recovery entries stay in the boot menu but not in the T3 Settings list
+                    "main": not mid.startswith("gnulinux") or mid.startswith("gnulinux-simple")})
+    return out
+
+
+def settings():
+    s = {"default": "0", "timeout": 5}
+    for src in (Path("/etc/default/grub.d/t3.cfg"), CFG):
+        try:
+            for line in src.read_text().splitlines():
+                m = re.match(r'^(GRUB_DEFAULT|GRUB_TIMEOUT)="?([^"]*)"?\s*$', line)
+                if m:
+                    s["default" if m.group(1) == "GRUB_DEFAULT" else "timeout"] = m.group(2)
+        except OSError:
+            pass
+    try:
+        s["timeout"] = int(s["timeout"])
+    except ValueError:
+        s["timeout"] = 5
+    return s
+
+
+def efi():
+    r = subprocess.run(["efibootmgr"], capture_output=True, text=True)
+    if r.returncode:
+        return {"present": False, "entries": []}
+    cur = re.search(r"^BootCurrent: (\w{4})", r.stdout, re.M)
+    nxt = re.search(r"^BootNext: (\w{4})", r.stdout, re.M)
+    entries = []
+    for m in re.finditer(r"^Boot(\w{4})(\*?) +([^\t\n]+)", r.stdout, re.M):
+        name = m.group(3).strip()
+        entries.append({"num": m.group(1), "name": name, "active": m.group(2) == "*",
+                        "current": bool(cur and cur.group(1) == m.group(1)),
+                        "kind": "windows" if "windows" in name.lower() else "t3" if cur and cur.group(1) == m.group(1) else "other"})
+    return {"present": True, "entries": entries, "next": nxt.group(1) if nxt else None}
+
+
+print(json.dumps({"grub": grub_entries(), "settings": settings(),
+                  "efi": efi() if Path("/sys/firmware/efi").is_dir() else {"present": False, "entries": []}}))

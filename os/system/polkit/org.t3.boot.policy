@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <!-- T3 Settings > การบูต: reading the boot menu needs root (grub.cfg is root-only) but changes nothing -->
+  <action id="org.t3.boot-info">
+    <description>Show the boot menu</description>
+    <message>ดูเมนูบูต</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/share/t3/bin/t3-boot-info</annotate>
+  </action>
+  <!-- changing it asks for the password (remembered for a few minutes) -->
+  <action id="org.t3.boot-set">
+    <description>Change how the computer boots</description>
+    <message>เปลี่ยนการบูตของเครื่อง</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/share/t3/bin/t3-boot-set</annotate>
+  </action>
+</policyconfig>

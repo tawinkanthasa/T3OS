@@ -40,3 +40,9 @@ def test_short_wifi_password_rejected():
 def test_kcm_open_rejects_unknown_module():
     with pytest.raises(SY.SysError):
         SY.kcm_open("kcm_bogus; rm -rf /")
+
+
+@pytest.mark.parametrize("what,value", [("rm", "x"), ("default", "a b"), ("default", "$(reboot)"), ("next", "")])
+def test_boot_set_validation(what, value):
+    with pytest.raises(SY.SysError):
+        SY.boot_set(what, value)

@@ -358,6 +358,15 @@ body.v .book{max-height:none!important}
             <div class="s-card keys" id="keys"></div>
           </div>
 
+          <div class="s-page" data-page="boot" hidden>
+            <div><h2>การบูต</h2><p class="sub">เลือกว่าเปิดเครื่องแล้วเข้า T3 หรือ Windows ตั้งได้จากตรงนี้เลย ไม่ต้องเข้า BIOS (มีผลตอนเปิดเครื่องครั้งต่อไป)</p></div>
+            <div><h3 class="sub" style="margin:0 0 8px">เปิดเครื่องแล้วเข้า</h3><div class="s-card s-pick" id="bootDef"><div class="s-empty">กำลังโหลด…</div></div></div>
+            <div class="s-card"><div class="s-item"><span class="t"><b>เมนูบูตรอให้เลือก</b><small>ถ้าไม่แสดงเมนู กด Shift หรือ Esc ค้างไว้ตอนเปิดเครื่องเพื่อเรียกเมนู</small></span>
+              <select id="bootTime" aria-label="เวลาเมนูบูต"><option value="0">ไม่แสดงเมนู</option><option value="3">3 วินาที</option><option value="5">5 วินาที</option><option value="10">10 วินาที</option></select></div></div>
+            <div><h3 class="sub" style="margin:0 0 8px">รีสตาร์ทตอนนี้</h3><div class="s-card" id="bootNow"></div></div>
+            <div class="res" id="bootRes" role="status"></div>
+          </div>
+
           <div class="s-page" data-page="more" hidden>
             <div><h2>ตั้งค่าทั้งหมด</h2><p class="sub" id="moreSub">ทุกหน้าตั้งค่าของเครื่อง กดแล้วเปิดหน้านั้นเลย</p></div>
             <input type="search" id="moreQ" placeholder="ค้นหา เช่น พลังงาน, เครื่องพิมพ์, เมาส์, เวลา" spellcheck="false" autocomplete="off" aria-label="ค้นหาในตั้งค่าทั้งหมด" style="height:40px;padding:0 14px;border-radius:10px;border:1px solid #2a2d31;background:var(--s-side);font-size:14px">
@@ -576,7 +585,7 @@ function toastMsg(s){const t=document.createElement('div');t.className='toast';t
 
 /* ---------------- SETTINGS ---------------- */
 const post=(url,body)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-T3':'1'},body:JSON.stringify(body)}).then(r=>r.json());
-const CATS=[['home','ภาพรวม','#3fb950','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z','overview'],['wifi','Wi-Fi และเน็ต','#2f6fb3','M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0','wifi internet network'],['bt','บลูทูธ','#2f6fb3','M7 7l10 10-5 4V3l5 4L7 17','bluetooth'],['sound','เสียง','#c2410c','M4 9h4l5-4v14l-5-4H4z','sound audio'],['display','หน้าจอ','#6d28d9','M3 5h18v11H3zM8 20h8M12 16v4','display screen monitor'],['look','หน้าตา','#be185d','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18','wallpaper theme'],['kbd','ภาษาและแป้นพิมพ์','#4a4d52','M3 6h18v12H3zM7 14h10','keyboard thai language caps lock'],['@bench','บอร์ดและพอร์ต','#1f6f35','M7 7h10v10H7zM9 3v4M15 3v4M9 17v4M15 17v4','esp32 board usb'],['ai','AI','#0f7c7e','M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z','ai lm studio claude'],['update','อัปเดตและจุดกู้คืน','#3a3d42','M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4','update snapshot'],['@users','ผู้ใช้และรหัสผ่าน','#3a3d42','M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8M4 21a8 8 0 0 1 16 0','user password'],['keys','ปุ่มลัด','#3a3d42','M3 6h18v12H3z','shortcut keys'],['more','ตั้งค่าทั้งหมด','#3a3d42','M4 6h16M4 12h16M4 18h16','all settings kde advanced power notification printer mouse touchpad date time font default apps'],['about','เกี่ยวกับเครื่อง','#3a3d42','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 11v5M12 8h.01','about system']];
+const CATS=[['home','ภาพรวม','#3fb950','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z','overview'],['wifi','Wi-Fi และเน็ต','#2f6fb3','M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0','wifi internet network'],['bt','บลูทูธ','#2f6fb3','M7 7l10 10-5 4V3l5 4L7 17','bluetooth'],['sound','เสียง','#c2410c','M4 9h4l5-4v14l-5-4H4z','sound audio'],['display','หน้าจอ','#6d28d9','M3 5h18v11H3zM8 20h8M12 16v4','display screen monitor'],['look','หน้าตา','#be185d','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18','wallpaper theme'],['kbd','ภาษาและแป้นพิมพ์','#4a4d52','M3 6h18v12H3zM7 14h10','keyboard thai language caps lock'],['@bench','บอร์ดและพอร์ต','#1f6f35','M7 7h10v10H7zM9 3v4M15 3v4M9 17v4M15 17v4','esp32 board usb'],['ai','AI','#0f7c7e','M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z','ai lm studio claude'],['update','อัปเดตและจุดกู้คืน','#3a3d42','M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4','update snapshot'],['@users','ผู้ใช้และรหัสผ่าน','#3a3d42','M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8M4 21a8 8 0 0 1 16 0','user password'],['keys','ปุ่มลัด','#3a3d42','M3 6h18v12H3z','shortcut keys'],['boot','การบูต T3 / Windows','#7c2d12','M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0','boot windows grub bios restart dual บูต'],['more','ตั้งค่าทั้งหมด','#3a3d42','M4 6h16M4 12h16M4 18h16','all settings kde advanced power notification printer mouse touchpad date time font default apps'],['about','เกี่ยวกับเครื่อง','#3a3d42','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 11v5M12 8h.01','about system']];
 const QUICK=[['wifi','Wi-Fi','เครือข่าย','M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0'],['bluetooth','บลูทูธ','อุปกรณ์ไร้สาย','M7 7l10 10-5 4V3l5 4L7 17'],['sound','เสียง','ลำโพง ไมค์','M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 0 1 0 6'],['display','หน้าจอ','ความสว่าง หลายจอ','M3 5h18v11H3zM8 20h8M12 16v4']];
 const UPD=[['t3update','อัปเดต T3','หน้าจอ Bench เครื่องมือ'],['update','อัปเดตระบบและแอป','Discover'],['snapshots','จุดกู้คืนระบบ','ดู สร้าง หรือย้อนกลับ'],['doctor','ตรวจเครื่อง','ให้ Claude ช่วยแก้ปัญหา'],['welcome','ติดตั้งเครื่องมือเพิ่ม','ESP-IDF Arduino NVIDIA']];
 const WALL=['#0a0d0b','#10241a','#1d3b2c','#141210','#1b1b2e','#2b1a14','#202020'];
@@ -698,7 +707,23 @@ function drawMore(){const q=$('#moreQ').value.trim().toLowerCase(),hit=i=>!q||(i
   $('#moreList').innerHTML=html||'<div class="s-empty">ไม่พบ ลองคำอื่น</div>'}
 $('#moreQ').oninput=()=>KCM&&drawMore();
 $('#moreList').onclick=async e=>{const b=e.target.closest('[data-kcm]');if(!b)return;const r=await spost('kcm/open',{id:b.dataset.kcm});say('#moreRes',r.error||'',!!r.error)};
-const SYS={wifi:()=>loadWifi(),bt:loadBt,sound:loadSound,display:loadDisplay,kbd:loadKbd,more:loadMore};
+let BOOT=null;
+const bootName=(t,k)=>k==='windows'?'Windows':k==='t3'?'T3':t;
+async function loadBoot(){const d=await sget('boot');if(d.error){say('#bootRes',d.error,true);$('#bootDef').innerHTML='';return}BOOT=d;
+  const g=d.grub,def=d.settings.default,cur=def==='0'?g[0]?.id:def;
+  $('#bootDef').innerHTML=g.length?g.map(e=>`<label><input type="radio" name="bd" value="${esc(e.id)}" ${e.id===cur?'checked':''}><span>${esc(bootName(e.title,e.kind))}<small>${esc(e.title)}</small></span></label>`).join(''):'<div class="s-empty">ไม่พบเมนูบูต</div>';
+  const t=$('#bootTime');if(![...t.options].some(o=>+o.value===d.settings.timeout))t.insertAdjacentHTML('beforeend',`<option value="${d.settings.timeout}">${d.settings.timeout} วินาที</option>`);t.value=String(d.settings.timeout);
+  const others=d.efi.entries.filter(e=>!e.current&&e.active);
+  $('#bootNow').innerHTML=others.map(e=>`<button class="s-row" data-next="${esc(e.num)}" data-n="${esc(bootName(e.name,e.kind))}"><span class="t"><b>รีสตาร์ทเข้า ${esc(bootName(e.name,e.kind))} รอบเดียว</b><small>${esc(e.name)} · เปิดเครื่องครั้งถัดไปกลับมาตามที่ตั้งไว้ข้างบน</small></span>›</button>`).join('')+
+    `<button class="s-row" data-fw="1"><span class="t"><b>รีสตาร์ทเข้า BIOS / UEFI</b><small>ตั้งค่าเฟิร์มแวร์ของเครื่อง</small></span>›</button>`}
+$('#bootDef').onchange=async e=>{const r=await busy(e.target,'#bootRes','กำลังบันทึก (อาจถามรหัสผ่าน)…',()=>spost('boot/set',{what:'default',value:e.target.value}));
+  if(r)say('#bootRes','ตั้งแล้ว: เปิดเครื่องครั้งต่อไปจะเข้า '+e.target.closest('label').querySelector('span').firstChild.textContent);loadBoot()};
+$('#bootTime').onchange=async e=>{const r=await busy(e.target,'#bootRes','กำลังบันทึก (อาจถามรหัสผ่าน)…',()=>spost('boot/set',{what:'timeout',value:e.target.value}));if(r)say('#bootRes','บันทึกแล้ว');loadBoot()};
+$('#bootNow').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.next){if(!confirm('รีสตาร์ทเข้า '+b.dataset.n+' ตอนนี้เลยไหม?\nงานที่ยังไม่บันทึกจะหาย'))return;
+    if(await busy(b,'#bootRes','กำลังตั้ง (อาจถามรหัสผ่าน)…',()=>spost('boot/set',{what:'next',value:b.dataset.next})))await spost('boot/restart',{})}
+  else{if(!confirm('รีสตาร์ทเข้า BIOS / UEFI ตอนนี้เลยไหม?\nงานที่ยังไม่บันทึกจะหาย'))return;const r=await spost('boot/restart',{firmware:true});if(r.error)say('#bootRes',r.error,true)}};
+const SYS={wifi:()=>loadWifi(),bt:loadBt,sound:loadSound,display:loadDisplay,kbd:loadKbd,more:loadMore,boot:loadBoot};
 
 /* ---------------- CLOCK ---------------- */
 function tick(){$('#clock').textContent=hhmm()}tick();setInterval(tick,15000);

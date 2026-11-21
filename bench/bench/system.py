@@ -420,3 +420,49 @@ def kcm_open(kcm) -> dict:
     import threading
     threading.Thread(target=p.wait, daemon=True).start()
     return {"ok": True}
+
+
+# ---- Boot: which system starts, menu time, restart into another system once, BIOS -------------
+T3BIN = "/usr/share/t3/bin"
+
+
+def _pk(helper: str, *args: str, timeout: float = 180) -> str:
+    """Run a T3 root helper through pkexec (polkit org.t3.boot-*); the password dialog is KDE's."""
+    try:
+        r = subprocess.run(["pkexec", f"{T3BIN}/{helper}", *args], capture_output=True, text=True, timeout=timeout)
+    except FileNotFoundError:
+        raise SysError("ไม่มี pkexec ในเครื่อง") from None
+    except subprocess.TimeoutExpired:
+        raise SysError("ใช้เวลานานเกินไป ลองใหม่อีกครั้ง") from None
+    if r.returncode in (126, 127):
+        raise SysError("ยกเลิกแล้ว (ไม่ได้ใส่รหัสผ่าน)")
+    if r.returncode:
+        raise SysError((r.stderr.strip().splitlines() or ["ไม่สำเร็จ"])[-1])
+    return r.stdout
+
+
+def boot_status() -> dict:
+    d = json.loads(_pk("t3-boot-info", timeout=30))
+    d["grub"] = [e for e in d["grub"] if e.get("main", True)]
+    return d
+
+
+def boot_set(what, value) -> dict:
+    if what not in ("default", "timeout", "next"):
+        raise SysError("ไม่รู้จักคำสั่งนี้")
+    value = str(value or "")
+    if not re.fullmatch(r"[\w.+\-]{1,200}", value):
+        raise SysError("ค่าไม่ถูกต้อง")
+    _pk("t3-boot-set", what, value)
+    return {"ok": True}
+
+
+def boot_restart(firmware: bool = False) -> dict:
+    if firmware:
+        _run(["busctl", "call", "org.freedesktop.login1", "/org/freedesktop/login1",
+              "org.freedesktop.login1.Manager", "SetRebootToFirmwareSetup", "b", "true"])
+    q = shutil.which("qdbus6") or shutil.which("qdbus")
+    # KDE's own restart asks apps to save first; fall back to systemd
+    if not q or subprocess.run([q, "org.kde.Shutdown", "/Shutdown", "logoutAndReboot"], capture_output=True).returncode:
+        _run(["systemctl", "reboot"])
+    return {"ok": True}
