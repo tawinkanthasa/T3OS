@@ -53,14 +53,14 @@ tasks.currentConfigGroup = ["General"];
 tasks.writeConfig("launchers", [
     "applications:org.kde.dolphin.desktop",
     "applications:google-chrome.desktop",
-    "applications:code.desktop",
+    "applications:com.microsoft.VSCode.desktop",               // VS Code from Microsoft's apt repo (t3-get vscode)
     "applications:org.kde.konsole.desktop",
     "applications:t3.bench.desktop",
     "applications:t3.scope.desktop",
     "applications:cc.arduino.IDE2.desktop",
     "applications:org.kicad.kicad.desktop",
     "applications:org.kde.discover.desktop",
-    "applications:systemsettings.desktop"
+    "applications:t3.settings.desktop"                       // T3 Settings (KDE's full one is linked inside it)
 ].join(","));
 tasks.writeConfig("groupingStrategy", "1");                 // one icon per app
 tasks.writeConfig("indicateAudioStreams", "true");

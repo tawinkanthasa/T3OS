@@ -6,6 +6,6 @@ Comment=AI, วอลเปเปอร์, ระบบ
 Exec=/usr/share/t3/bin/t3-open settings
 Icon=t3-settings
 StartupWMClass=t3.settings
-Categories=Development;Electronics;
+Categories=Settings;System;
 Keywords=t3;bench;esp32;arduino;
 X-KDE-Shortcuts=Meta+,
