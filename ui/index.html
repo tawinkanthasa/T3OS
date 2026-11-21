@@ -184,6 +184,25 @@ button.s-row:hover{background:rgba(255,255,255,.03)}
 .keys kbd{font-family:var(--mono);font-size:13px;color:var(--acc)}
 .keys kbd:first-child,.keys kbd:first-child+span{border-top:0}
 .s-foot{font-size:13px;color:#8b949e}
+.s-tog{position:relative;width:46px;height:26px;border-radius:13px;border:0;background:#3a3d42;flex-shrink:0;transition:background .15s}
+.s-tog::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+.s-tog[aria-checked="true"]{background:var(--acc)} .s-tog[aria-checked="true"]::after{left:23px}
+.s-item{display:flex;align-items:center;gap:14px;padding:12px 18px;border-top:1px solid var(--s-line);min-height:58px}
+.s-item:first-child{border-top:0}
+.s-item .t{flex-grow:1;min-width:0;display:flex;flex-direction:column}
+.s-item .t b{font-size:15px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .s-item .t small{font-size:13px;color:var(--s-mute)}
+.s-item .t small.on{color:var(--acc)}
+.s-item .s-btn{height:34px;padding:0 14px;font-size:14px}
+.s-item input[type=password]{height:34px;padding:0 10px;border-radius:8px;border:1px solid #2c3a32;background:var(--s-side);font-size:14px;width:180px}
+.s-item input[type=range]{flex-grow:1;accent-color:var(--acc);max-width:340px}
+.s-item select{height:34px;padding:0 10px;border-radius:8px;border:1px solid #2c3a32;background:var(--s-side);font-size:14px;max-width:320px}
+.s-item .num{width:44px;text-align:right;font-size:14px;color:#c9cdd1}
+.sig{display:inline-flex;align-items:flex-end;gap:2px;height:14px;flex-shrink:0}.sig i{width:4px;background:#3a3d42;border-radius:1px}.sig i.on{background:var(--acc)}
+.s-empty{padding:18px;color:var(--s-mute);font-size:14px}
+.s-pick{display:flex;flex-direction:column}
+.s-pick label{display:flex;align-items:center;gap:12px;padding:12px 18px;border-top:1px solid var(--s-line);font-size:15px;cursor:pointer}
+.s-pick label:first-child{border-top:0} .s-pick input{accent-color:var(--acc);width:18px;height:18px}
+.s-pick small{display:block;font-size:13px;color:var(--s-mute)}
 .s-foot button{border:0;background:none;color:#7ee787;padding:0;font-size:13px;text-decoration:underline}
 @media (max-width:760px){#m-settings{flex-direction:column}.s-side{width:auto;max-height:40vh}.s-main{padding:20px 16px}}
 /* single-panel windows inside the T3 desktop (?view=bench|scope|logbook): the T3 menu bar widget replaces the top bar */
@@ -257,6 +276,50 @@ body.v .book{max-height:none!important}
             <div class="s-quick" id="sQuick"></div>
             <div class="s-card" id="sRows"></div>
             <div class="s-foot">ต้องการตั้งค่าละเอียด: <button type="button" data-app="system">เปิดการตั้งค่าขั้นสูงของ KDE</button></div>
+          </div>
+
+          <div class="s-page" data-page="wifi" hidden>
+            <div><h2>Wi-Fi และเน็ต</h2><p class="sub" id="wfSub">กำลังโหลด…</p></div>
+            <div class="s-card"><div class="s-item"><span class="t"><b>Wi-Fi</b><small id="wfRadioTxt"></small></span><button class="s-tog" id="wfRadio" role="switch" aria-checked="false" aria-label="เปิดปิด Wi-Fi"></button></div><div id="wfWired"></div></div>
+            <div class="s-btns"><button class="s-btn" type="button" id="wfScan">ค้นหาใหม่</button></div>
+            <div class="res" id="wfRes" role="status"></div>
+            <div class="s-card" id="wfList"></div>
+            <div class="s-foot">Wi-Fi ซ่อนชื่อ, VPN, ตั้ง IP เอง: <button type="button" data-app="wifi">เปิดการตั้งค่าเครือข่ายของ KDE</button></div>
+          </div>
+
+          <div class="s-page" data-page="bt" hidden>
+            <div><h2>บลูทูธ</h2><p class="sub">หูฟัง ลำโพง เมาส์ คีย์บอร์ด</p></div>
+            <div class="s-card"><div class="s-item"><span class="t"><b>บลูทูธ</b><small id="btTxt"></small></span><button class="s-tog" id="btPow" role="switch" aria-checked="false" aria-label="เปิดปิดบลูทูธ"></button></div></div>
+            <div class="s-btns"><button class="s-btn" type="button" id="btScan">ค้นหาอุปกรณ์ใกล้ๆ</button></div>
+            <div class="res" id="btRes" role="status"></div>
+            <div class="s-card" id="btList"></div>
+            <div class="s-foot">ตั้งค่าเพิ่มเติม: <button type="button" data-app="bluetooth">เปิดการตั้งค่าบลูทูธของ KDE</button></div>
+          </div>
+
+          <div class="s-page" data-page="sound" hidden>
+            <div><h2>เสียง</h2><p class="sub">ลำโพง หูฟัง ไมค์</p></div>
+            <div><h3 class="sub" style="margin:0 0 8px">เสียงออก</h3><div class="s-card" id="sndOut"></div></div>
+            <div><h3 class="sub" style="margin:0 0 8px">ไมค์</h3><div class="s-card" id="sndIn"></div></div>
+            <div class="res" id="sndRes" role="status"></div>
+            <div class="s-foot">ตั้งค่าเพิ่มเติม (เสียงแต่ละแอป โปรไฟล์): <button type="button" data-app="sound">เปิดการตั้งค่าเสียงของ KDE</button></div>
+          </div>
+
+          <div class="s-page" data-page="display" hidden>
+            <div><h2>หน้าจอ</h2><p class="sub">ความสว่าง ขนาดตัวหนังสือ ความละเอียด</p></div>
+            <div class="s-card" id="dispList"></div>
+            <div class="res" id="dispRes" role="status"></div>
+            <div class="s-foot">หลายจอ หมุนจอ จัดตำแหน่ง: <button type="button" data-app="display">เปิดการตั้งค่าหน้าจอของ KDE</button></div>
+          </div>
+
+          <div class="s-page" data-page="kbd" hidden>
+            <div><h2>ภาษาและแป้นพิมพ์</h2><p class="sub">พิมพ์ได้ทั้ง EN และ ไทย (เกษมณี) เลือกปุ่มที่ใช้สลับภาษาได้</p></div>
+            <div class="s-card s-pick" id="kbdPick">
+              <label><input type="radio" name="lk" value="alt_shift"><span>Alt+Shift<small>แบบเดิมของ T3</small></span></label>
+              <label><input type="radio" name="lk" value="caps"><span>Caps Lock<small>กด Caps Lock เปลี่ยนภาษา · ตัวพิมพ์ใหญ่ค้าง: Shift+Caps Lock</small></span></label>
+              <label><input type="radio" name="lk" value="both"><span>Caps Lock หรือ Alt+Shift<small>ใช้ได้ทั้งสองแบบ · ตัวพิมพ์ใหญ่ค้าง: Shift+Caps Lock</small></span></label>
+            </div>
+            <div class="res" id="kbdRes" role="status"></div>
+            <div class="s-foot">เพิ่มภาษาอื่น เปลี่ยนแบบแป้น: <button type="button" data-app="thai">เปิดการตั้งค่าแป้นพิมพ์ของ KDE</button></div>
           </div>
 
           <div class="s-page" data-page="look" hidden>
@@ -498,20 +561,20 @@ function toastMsg(s){const t=document.createElement('div');t.className='toast';t
 
 /* ---------------- SETTINGS ---------------- */
 const post=(url,body)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-T3':'1'},body:JSON.stringify(body)}).then(r=>r.json());
-const CATS=[['home','ภาพรวม','#3fb950','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z','overview'],['@wifi','Wi-Fi และเน็ต','#2f6fb3','M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0','wifi internet network'],['@bluetooth','บลูทูธ','#2f6fb3','M7 7l10 10-5 4V3l5 4L7 17','bluetooth'],['@sound','เสียง','#c2410c','M4 9h4l5-4v14l-5-4H4z','sound audio'],['@display','หน้าจอ','#6d28d9','M3 5h18v11H3zM8 20h8M12 16v4','display screen monitor'],['look','หน้าตา','#be185d','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18','wallpaper theme'],['@thai','ภาษาและแป้นพิมพ์','#4a4d52','M3 6h18v12H3zM7 14h10','keyboard thai language'],['@bench','บอร์ดและพอร์ต','#1f6f35','M7 7h10v10H7zM9 3v4M15 3v4M9 17v4M15 17v4','esp32 board usb'],['ai','AI','#0f7c7e','M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z','ai lm studio claude'],['update','อัปเดตและจุดกู้คืน','#3a3d42','M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4','update snapshot'],['@users','ผู้ใช้และรหัสผ่าน','#3a3d42','M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8M4 21a8 8 0 0 1 16 0','user password'],['keys','ปุ่มลัด','#3a3d42','M3 6h18v12H3z','shortcut keys'],['about','เกี่ยวกับเครื่อง','#3a3d42','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 11v5M12 8h.01','about system']];
+const CATS=[['home','ภาพรวม','#3fb950','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z','overview'],['wifi','Wi-Fi และเน็ต','#2f6fb3','M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0','wifi internet network'],['bt','บลูทูธ','#2f6fb3','M7 7l10 10-5 4V3l5 4L7 17','bluetooth'],['sound','เสียง','#c2410c','M4 9h4l5-4v14l-5-4H4z','sound audio'],['display','หน้าจอ','#6d28d9','M3 5h18v11H3zM8 20h8M12 16v4','display screen monitor'],['look','หน้าตา','#be185d','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18','wallpaper theme'],['kbd','ภาษาและแป้นพิมพ์','#4a4d52','M3 6h18v12H3zM7 14h10','keyboard thai language caps lock'],['@bench','บอร์ดและพอร์ต','#1f6f35','M7 7h10v10H7zM9 3v4M15 3v4M9 17v4M15 17v4','esp32 board usb'],['ai','AI','#0f7c7e','M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z','ai lm studio claude'],['update','อัปเดตและจุดกู้คืน','#3a3d42','M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4','update snapshot'],['@users','ผู้ใช้และรหัสผ่าน','#3a3d42','M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8M4 21a8 8 0 0 1 16 0','user password'],['keys','ปุ่มลัด','#3a3d42','M3 6h18v12H3z','shortcut keys'],['about','เกี่ยวกับเครื่อง','#3a3d42','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 11v5M12 8h.01','about system']];
 const QUICK=[['wifi','Wi-Fi','เครือข่าย','M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0'],['bluetooth','บลูทูธ','อุปกรณ์ไร้สาย','M7 7l10 10-5 4V3l5 4L7 17'],['sound','เสียง','ลำโพง ไมค์','M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 0 1 0 6'],['display','หน้าจอ','ความสว่าง หลายจอ','M3 5h18v11H3zM8 20h8M12 16v4']];
 const UPD=[['t3update','อัปเดต T3','หน้าจอ Bench เครื่องมือ'],['update','อัปเดตระบบและแอป','Discover'],['snapshots','จุดกู้คืนระบบ','ดู สร้าง หรือย้อนกลับ'],['doctor','ตรวจเครื่อง','ให้ Claude ช่วยแก้ปัญหา'],['welcome','ติดตั้งเครื่องมือเพิ่ม','ESP-IDF Arduino NVIDIA']];
 const WALL=['#0a0d0b','#10241a','#1d3b2c','#141210','#1b1b2e','#2b1a14','#202020'];
-const KEYS=[['Meta','เมนู T3'],['Meta+Space','ค้นหาแอป ไฟล์ คำนวณ'],['Meta+1…9','เปิดแอปตามลำดับใน Dock'],['Meta+W','ดูทุกหน้าต่าง'],['Meta+Enter','terminal'],['F12','terminal แบบดึงลง'],['Meta+E','ไฟล์'],['Meta+B / O / J','Bench / Scope / Logbook'],['Meta+,','ตั้งค่า T3'],['Meta+V','ประวัติคลิปบอร์ด'],['Print','จับภาพหน้าจอ'],['Meta+L','ล็อกจอ'],['Alt+Shift','สลับ EN / TH']];
+const KEYS=[['Meta','เมนู T3'],['Meta+Space','ค้นหาแอป ไฟล์ คำนวณ'],['Meta+1…9','เปิดแอปตามลำดับใน Dock'],['Meta+W','ดูทุกหน้าต่าง'],['Meta+Enter','terminal'],['F12','terminal แบบดึงลง'],['Meta+E','ไฟล์'],['Meta+B / O / J','Bench / Scope / Logbook'],['Meta+,','ตั้งค่า T3'],['Meta+V','ประวัติคลิปบอร์ด'],['Print','จับภาพหน้าจอ'],['Meta+L','ล็อกจอ'],['Alt+Shift / Caps Lock','สลับ EN / TH (เลือกได้ในหน้าภาษาและแป้นพิมพ์)']];
 const sRow=(app,t,d,v='')=>`<button class="s-row" data-app="${app}"><span class="t"><b>${t}</b><small>${d}</small></span><span class="v">${esc(v)}</span>›</button>`;
-function sPage(p){$$('.s-page').forEach(x=>x.hidden=x.dataset.page!==p);$$('.s-cat').forEach(c=>c.dataset.p===p?c.setAttribute('aria-current','page'):c.removeAttribute('aria-current'))}
+function sPage(p){$$('.s-page').forEach(x=>x.hidden=x.dataset.page!==p);SYS[p]?.();$$('.s-cat').forEach(c=>c.dataset.p===p?c.setAttribute('aria-current','page'):c.removeAttribute('aria-current'))}
 async function sLaunch(app){let r;try{r=await post('/api/launch',{app})}catch{r={ok:false,error:'ต่อ benchd ไม่ได้'}}const e=$('#launchRes');e.hidden=r.ok;e.className='res bad';e.textContent=r.error||''}
 function sBind(root){root.querySelectorAll('[data-app]').forEach(b=>b.onclick=()=>sLaunch(b.dataset.app));root.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>sPage(b.dataset.go))}
 async function initSettings(){
   $('#sCats').innerHTML=CATS.map(([p,n,c,d,k])=>`<button class="s-cat" data-p="${p}" data-k="${n} ${k}"><i style="background:${c}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg></i>${n}${p[0]==='@'?'<span class="ext" aria-hidden="true">↗</span>':''}</button>`).join('');
   $$('.s-cat').forEach(b=>b.onclick=()=>b.dataset.p[0]==='@'?sLaunch(b.dataset.p.slice(1)):sPage(b.dataset.p));
   $('#sQ').oninput=e=>{const q=e.target.value.toLowerCase();$$('.s-cat').forEach(b=>b.hidden=!!q&&!b.dataset.k.toLowerCase().includes(q))};
-  $('#sQuick').innerHTML=QUICK.map(([a,n,s,d])=>`<button class="s-q" data-app="${a}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg><span><b>${n}</b><small>${s}</small></span></button>`).join('');
+  $('#sQuick').innerHTML=QUICK.map(([a,n,s,d])=>`<button class="s-q" data-go="${a==='bluetooth'?'bt':a}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg><span><b>${n}</b><small>${s}</small></span></button>`).join('');
   $('#sUpd').innerHTML=UPD.map(([a,t,d])=>sRow(a,t,d)).join('');
   $('#keys').innerHTML=KEYS.map(([k,v])=>`<kbd>${k}</kbd><span>${v}</span>`).join('');
   sBind($('#m-settings'));sPage('home');
@@ -519,7 +582,7 @@ async function initSettings(){
   const a=d.ai,s=d.system;$('#aiUrl').value=a.local.url;$('#aiMode').value=a.router.mode;$('#aiClaude').value=a.claude.model;$('#aiAsk').checked=a.router.ask_before_cloud;
   if(a.local.model)$('#aiModel').innerHTML=`<option>${esc(a.local.model)}</option>`;
   $('#sWho').textContent='เครื่องของ '+(s.user||s.hostname);$('#sOs').textContent=s.os||'T3';
-  $('#sRows').innerHTML=sRow('thai','ภาษาและแป้นพิมพ์','กด Alt+Shift เพื่อสลับพิมพ์ EN / TH ได้เสมอ','ไทย')+`<button class="s-row" data-go="ai"><span class="t"><b>AI ในบ้าน (LM Studio)</b><small>ข้อมูลไม่ออกจากบ้าน</small></span><span class="v">${esc(a.local.url||'ยังไม่ได้ตั้ง')}</span>›</button>`+sRow('t3update','อัปเดต T3','สร้างจุดกู้คืนให้ก่อนอัปเดตทุกครั้ง')+sRow('bench','บอร์ดและพอร์ต','ESP32, Pico, Arduino')+sRow('doctor','ตรวจเครื่อง','ให้ Claude ช่วยหาและแก้ปัญหา');
+  $('#sRows').innerHTML=`<button class="s-row" data-go="kbd"><span class="t"><b>ภาษาและแป้นพิมพ์</b><small>เลือกปุ่มสลับพิมพ์ EN / TH ได้ เช่น Caps Lock</small></span><span class="v">ไทย</span>›</button>`+`<button class="s-row" data-go="ai"><span class="t"><b>AI ในบ้าน (LM Studio)</b><small>ข้อมูลไม่ออกจากบ้าน</small></span><span class="v">${esc(a.local.url||'ยังไม่ได้ตั้ง')}</span>›</button>`+sRow('t3update','อัปเดต T3','สร้างจุดกู้คืนให้ก่อนอัปเดตทุกครั้ง')+sRow('bench','บอร์ดและพอร์ต','ESP32, Pico, Arduino')+sRow('doctor','ตรวจเครื่อง','ให้ Claude ช่วยหาและแก้ปัญหา');
   sBind($('#sRows'));
   const wp=d.prefs.wallpaper;
   $('#wpSw').innerHTML=WALL.map(c=>`<button style="background:${c}" data-c="${c}" aria-label="สี ${c}" aria-pressed="${c===wp}"></button>`).join('');
@@ -535,6 +598,82 @@ $('#aiTest').onclick=async()=>{$('#aiRes').className='res';$('#aiRes').textConte
   else{$('#aiRes').className='res bad';$('#aiRes').textContent='ต่อไม่ได้: '+r.error}};
 $('#aiForm').onsubmit=async e=>{e.preventDefault();const r=await post('/api/settings/ai',{local:{url:$('#aiUrl').value,model:$('#aiModel').value},claude:{model:$('#aiClaude').value},router:{mode:$('#aiMode').value,ask_before_cloud:$('#aiAsk').checked}});
   $('#aiRes').className='res '+(r.error?'bad':'ok');$('#aiRes').textContent=r.error||'บันทึกแล้ว → ~/.config/bench/ai.toml'};
+
+/* ---- Wi-Fi / Bluetooth / sound / display / keyboard (benchd /api/sys/*) ---- */
+const sget=w=>fetch('/api/sys/'+w).then(r=>r.json()).catch(()=>({error:'ต่อ benchd ไม่ได้'}));
+const spost=(w,b)=>post('/api/sys/'+w,b).catch(()=>({error:'ต่อ benchd ไม่ได้'}));
+const say=(id,txt,bad)=>{const e=$(id);e.className='res'+(txt?(bad?' bad':' ok'):'');e.textContent=txt||''};
+async function busy(btn,id,msg,fn){const all=btn?.closest('.s-page')?.querySelectorAll('button,input,select')||[];all.forEach(x=>x.disabled=true);say(id,msg);
+  let r;try{r=await fn()}finally{all.forEach(x=>x.disabled=false)}if(r?.error){say(id,r.error,true);return false}say(id,'');return true}
+const sig=n=>`<span class="sig" aria-label="สัญญาณ ${n}%">${[1,2,3,4].map(i=>`<i class="${n>=i*22?'on':''}" style="height:${i*3+2}px"></i>`).join('')}</span>`;
+
+let WF={networks:[],devices:[]};
+async function loadWifi(rescan){if(rescan)say('#wfRes','กำลังค้นหา Wi-Fi…');const d=await sget('wifi'+(rescan?'?rescan=1':''));
+  if(d.error){say('#wfRes',d.error,true);return}if(rescan)say('#wfRes','');WF=d;
+  const w=d.devices.find(x=>x.type==='wifi'),eth=d.devices.filter(x=>x.type==='ethernet'),on=d.devices.filter(x=>x.connected);
+  $('#wfSub').textContent=on.length?'ต่อเน็ตอยู่: '+on.map(x=>x.connection).join(', '):'ยังไม่ได้ต่อเน็ต';
+  $('#wfRadio').setAttribute('aria-checked',String(d.radio));$('#wfRadio').hidden=!w;
+  $('#wfRadioTxt').textContent=!w?'เครื่องนี้ไม่มีการ์ด Wi-Fi':!d.radio?'ปิดอยู่':w.connected?'ต่อ '+w.connection:'เปิดอยู่ ยังไม่ได้ต่อ';
+  $('#wfWired').innerHTML=eth.map(x=>`<div class="s-item"><span class="t"><b>สายแลน</b><small class="${x.connected?'on':''}">${x.connected?'ต่ออยู่ · '+esc(x.connection):'ไม่ได้เสียบสาย'}</small></span></div>`).join('');
+  $('#wfScan').hidden=!w||!d.radio;
+  $('#wfList').innerHTML=!w?'':!d.radio?'<div class="s-empty">เปิด Wi-Fi เพื่อดูรายชื่อ</div>':!d.networks.length?'<div class="s-empty">ไม่พบ Wi-Fi ลองกด ค้นหาใหม่</div>':
+    d.networks.map((n,i)=>`<div class="s-item" data-i="${i}">${sig(n.signal)}<span class="t"><b>${esc(n.ssid)}</b><small class="${n.active?'on':''}">${n.active?'ต่ออยู่':n.saved?'เคยต่อแล้ว':n.secure?'มีรหัส':'ไม่มีรหัส'}</small></span>`+
+      (n.active?'<button class="s-btn" data-a="off">ตัดการเชื่อมต่อ</button>':'<button class="s-btn pri" data-a="on">เชื่อมต่อ</button>')+(n.saved?'<button class="s-btn" data-a="forget">ลืม</button>':'')+'</div>').join('')}
+$('#wfRadio').onclick=e=>busy(e.target,'#wfRes','',()=>spost('wifi/radio',{on:e.target.getAttribute('aria-checked')!=='true'})).then(()=>setTimeout(()=>loadWifi(),1500));
+$('#wfScan').onclick=()=>loadWifi(true);
+$('#wfList').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const row=b.closest('.s-item'),n=WF.networks[+row.dataset.i],a=b.dataset.a;
+  if(a==='on'&&n.secure&&!n.saved&&!row.querySelector('input')){b.insertAdjacentHTML('beforebegin','<input type="password" placeholder="รหัส Wi-Fi" aria-label="รหัส Wi-Fi '+esc(n.ssid)+'">');const i=row.querySelector('input');i.focus();i.onkeydown=k=>k.key==='Enter'&&b.click();return}
+  const pw=row.querySelector('input')?.value;
+  const ok=await busy(b,'#wfRes',a==='on'?'กำลังต่อ '+n.ssid+'…':'',()=>a==='on'?spost('wifi/connect',{ssid:n.ssid,password:pw}):a==='off'?spost('wifi/disconnect',{device:WF.devices.find(x=>x.type==='wifi')?.device}):spost('wifi/forget',{ssid:n.ssid}));
+  if(ok&&a==='on')say('#wfRes','ต่อ '+n.ssid+' แล้ว');loadWifi()};
+
+let BT={devices:[]};
+async function loadBt(){const d=await sget('bt');if(d.error){say('#btRes',d.error,true);return}BT=d;
+  $('#btPow').setAttribute('aria-checked',String(d.powered));$('#btPow').hidden=!d.present;$('#btScan').hidden=!d.powered;
+  $('#btTxt').textContent=!d.present?'เครื่องนี้ไม่มีบลูทูธ':d.powered?'เปิดอยู่':'ปิดอยู่';
+  $('#btList').innerHTML=!d.powered?'':!d.devices.length?'<div class="s-empty">ยังไม่มีอุปกรณ์ เปิดอุปกรณ์ให้อยู่ในโหมดจับคู่ แล้วกด ค้นหาอุปกรณ์ใกล้ๆ</div>':
+    d.devices.map((x,i)=>`<div class="s-item" data-i="${i}"><span class="t"><b>${esc(x.name)}</b><small class="${x.connected?'on':''}">${x.connected?'เชื่อมต่ออยู่':x.paired?'จับคู่แล้ว':'พบใกล้ๆ'}${x.battery!=null?' · แบต '+x.battery+'%':''}</small></span>`+
+      (x.connected?'<button class="s-btn" data-a="disconnect">ตัด</button>':x.paired?'<button class="s-btn pri" data-a="connect">เชื่อมต่อ</button>':'<button class="s-btn pri" data-a="pair">จับคู่</button>')+(x.paired?'<button class="s-btn" data-a="remove">ลืม</button>':'')+'</div>').join('')}
+$('#btPow').onclick=e=>busy(e.target,'#btRes','',()=>spost('bt/power',{on:e.target.getAttribute('aria-checked')!=='true'})).then(loadBt);
+$('#btScan').onclick=e=>busy(e.target,'#btRes','กำลังค้นหาอุปกรณ์ (10 วินาที)…',()=>spost('bt/scan',{seconds:10})).then(loadBt);
+$('#btList').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const x=BT.devices[+b.closest('.s-item').dataset.i],a=b.dataset.a;
+  const ok=await busy(b,'#btRes',{pair:'กำลังจับคู่ '+x.name+'…',connect:'กำลังเชื่อมต่อ…',disconnect:'',remove:''}[a],()=>spost('bt/device',{action:a,addr:x.addr}));
+  if(ok&&(a==='pair'||a==='connect'))say('#btRes','เชื่อมต่อ '+x.name+' แล้ว');loadBt()};
+
+async function loadSound(){const d=await sget('sound');if(d.error){say('#sndRes',d.error,true);return}
+  const row=(k,x)=>`<div class="s-item" data-k="${k}" data-n="${esc(x.name)}"><span class="t" style="flex:0 1 260px"><b>${esc(x.label)}</b><small class="${x.default?'on':''}">${x.default?'ใช้อยู่':''}</small></span>`+
+    `<button class="s-tog" data-a="mute" role="switch" aria-checked="${!x.mute}" aria-label="เปิดเสียง ${esc(x.label)}"></button><input type="range" min="0" max="100" value="${x.volume}" aria-label="ระดับเสียง ${esc(x.label)}"><span class="num">${x.volume}%</span>`+
+    (x.default?'':'<button class="s-btn" data-a="def">ใช้อันนี้</button>')+'</div>';
+  $('#sndOut').innerHTML=d.sinks.map(x=>row('sinks',x)).join('')||'<div class="s-empty">ไม่พบลำโพงหรือหูฟัง</div>';
+  $('#sndIn').innerHTML=d.sources.map(x=>row('sources',x)).join('')||'<div class="s-empty">ไม่พบไมค์</div>'}
+let sndT;
+$('[data-page="sound"]').oninput=e=>{if(e.target.type!=='range')return;const r=e.target.closest('.s-item');r.querySelector('.num').textContent=e.target.value+'%';
+  clearTimeout(sndT);sndT=setTimeout(()=>spost('sound/set',{kind:r.dataset.k,name:r.dataset.n,volume:+e.target.value}).then(x=>x.error&&say('#sndRes',x.error,true)),120)};
+$('[data-page="sound"]').onclick=async e=>{const b=e.target.closest('button[data-a]');if(!b)return;const r=b.closest('.s-item');
+  await busy(b,'#sndRes','',()=>spost('sound/set',b.dataset.a==='mute'?{kind:r.dataset.k,name:r.dataset.n,mute:b.getAttribute('aria-checked')==='true'}:{kind:r.dataset.k,name:r.dataset.n,default:true}));loadSound()};
+
+let DSP={outputs:[],brightness:[]},dspUndo=null;
+async function loadDisplay(){const d=await sget('display');if(d.error){say('#dispRes',d.error,true);return}DSP=d;
+  const multi=d.outputs.length>1;
+  $('#dispList').innerHTML=d.brightness.map(b=>`<div class="s-item" data-b="${esc(b.id)}"><span class="t" style="flex:0 1 220px"><b>ความสว่าง</b><small>${esc(b.label)}</small></span><input type="range" min="1" max="100" value="${b.value}" aria-label="ความสว่าง ${esc(b.label)}"><span class="num">${b.value}%</span></div>`).join('')+
+    d.outputs.map(o=>{const sc=d.scales.includes(o.scale)?d.scales:[...d.scales,o.scale].sort((a,b)=>a-b);
+      return `<div class="s-item" data-o="${esc(o.name)}"><span class="t"><b>ขนาดตัวหนังสือและไอคอน${multi?' · '+esc(o.name):''}</b><small>ยิ่งมากยิ่งใหญ่</small></span><select data-a="scale" aria-label="ขนาด">${sc.map(v=>`<option value="${v}" ${v===o.scale?'selected':''}>${Math.round(v*100)}%</option>`).join('')}</select></div>`+
+      `<div class="s-item" data-o="${esc(o.name)}"><span class="t"><b>ความละเอียด${multi?' · '+esc(o.name):''}</b><small>${esc(o.current)}</small></span><select data-a="mode" aria-label="ความละเอียด">${o.modes.map(m=>`<option value="${esc(m.id)}" ${m.id===o.mode?'selected':''}>${esc(m.label)}</option>`).join('')}</select></div>`}).join('')}
+let dspT;
+$('#dispList').oninput=e=>{const r=e.target.closest('[data-b]');if(!r)return;r.querySelector('.num').textContent=e.target.value+'%';
+  clearTimeout(dspT);dspT=setTimeout(()=>spost('display/brightness',{id:r.dataset.b,percent:+e.target.value}).then(x=>x.error&&say('#dispRes',x.error,true)),120)};
+$('#dispList').onchange=async e=>{const s=e.target;if(s.tagName!=='SELECT')return;const o=s.closest('[data-o]').dataset.o;
+  const r=await spost('display/set',{output:o,[s.dataset.a]:s.dataset.a==='scale'?+s.value:s.value});if(r.error){say('#dispRes',r.error,true);loadDisplay();return}
+  // a bad mode can leave the screen black: undo by itself unless kept
+  clearInterval(dspUndo?.t);let left=15;const prev=r.previous,undo=async()=>{clearInterval(dspUndo?.t);dspUndo=null;await spost('display/set',{output:prev.output,scale:prev.scale,mode:prev.mode});say('#dispRes','ย้อนกลับแล้ว');loadDisplay()};
+  const show=()=>{$('#dispRes').className='res';$('#dispRes').innerHTML=`ใช้แบบนี้ต่อไหม? จะย้อนกลับเองใน ${left} วินาที <button class="s-btn pri" id="dKeep">ใช้ต่อ</button> <button class="s-btn" id="dUndo">ย้อนกลับ</button>`;
+    $('#dKeep').onclick=()=>{clearInterval(dspUndo.t);dspUndo=null;say('#dispRes','บันทึกแล้ว');loadDisplay()};$('#dUndo').onclick=undo};
+  dspUndo={t:setInterval(()=>{if(--left<=0)undo();else show()},1000)};show()};
+
+async function loadKbd(){const d=await sget('keyboard');if(d.error){say('#kbdRes',d.error,true);return}
+  $$('#kbdPick input').forEach(i=>i.checked=i.value===d.lang_key);if(d.lang_key==='other')say('#kbdRes','ตอนนี้ตั้งไว้แบบอื่น ('+d.options+')')}
+$('#kbdPick').onchange=async e=>{const r=await spost('keyboard/set',{lang_key:e.target.value});say('#kbdRes',r.error||'เปลี่ยนแล้ว ลองกดดูได้เลย',!!r.error);if(r.error)loadKbd()};
+const SYS={wifi:()=>loadWifi(),bt:loadBt,sound:loadSound,display:loadDisplay,kbd:loadKbd};
 
 /* ---------------- CLOCK ---------------- */
 function tick(){$('#clock').textContent=hhmm()}tick();setInterval(tick,15000);

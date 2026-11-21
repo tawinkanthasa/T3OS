@@ -20,7 +20,7 @@ from pathlib import Path
 
 from aiohttp import WSMsgType, web
 
-from . import boards as B, logbook, pins as P, serialmon, settings as ST
+from . import boards as B, logbook, pins as P, serialmon, settings as ST, system as SY
 
 PORT = int(os.environ.get("BENCHD_PORT", "7300"))
 def _ui_dir() -> Path:
@@ -343,6 +343,48 @@ async def api_launch(request: web.Request) -> web.Response:
     return web.json_response(ST.launch(str((await request.json()).get("app", ""))))
 
 
+# ---- Wi-Fi / Bluetooth / sound / display / keyboard for T3 Settings (bench/system.py) ----
+SYS_GET = {"wifi": lambda q: SY.wifi_status(q.get("rescan") == "1"), "bt": lambda q: SY.bt_status(),
+           "sound": lambda q: SY.sound_status(), "display": lambda q: SY.display_status(),
+           "keyboard": lambda q: SY.keyboard_status()}
+SYS_POST = {
+    "wifi/connect": lambda b: SY.wifi_connect(b.get("ssid"), b.get("password") or None),
+    "wifi/disconnect": lambda b: SY.wifi_disconnect(b.get("device")),
+    "wifi/forget": lambda b: SY.wifi_forget(b.get("ssid")),
+    "wifi/radio": lambda b: SY.wifi_radio(bool(b.get("on"))),
+    "bt/power": lambda b: SY.bt_power(bool(b.get("on"))),
+    "bt/scan": lambda b: SY.bt_scan(int(b.get("seconds", 8))),
+    "bt/device": lambda b: SY.bt_action(str(b.get("action")), b.get("addr")),
+    "sound/set": lambda b: SY.sound_set(b.get("kind"), b.get("name"), b.get("volume"), b.get("mute"), b.get("default")),
+    "display/set": lambda b: SY.display_set(b.get("output"), b.get("scale"), b.get("mode")),
+    "display/brightness": lambda b: SY.brightness_set(b.get("id"), b.get("percent", 100)),
+    "keyboard/set": lambda b: SY.keyboard_set(b.get("lang_key")),
+}
+
+
+async def api_sys_get(request: web.Request) -> web.Response:
+    fn = SYS_GET.get(request.match_info["what"])
+    if not fn:
+        return web.json_response({"error": "not found"}, status=404)
+    try:
+        return web.json_response(await asyncio.to_thread(fn, request.query))
+    except SY.SysError as e:
+        return web.json_response({"error": str(e)}, status=400)
+
+
+async def api_sys_post(request: web.Request) -> web.Response:
+    fn = SYS_POST.get(request.match_info["what"])
+    if not fn:
+        return web.json_response({"error": "not found"}, status=404)
+    try:
+        body = await request.json()
+        if not isinstance(body, dict):
+            raise SY.SysError("ข้อมูลไม่ถูกต้อง")
+        return web.json_response(await asyncio.to_thread(fn, body))
+    except (SY.SysError, ValueError, TypeError) as e:
+        return web.json_response({"error": str(e)}, status=400)
+
+
 ALLOWED_HOSTS = {f"127.0.0.1:{PORT}", f"localhost:{PORT}"}
 
 
@@ -387,6 +429,7 @@ def make_app() -> web.Application:
                     web.get("/api/settings", api_settings_get), web.post("/api/settings/ai", api_settings_ai),
                     web.post("/api/ai/test", api_ai_test), web.post("/api/settings/prefs", api_prefs),
                     web.post("/api/launch", api_launch),
+                    web.get("/api/sys/{what}", api_sys_get), web.post("/api/sys/{what:.+}", api_sys_post),
                     web.static("/", UI_DIR)])
     return app
 
