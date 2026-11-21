@@ -15,9 +15,24 @@ bash "$REPO/os/install.sh" "$RUN/root" >/dev/null
 export XDG_DATA_DIRS="$RUN/root/usr/share:/usr/local/share:/usr/share"
 export XDG_CONFIG_DIRS="$RUN/root/etc/xdg:/etc/xdg"
 export XDG_CONFIG_HOME="$RUN/config"
-# startplasma-wayland sets up the rest exactly like the real login (menu prefix, KDE platform
-# theme, session manager, autostart -> benchd). Run inside WSLg it opens kwin as a window.
-# WSLg's GPU driver crashes kwin: render OpenGL on the CPU (llvmpipe) here; real T3 uses the GPU.
-export LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe
+# What startplasma does on the real login: KDE menus (otherwise no app resolves and nothing
+# opens from the dock), the KDE Qt theme (icons), session type.
+export XDG_CURRENT_DESKTOP=KDE XDG_SESSION_DESKTOP=KDE KDE_FULL_SESSION=true KDE_SESSION_VERSION=6
+export XDG_MENU_PREFIX=plasma- QT_QPA_PLATFORMTHEME=kde XDG_SESSION_TYPE=wayland
+# WSLg: kwin crashes on its GPU path and shows no frames with llvmpipe -> QPainter here
+# (real T3 uses the GPU). startplasma-wayland can't be used: under WSLg its shell lands on
+# WSLg's own display instead of inside kwin.
+export KWIN_COMPOSE=Q
+cat > "$RUN/start.sh" <<EOS
+#!/bin/sh
+# runs inside kwin, so everything below gets kwin's display
+dbus-update-activation-environment --all
+kbuildsycoca6 >/dev/null 2>&1
+/usr/libexec/kactivitymanagerd >/dev/null 2>&1 &
+kded6 >/dev/null 2>&1 &
+benchd >"$RUN/benchd.log" 2>&1 &
+exec plasmashell
+EOS
+chmod +x "$RUN/start.sh"
 echo "T3 (Plasma) starting: settings in $RUN/config"
-exec dbus-run-session -- startplasma-wayland
+exec dbus-run-session -- kwin_wayland --width 1600 --height 900 --no-lockscreen "$RUN/start.sh"
