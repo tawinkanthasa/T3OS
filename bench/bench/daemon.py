@@ -414,7 +414,8 @@ def make_app() -> web.Application:
     app["hub"] = hub
 
     async def start_bg(app):
-        ST.apply_wallpaper(ST.read_prefs()["wallpaper"])
+        # no wallpaper here: Plasma remembers the wallpaper itself, and re-applying T3's saved one at
+        # every login replaced a picture chosen in KDE (right-click desktop) after each restart
         app["bg"] = [asyncio.create_task(c) for c in (hub.watch_boards(), hub.watch_log(), hub.watch_ai())]
 
     async def stop_bg(app):

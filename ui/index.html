@@ -587,7 +587,7 @@ async function initSettings(){
   const wp=d.prefs.wallpaper;
   $('#wpSw').innerHTML=WALL.map(c=>`<button style="background:${c}" data-c="${c}" aria-label="สี ${c}" aria-pressed="${c===wp}"></button>`).join('');
   if(!wp.startsWith('#'))$('#wpPath').value=wp;
-  const setWp=async v=>{const r=await post('/api/settings/prefs',{wallpaper:v});$$('#wpSw button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===v));$('#wpRes').className='res '+(r.applied?'ok':'bad');$('#wpRes').textContent=r.applied?'เปลี่ยนแล้ว':'บันทึกแล้ว จะใช้ตอนเข้า T3 ครั้งหน้า'};
+  const setWp=async v=>{const r=await post('/api/settings/prefs',{wallpaper:v});$$('#wpSw button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===v));$('#wpRes').className='res '+(r.applied?'ok':'bad');$('#wpRes').textContent=r.applied?'เปลี่ยนแล้ว (เปิดเครื่องใหม่ก็ยังอยู่)':'เปลี่ยนไม่ได้: ไม่พบรูปนี้ หรือหน้าจอยังไม่พร้อม ลองใหม่อีกครั้ง'};
   $$('#wpSw button').forEach(b=>b.onclick=()=>setWp(b.dataset.c));$('#wpSet').onclick=()=>$('#wpPath').value.trim()&&setWp($('#wpPath').value.trim());
   $('#about').innerHTML=[['ระบบ',s.os],['ชื่อเครื่อง',s.hostname],['kernel',s.kernel],['RAM',s.mem_gb+' GB'],['ดิสก์ว่าง',`${s.disk_free_gb} / ${s.disk_total_gb} GB`],['เปิดมา',s.uptime_h+' ชม.'],['Claude Code',s.claude_code?'ติดตั้งแล้ว':'ยังไม่ติดตั้ง']].map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('');
   aiStatus(S.ai);
