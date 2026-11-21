@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=T3 menu bar on every screen
+Exec=/usr/share/t3/bin/t3-screens
+OnlyShowIn=KDE;
+NoDisplay=true
+X-KDE-autostart-phase=2

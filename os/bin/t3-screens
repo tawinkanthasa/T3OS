@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Give every screen the T3 menu bar (like macOS); the dock stays on the main screen.
+# Runs at login (autostart) and keeps watching: plug in a monitor later and it gets a bar too.
+#   t3-screens          check once and keep watching
+#   t3-screens --once   check once
+set -uo pipefail
+RC="${XDG_CONFIG_HOME:-$HOME/.config}/plasma-org.kde.plasma.desktop-appletsrc"
+Q=$(command -v qdbus6 || command -v qdbus) || exit 0
+js() { "$Q" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$1" 2>/dev/null; }
+
+# screens that already have a top bar, from Plasma's own config (location 3 = top edge)
+screens_with_bar() {
+  awk -F= '
+    /^\[Containments\]\[[0-9]+\]$/ { if (p && loc == 3) print scr; p = 0; loc = -1; scr = -1; next }
+    /^\[/                           { if (p && loc == 3) print scr; p = 0; loc = -1; scr = -1; next }
+    $1 == "plugin" && $2 == "org.kde.panel" { p = 1 }
+    $1 == "location"   { loc = $2 }
+    $1 == "lastScreen" { scr = $2 }
+    END { if (p && loc == 3) print scr }' "$RC" 2>/dev/null | sort -u
+}
+
+# the same menu bar as the T3 layout (look-and-feel/org.t3.desktop), returned by its id
+NEW_BAR='
+var bar = new Panel;
+bar.location = "top";
+bar.height = Math.round(gridUnit * 1.6);
+bar.floating = false;
+bar.hiding = "dodgewindows";
+var m = bar.addWidget("org.kde.plasma.kickoff");
+m.currentConfigGroup = ["General"]; m.writeConfig("icon", "t3-logo"); m.writeConfig("favoritesDisplay", "1");
+bar.addWidget("org.kde.plasma.appmenu");
+bar.addWidget("org.kde.plasma.panelspacer");
+bar.addWidget("org.t3.boards");
+bar.addWidget("org.kde.plasma.systemtray");
+var c = bar.addWidget("org.kde.plasma.digitalclock");
+c.currentConfigGroup = ["Appearance"];
+c.writeConfig("showDate", "true"); c.writeConfig("dateDisplayFormat", "BesideTime");
+c.writeConfig("dateFormat", "custom"); c.writeConfig("customDateFormat", "ddd d MMM"); c.writeConfig("use24hFormat", "2");
+print(bar.id);'
+
+check() {
+  local n have i id made=0
+  n=$(js 'print(screenCount)') || return
+  [[ "$n" =~ ^[0-9]+$ ]] || return
+  have=$(screens_with_bar)
+  for (( i = 1; i < n; i++ )); do
+    grep -qx "$i" <<<"$have" && continue
+    # Plasma's script API puts new panels on screen 0; move it by its saved screen number
+    id=$(js "$NEW_BAR") || continue
+    [[ "$id" =~ ^[0-9]+$ ]] || continue
+    sleep 1
+    kwriteconfig6 --file "$RC" --group Containments --group "$id" --key lastScreen "$i"
+    made=1
+  done
+  (( made )) && systemctl --user restart plasma-plasmashell.service
+}
+
+sleep 5   # let Plasma finish starting
+check
+[[ "${1:-}" == "--once" ]] && exit 0
+command -v udevadm >/dev/null || exit 0
+# a monitor plugged in or out: the drm subsystem sends a change event
+udevadm monitor --udev --subsystem-match=drm 2>/dev/null | while read -r line; do
+  [[ "$line" == *change* ]] || continue
+  sleep 4
+  check
+done
