@@ -49,6 +49,14 @@ tar -C "$REPO" --exclude=.git --exclude='*.venv' --exclude=.venv --exclude=__pyc
     --exclude=.impeccable --exclude=build --exclude=live/cache -cf - bench os ui scripts | tar -C "$SRC" -xf -
 git -C "$REPO" rev-parse --short=12 HEAD > "$SRC/COMMIT" 2>/dev/null || echo unknown > "$SRC/COMMIT"
 list maker > "$SRC/maker.list"
+# updates: point installed systems at this repo's GitHub copy (git remote "origin")
+ORIGIN=$(git -C "$REPO" remote get-url origin 2>/dev/null || true)
+if [[ "$ORIGIN" == https://* ]]; then
+  sed -i "s#^repo=.*#repo=$ORIGIN#" "$SRC/os/system/t3/update.conf"
+  echo "updates from: $ORIGIN"
+else
+  echo "!! no https git remote 'origin': installed systems won't find updates (set repo= in /etc/t3/update.conf)"
+fi
 
 # ---- hooks (run inside the image, in name order)
 # (lb config already put symlinks to its own root-owned hooks there: touch only ours)
