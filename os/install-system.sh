@@ -46,6 +46,11 @@ if [[ "$(findmnt -no FSTYPE / 2>/dev/null)" == btrfs && ! -s /etc/timeshift/time
 fi
 
 # ---- the boot menu picks up the T3 name, Windows, snapshots
+GB=/etc/default/grub-btrfs/config   # snapshot submenu says "T3", not "Debian GNU/Linux"
+if [[ -f "$GB" ]]; then
+  sed -i '/^#\?GRUB_BTRFS_SUBMENUNAME=/d' "$GB"
+  echo 'GRUB_BTRFS_SUBMENUNAME="T3 restore points (snapshots)"' >> "$GB"
+fi
 if command -v update-grub >/dev/null && [[ -e /boot/grub/grub.cfg ]]; then
   update-grub >/dev/null 2>&1 || echo "  (update-grub ไม่สำเร็จ: ลองรันเองภายหลัง)"
 fi
