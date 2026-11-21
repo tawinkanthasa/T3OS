@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# T3 Welcome: first-login setup with plain KDE dialogs.
+#   t3-welcome              open it (from the app menu)
+#   t3-welcome --first-run  from autostart: only if it hasn't been finished or dismissed
+set -uo pipefail
+T3=/usr/share/t3
+STATE="${XDG_CONFIG_HOME:-$HOME/.config}/t3"; mkdir -p "$STATE"
+DONE="$STATE/welcome-done"
+TITLE="ยินดีต้อนรับสู่ T3"
+has() { command -v "$1" >/dev/null 2>&1; }
+k() { kdialog --title "$TITLE" --icon t3-logo "$@"; }
+api() { curl -sf -m 8 -H 'Content-Type: application/json' -d "$2" "http://127.0.0.1:7300$1"; }
+
+if [[ "${1:-}" == "--first-run" ]]; then
+  [[ -e "$DONE" ]] && exit 0
+  sleep 4   # let the desktop finish drawing
+fi
+has kdialog || { echo "ต้องมี kdialog"; exit 1; }
+
+# ---- live USB: offer the installer first
+if [[ -d /run/live/medium ]]; then
+  k --yesno "นี่คือ T3 แบบลองใช้จาก USB\nทุกอย่างหายเมื่อปิดเครื่อง\n\nติดตั้ง T3 ลงเครื่องเลยไหม?\n(ติดตั้งคู่กับ Windows ได้ เลือกดิสก์และพื้นที่เองในขั้นถัดไป)" \
+    --yes-label "ติดตั้ง T3" --no-label "ลองใช้ก่อน"
+  [[ $? -eq 0 ]] && { setsid calamares-install-debian >/dev/null 2>&1 & exit 0; }
+  exit 0
+fi
+
+k --yesnocancel "สวัสดีครับ ใช้เวลาประมาณ 2 นาที:\n\n  1. อินเทอร์เน็ต\n  2. AI ในเครื่อง (LM Studio)\n  3. Claude Code\n  4. เลือกเครื่องมือที่อยากติดตั้งเพิ่ม\n\nเปิดหน้านี้ใหม่ได้ทุกเมื่อจากเมนู: T3 Welcome" \
+  --yes-label "เริ่มเลย" --no-label "ไว้ทีหลัง" --cancel-label "ไม่ต้องถามอีก"
+case $? in 1) exit 0 ;; 2) touch "$DONE"; exit 0 ;; esac
+
+# ---- 1. internet
+for _ in 1 2 3; do
+  [[ "$(nmcli -t -f CONNECTIVITY general 2>/dev/null)" == full ]] && break
+  k --warningcontinuecancel "ยังไม่ได้ต่ออินเทอร์เน็ต\nกด 'ตั้งค่า Wi-Fi' เลือกเครือข่าย แล้วปิดหน้าต่างนั้นเพื่อกลับมาที่นี่" \
+    --continue-label "ตั้งค่า Wi-Fi" --cancel-label "ข้าม" || break
+  kcmshell6 kcm_networkmanagement >/dev/null 2>&1 || systemsettings kcm_networkmanagement >/dev/null 2>&1
+done
+online=0; [[ "$(nmcli -t -f CONNECTIVITY general 2>/dev/null)" == full ]] && online=1
+
+# ---- 2. LM Studio
+# tiny JSON helpers (python3 is always there)
+jget() { python3 -c 'import json,sys
+try: d=json.load(sys.stdin)
+except Exception: sys.exit()
+for k in sys.argv[1:]: d=d.get(k) if isinstance(d,dict) else None
+print(", ".join(map(str,d)) if isinstance(d,list) else ("" if d is None else str(d)).lower() if isinstance(d,bool) else ("" if d is None else d))' "$@"; }
+jurl() { python3 -c 'import json,sys; print(json.dumps({"url": sys.argv[1]}))' "$1"; }
+jlocal() { python3 -c 'import json,sys; print(json.dumps({"local": {"url": sys.argv[1]}}))' "$1"; }
+
+cur=$(curl -sf -m 4 http://127.0.0.1:7300/api/settings | jget ai local url)
+while :; do
+  url=$(k --inputbox "AI ในเครื่อง: ใส่ URL ของ LM Studio บนเครื่องอื่นในบ้าน\nเช่น http://192.168.1.50:1234/v1\n\n(ที่เครื่อง LM Studio ต้องเปิด Developer > Serve on Local Network)\nเว้นว่างไว้ถ้ายังไม่ใช้" "${cur:-http://}") || break
+  [[ -z "$url" || "$url" == "http://" ]] && break
+  res=$(api /api/ai/test "$(jurl "$url")")
+  if [[ "$(jget ok <<<"$res")" == true ]]; then
+    api /api/settings/ai "$(jlocal "$url")" >/dev/null
+    k --msgbox "ต่อ LM Studio ได้แล้ว ✓\nโมเดลที่มี: $(jget models <<<"$res")"
+    break
+  fi
+  k --warningyesnocancel "ติดต่อ $url ไม่ได้\n$(jget error <<<"$res")\n\nเช็กว่าเครื่อง LM Studio เปิดอยู่และอยู่วง Wi-Fi เดียวกัน" \
+    --yes-label "แก้ URL" --no-label "บันทึกไว้ก่อน" --cancel-label "ข้าม"
+  case $? in 0) cur="$url"; continue ;; 1) api /api/settings/ai "$(jlocal "$url")" >/dev/null; break ;; *) break ;; esac
+done
+
+# ---- 3. Claude Code
+if has claude || [[ -x "$HOME/.local/bin/claude" ]]; then
+  if [[ ! -s "$HOME/.claude.json" ]] && (( online )); then
+    k --yesno "ล็อกอิน Claude Code ตอนนี้ไหม?\nจะเปิด Terminal ให้ ทำตามขั้นตอนในนั้น เสร็จแล้วพิมพ์ /exit" --yes-label "ล็อกอิน" --no-label "ข้าม" \
+      && konsole -e "$T3/bin/t3-get" bench-mcp claude >/dev/null 2>&1 && konsole -e claude >/dev/null 2>&1
+  else
+    "$T3/bin/t3-get" bench-mcp >/dev/null 2>&1
+  fi
+fi
+
+# ---- 4. extras
+items=()
+add() { items+=("$1" "$2" "$3"); }
+flatpak info cc.arduino.IDE2 >/dev/null 2>&1 || add arduino "Arduino IDE 2" on
+has pio || [[ -x "$HOME/.local/bin/pio" ]] || add platformio "PlatformIO (pio)" on
+has code || add vscode "VS Code" on
+has google-chrome-stable || add chrome "Google Chrome" on
+has claude || [[ -x "$HOME/.local/bin/claude" ]] || add claude "Claude Code" on
+[[ -f "$HOME/esp/esp-idf/export.sh" ]] || add esp-idf "ESP-IDF ตัวเต็มของ Espressif (~2-3 GB, ใช้เวลานาน)" off
+dpkg -s kicad-packages3d >/dev/null 2>&1 || add kicad-3d "โมเดล 3D ของ KiCad (~5 GB)" off
+lspci 2>/dev/null | grep -qi nvidia && ! dpkg -s nvidia-driver >/dev/null 2>&1 && add nvidia "ไดรเวอร์ NVIDIA (เร็วกว่า แต่ต้องรีบูต)" off
+if (( ${#items[@]} )) && (( online )); then
+  sel=$(k --separate-output --checklist "เลือกเครื่องมือที่อยากติดตั้ง\n(จะเปิด Terminal ให้ใส่รหัสผ่านของคุณเอง)" "${items[@]}")
+  [[ -n "$sel" ]] && konsole --hold -e "$T3/bin/t3-get" $sel >/dev/null 2>&1
+fi
+
+touch "$DONE"
+k --msgbox "พร้อมใช้แล้ว 🎉\n\nคีย์ลัดที่ควรรู้\n  Meta+Space   ค้นหาแอป/ไฟล์\n  Meta+B         T3 Bench (บอร์ดที่เสียบอยู่)\n  Meta+T         Terminal\n  Alt+Shift       สลับ EN/TH\n\nเครื่องมีปัญหา: เปิด 'T3 Doctor' จากเมนู\nหน้าจอเพี้ยน: 'รีเซ็ตหน้าจอ T3'\nอัปเดต: ไอคอนอัปเดตที่มุมขวาบน กดได้เลย ระบบสร้างจุดกู้คืนให้ก่อนทุกครั้ง"

@@ -1,0 +1,4 @@
+# T3: compressed swap in RAM (zram-tools). Half the RAM, zstd.
+ALGO=zstd
+PERCENT=50
+PRIORITY=100

@@ -1,0 +1,7 @@
+[Unit]
+Description=Check for a newer T3
+After=graphical-session.target network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/share/t3/bin/t3-update-check

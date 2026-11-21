@@ -1,0 +1,6 @@
+#!/bin/sh
+# Maker tools without recommends (KiCad would otherwise pull ~5 GB of 3D models; `t3-get kicad-3d` adds them)
+set -e
+export DEBIAN_FRONTEND=noninteractive
+# shellcheck disable=SC2046  # one package per line, split on purpose
+apt-get install -y --no-install-recommends $(cat /usr/src/t3/maker.list)

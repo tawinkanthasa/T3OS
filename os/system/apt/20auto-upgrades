@@ -1,0 +1,5 @@
+// T3: refresh package lists daily (Discover's tray icon shows what's new) and install
+// Debian security fixes automatically in the background.
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";

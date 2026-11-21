@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=T3 Welcome (first login)
+Exec=/usr/share/t3/bin/t3-welcome --first-run
+NoDisplay=true
+X-KDE-autostart-phase=2

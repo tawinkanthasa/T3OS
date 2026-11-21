@@ -1,0 +1,32 @@
+---
+componentName:   t3
+welcomeStyleCalamares: true
+welcomeExpandingLogo: true
+windowExpanding: normal
+windowSize: 900px,620px
+windowPlacement: center
+strings:
+    productName:         T3
+    shortProductName:    T3
+    version:             "1 (Debian 13)"
+    shortVersion:        "1"
+    versionedName:       T3 1
+    shortVersionedName:  T3 1
+    bootloaderEntryName: T3
+    productUrl:          https://www.debian.org
+    supportUrl:          https://www.debian.org/support
+    knownIssuesUrl:      https://bugs.debian.org
+    releaseNotesUrl:     https://www.debian.org/releases/trixie/releasenotes
+sidebar: widget
+navigation: widget
+images:
+    productLogo:         "t3-logo.svg"
+    productIcon:         "t3-logo.svg"
+    productWelcome:      "t3-logo.svg"
+slideshow:               "show.qml"
+slideshowAPI: 2
+style:
+   SidebarBackground:        "#17181a"
+   SidebarText:              "#e6e8ea"
+   SidebarTextCurrent:       "#ffffff"
+   SidebarBackgroundCurrent: "#2f8f45"

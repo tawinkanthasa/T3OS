@@ -3,3 +3,5 @@ kicad kicad-symbols kicad-footprints kicad-templates xsltproc
 pulseview sigrok-cli sigrok-firmware-fx2lafw
 openocd gdb-multiarch dfu-util avrdude stlink-tools
 picocom minicom fritzing fritzing-parts
+# flash without an IDE: ESP32 (esptool) and Raspberry Pi Pico (picotool)
+esptool picotool

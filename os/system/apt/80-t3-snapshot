@@ -1,0 +1,2 @@
+// T3: snapshot before every apt / Discover install, upgrade or removal
+DPkg::Pre-Invoke { "if [ -x /usr/share/t3/bin/t3-snapshot-apt ]; then /usr/share/t3/bin/t3-snapshot-apt; fi"; };

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=T3 (รีเซ็ตหน้าจอ)
+Comment=ใช้เมื่อหน้าจอพังจนใช้ไม่ได้: คืนหน้าจอ T3 แบบเดิมแล้วเข้าระบบ (ไฟล์ไม่หาย)
+Exec=/usr/share/t3/bin/t3-reset-desktop --session
+DesktopNames=KDE
+X-KDE-PluginInfo-Version=6

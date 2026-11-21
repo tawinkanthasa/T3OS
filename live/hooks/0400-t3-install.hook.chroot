@@ -1,0 +1,36 @@
+#!/bin/sh
+# T3 desktop + system setup, installer branding, Thai locale, live-session login.
+set -e
+T=/usr/src/t3
+T3_KEEP_PATHS=1 bash $T/os/install.sh /
+bash $T/os/install-system.sh
+
+# grub-btrfsd stays off in the image (enabled by the installer on Btrfs)
+systemctl disable grub-btrfsd.service >/dev/null 2>&1 || true
+
+# ---- locales: Thai + English available, Thai default
+sed -i -e 's/^# *\(th_TH.UTF-8\)/\1/' -e 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen
+locale-gen
+
+# ---- installer (Calamares on top of Debian's settings)
+I=$T/os/installer
+install -d /etc/calamares/modules /etc/calamares/branding/t3 /usr/share/t3/installer
+install -m 0644 $I/settings.conf /etc/calamares/settings.conf
+install -m 0644 $I/modules/*.conf /etc/calamares/modules/
+install -m 0644 $I/branding/t3/* /etc/calamares/branding/t3/
+install -m 0644 $T/os/kde/icons/t3-logo.svg /etc/calamares/branding/t3/t3-logo.svg
+install -m 0755 $I/t3-postinstall /usr/share/t3/installer/t3-postinstall
+sed -i -e 's/^Name=.*/Name=ติดตั้ง T3/' -e 's/^Icon=.*/Icon=t3-logo/' -e 's/^Comment=.*/Comment=ติดตั้ง T3 ลงเครื่อง (คู่กับ Windows ได้)/' \
+  /usr/share/applications/calamares-install-debian.desktop
+
+# ---- live session: log straight into T3 (removed by the installer)
+install -d /etc/sddm.conf.d
+cat > /etc/sddm.conf.d/zz-t3-live.conf <<'CONF'
+[Autologin]
+User=t3
+Session=plasma
+CONF
+
+gtk-update-icon-cache -q /usr/share/icons/hicolor || true
+kbuildsycoca6 --noincremental >/dev/null 2>&1 || true
+apt-get clean

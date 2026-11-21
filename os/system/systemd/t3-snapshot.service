@@ -1,0 +1,10 @@
+[Unit]
+Description=T3 scheduled snapshot + prune old ones (Timeshift)
+ConditionPathExists=/etc/timeshift/timeshift.json
+After=local-fs.target
+
+[Service]
+Type=oneshot
+Nice=10
+IOSchedulingClass=idle
+ExecStart=/usr/bin/timeshift --check --scripted

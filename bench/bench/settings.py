@@ -132,6 +132,10 @@ APPS = {
     "update": ["plasma-discover", "--mode", "update"],
     "snapshots": ["timeshift-launcher"],
     "system": ["systemsettings"],
+    "doctor": ["konsole", "--hidemenubar", "-e", "/usr/share/t3/bin/t3-doctor", "--ask"],
+    "welcome": ["/usr/share/t3/bin/t3-welcome"],
+    "t3update": ["konsole", "--hold", "-e", "/usr/share/t3/bin/t3-get", "t3"],
+    "reset": ["/usr/share/t3/bin/t3-reset-desktop"],
 }
 
 

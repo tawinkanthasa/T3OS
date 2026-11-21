@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=T3 Welcome
+GenericName=ตั้งค่าเริ่มต้น
+Comment=อินเทอร์เน็ต, LM Studio, Claude Code, ติดตั้งเครื่องมือเพิ่ม
+Exec=/usr/share/t3/bin/t3-welcome
+Icon=t3-logo
+Categories=System;Settings;
+Keywords=t3;welcome;setup;install;esp-idf;arduino;nvidia;ติดตั้ง;

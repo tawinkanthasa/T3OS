@@ -10,7 +10,7 @@ T3="$ROOT/usr/share/t3"; SHARE="$ROOT/usr/share"; XDG="$ROOT/etc/xdg"
 
 install -d "$T3/bin" "$T3/wallpapers" "$SHARE/plasma/look-and-feel" "$SHARE/plasma/plasmoids" \
            "$SHARE/color-schemes" "$SHARE/applications" "$SHARE/icons/hicolor/scalable/apps" \
-           "$XDG/autostart" "$ROOT/etc/sddm.conf.d" "$SHARE/sddm/themes/breeze"
+           "$XDG/autostart" "$ROOT/etc/sddm.conf.d" "$SHARE/sddm/themes/breeze"            "$T3/udev" "$ROOT/etc/udev/rules.d" "$SHARE/wayland-sessions"
 install -m 0755 "$SRC"/bin/* "$T3/bin/"
 cp -r "$REPO/ui" "$T3/"
 install -m 0644 "$K"/wallpapers/* "$T3/wallpapers/"
@@ -26,10 +26,16 @@ install -m 0644 "$K"/xdg/autostart/* "$XDG/autostart/"
 { cat "$K/xdg/kdeglobals"; grep -v '^\[General\]$\|^ColorScheme=\|^Name=\|^shadeSortColumn=' "$K/color-schemes/T3Dark.colors"; } > "$XDG/kdeglobals"
 install -m 0644 "$K/sddm/t3.conf" "$ROOT/etc/sddm.conf.d/t3.conf"
 install -m 0644 "$K/sddm/theme.conf.user" "$SHARE/sddm/themes/breeze/theme.conf.user"
+install -m 0644 "$K"/sessions/* "$SHARE/wayland-sessions/"
+# boards/probes usable without sudo (also kept in /usr/share/t3 so T3 Doctor can reinstall it)
+install -m 0644 "$SRC/udev/99-t3-boards.rules" "$T3/udev/"
+install -m 0644 "$SRC/udev/99-t3-boards.rules" "$ROOT/etc/udev/rules.d/"
+# which T3 this is (T3 Doctor, update check)
+{ cat "$REPO/COMMIT" 2>/dev/null || git -C "$REPO" rev-parse --short=12 HEAD 2>/dev/null || echo unknown; date -u +%Y-%m-%d; } | paste -sd' ' - > "$T3/VERSION"
 
-if [[ "$ROOT" != "" ]]; then
+if [[ "$ROOT" != "" && "${T3_KEEP_PATHS:-}" != 1 ]]; then
   # installed somewhere other than /: point every reference at that tree
-  grep -rlI /usr/share/t3 "$T3/bin" "$SHARE/plasma" "$SHARE/applications" "$SHARE/sddm" 2>/dev/null \
+  grep -rlI /usr/share/t3 "$T3/bin" "$SHARE/plasma" "$SHARE/applications" "$SHARE/sddm" "$SHARE/wayland-sessions" "$XDG/autostart" 2>/dev/null \
     | xargs -r sed -i "s#/usr/share/t3#$T3#g"
 fi
 command -v gtk-update-icon-cache >/dev/null && [[ -z "$ROOT" ]] && gtk-update-icon-cache -q /usr/share/icons/hicolor || true

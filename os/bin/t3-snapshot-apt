@@ -1,0 +1,16 @@
+#!/bin/sh
+# apt/Discover hook (DPkg::Pre-Invoke): take a Timeshift snapshot before packages change, so a
+# bad update can be undone from the boot menu (grub-btrfs) or from the Timeshift app.
+# Never blocks an update: every failure just skips the snapshot.
+[ -n "${T3_NO_SNAPSHOT:-}" ] && exit 0
+[ "$(findmnt -no FSTYPE / 2>/dev/null)" = btrfs ] || exit 0
+[ -s /etc/timeshift/timeshift.json ] && command -v timeshift >/dev/null || exit 0
+# apt runs this once per dpkg call and Discover may make several in a row: one snapshot per 15 min
+stamp=/run/t3-snapshot-apt
+if [ -f "$stamp" ] && [ $(( $(date +%s) - $(stat -c %Y "$stamp") )) -lt 900 ]; then exit 0; fi
+touch "$stamp"
+echo "T3: สร้างจุดกู้คืนก่อนอัปเดต..."
+# tag D = counted in the daily retention (keeps the newest 5), so these never pile up
+timeout 300 timeshift --create --scripted --tags D --comments "ก่อนอัปเดต $(date '+%Y-%m-%d %H:%M')" >/dev/null 2>&1 \
+  && echo "T3: สร้างจุดกู้คืนแล้ว" || echo "T3: สร้างจุดกู้คืนไม่สำเร็จ (อัปเดตต่อได้ตามปกติ)"
+exit 0

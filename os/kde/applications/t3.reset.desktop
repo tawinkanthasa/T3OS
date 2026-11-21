@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=รีเซ็ตหน้าจอ T3
+GenericName=Reset desktop
+Comment=คืนแถบเมนู Dock ธีม และคีย์ลัดเป็นแบบเดิม ไฟล์ไม่หาย ย้อนกลับได้
+Exec=/usr/share/t3/bin/t3-reset-desktop
+Icon=edit-reset
+Categories=System;Settings;
+Keywords=t3;reset;panel;dock;broken;รีเซ็ต;เพี้ยน;
+Actions=undo;
+
+[Desktop Action undo]
+Name=ย้อนกลับการรีเซ็ตครั้งล่าสุด
+Exec=/usr/share/t3/bin/t3-reset-desktop --undo

@@ -1,0 +1,11 @@
+#!/bin/sh
+# grub-btrfs (not packaged by Debian): snapshots appear in the boot menu, so a broken update
+# can be undone even when the desktop won't start. Pinned release, from the upstream repo.
+set -e
+V=v4.14
+rm -rf /tmp/grub-btrfs
+git clone -q --depth 1 -b "$V" https://github.com/Antynea/grub-btrfs.git /tmp/grub-btrfs
+make -C /tmp/grub-btrfs install INITCPIO=false SYSTEMD=true >/dev/null
+rm -rf /tmp/grub-btrfs
+# the live image itself isn't Btrfs; the installer turns the service on for Btrfs installs
+systemctl disable grub-btrfsd.service >/dev/null 2>&1 || true

@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# t3-get <item>...   install the optional, big, or per-user extras (asks for your sudo password when needed)
+#   arduino     Arduino IDE 2 (Flathub)
+#   esp-idf     Espressif ESP-IDF, latest stable release, into ~/esp/esp-idf  (~2-3 GB)
+#   kicad-3d    KiCad 3D models (~5 GB)
+#   platformio  PlatformIO Core (pio)
+#   claude      Claude Code for this user (updates itself)  + connects it to T3 Bench (MCP)
+#   bench-mcp   only connect Claude Code to T3 Bench
+#   vscode      Visual Studio Code (Microsoft apt repo)
+#   chrome      Google Chrome (Google apt repo, amd64)
+#   nvidia      NVIDIA driver (only on machines with an NVIDIA card)
+#   t3          update T3 itself (desktop, Bench, Doctor ...) from the T3 repo set in /etc/t3/update.conf
+set -uo pipefail
+B=$'\e[1m' G=$'\e[32m' R=$'\e[31m' N=$'\e[0m'
+say() { printf '\n%s== %s ==%s\n' "$B" "$*" "$N"; }
+has() { command -v "$1" >/dev/null 2>&1; }
+apt_repo() {  # name key-url "deb line"
+  sudo install -d -m 0755 /etc/apt/keyrings
+  curl -fsSL "$2" | sudo gpg --dearmor --yes -o "/etc/apt/keyrings/$1.gpg" || return 1
+  echo "$3" | sudo tee "/etc/apt/sources.list.d/$1.list" >/dev/null
+}
+FAILED=()
+
+get_arduino() {
+  say "Arduino IDE 2"
+  flatpak remote-add --if-not-exists --system flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>/dev/null \
+    || sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  flatpak install -y --system --noninteractive flathub cc.arduino.IDE2
+}
+
+get_esp_idf() {
+  say "ESP-IDF"
+  local tag
+  tag=$(curl -fsSL https://api.github.com/repos/espressif/esp-idf/releases/latest | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)
+  tag="${ESP_IDF_VERSION:-${tag:-v5.5.1}}"
+  echo "เวอร์ชัน: $tag"
+  sudo apt-get install -y git wget flex bison gperf python3 python3-pip python3-venv cmake ninja-build ccache \
+    libffi-dev libssl-dev dfu-util libusb-1.0-0 || return 1
+  mkdir -p "$HOME/esp"
+  if [[ -d "$HOME/esp/esp-idf/.git" ]]; then
+    git -C "$HOME/esp/esp-idf" fetch --depth 1 origin tag "$tag" && git -C "$HOME/esp/esp-idf" checkout -q "$tag" \
+      && git -C "$HOME/esp/esp-idf" submodule update --init --recursive --depth 1 || return 1
+  else
+    git clone -b "$tag" --depth 1 --recursive --shallow-submodules https://github.com/espressif/esp-idf.git "$HOME/esp/esp-idf" || return 1
+  fi
+  "$HOME/esp/esp-idf/install.sh" esp32,esp32s2,esp32s3,esp32c3,esp32c6,esp32h2 || return 1
+  grep -q 'alias get_idf=' "$HOME/.bashrc" 2>/dev/null || echo "alias get_idf='. \$HOME/esp/esp-idf/export.sh'" >> "$HOME/.bashrc"
+  echo "เปิด Terminal ใหม่ แล้วพิมพ์ get_idf ก่อนใช้ idf.py"
+}
+
+get_kicad_3d() { say "KiCad 3D models"; sudo apt-get install -y kicad-packages3d; }
+
+get_platformio() {
+  say "PlatformIO"
+  has pipx || sudo apt-get install -y pipx
+  pipx install platformio || pipx upgrade platformio; pipx ensurepath >/dev/null
+}
+
+get_bench_mcp() {
+  has claude || [[ -x "$HOME/.local/bin/claude" ]] || return 0
+  local c; c=$(command -v claude || echo "$HOME/.local/bin/claude")
+  "$c" mcp get bench >/dev/null 2>&1 && { echo "Claude Code ต่อกับ T3 Bench อยู่แล้ว"; return 0; }
+  has bench-mcp && "$c" mcp add --scope user bench -- "$(command -v bench-mcp)" && echo "Claude Code ต่อกับ T3 Bench แล้ว"
+}
+
+get_claude() {
+  say "Claude Code"
+  [[ -x "$HOME/.local/bin/claude" ]] || curl -fsSL https://claude.ai/install.sh | bash || return 1
+  get_bench_mcp
+}
+
+get_vscode() {
+  say "VS Code"
+  apt_repo microsoft https://packages.microsoft.com/keys/microsoft.asc \
+    "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" || return 1
+  sudo apt-get update && sudo apt-get install -y code
+}
+
+get_chrome() {
+  say "Google Chrome"
+  [[ "$(dpkg --print-architecture)" == amd64 ]] || { echo "Chrome มีแค่ amd64"; return 1; }
+  apt_repo google-chrome https://dl.google.com/linux/linux_signing_key.pub \
+    "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" || return 1
+  sudo apt-get update && sudo apt-get install -y google-chrome-stable
+}
+
+get_nvidia() {
+  say "ไดรเวอร์ NVIDIA"
+  lspci | grep -qi 'nvidia' || { echo "เครื่องนี้ไม่มีการ์ด NVIDIA"; return 0; }
+  if mokutil --sb-state 2>/dev/null | grep -qi enabled; then
+    echo "Secure Boot เปิดอยู่: หลังติดตั้ง ระบบจะให้ตั้งรหัสผ่าน MOK, รีบูตแล้วเลือก 'Enroll MOK' ใส่รหัสเดิม (ทำครั้งเดียว)"
+  fi
+  sudo apt-get install -y linux-headers-amd64 nvidia-driver firmware-nvidia-graphics || return 1
+  echo "รีบูตเครื่องเพื่อใช้ไดรเวอร์ใหม่"
+}
+
+get_t3() {
+  say "อัปเดต T3"
+  local repo branch src=/var/cache/t3/src
+  # shellcheck disable=SC1091
+  [[ -f /etc/t3/update.conf ]] && . /etc/t3/update.conf
+  [[ -z "${repo:-}" ]] && { echo "ยังไม่ได้ตั้งที่อยู่ของ T3 (repo=...) ใน /etc/t3/update.conf"; return 1; }
+  sudo rm -rf "$src.new" && sudo git clone -q --depth 1 -b "${branch:-main}" "$repo" "$src.new" || return 1
+  sudo bash "$src.new/os/install.sh" || return 1
+  sudo bash "$src.new/os/install-system.sh" --update || return 1
+  sudo rm -rf "$src" && sudo mv "$src.new" "$src"
+  echo "T3 เป็นเวอร์ชัน $(cat /usr/share/t3/VERSION) แล้ว (หน้าจอที่ตั้งเองไม่ถูกแตะ)"
+}
+
+[[ $# -eq 0 ]] && { sed -n '2,13s/^# \{0,1\}//p' "$0"; exit 0; }
+for item in "$@"; do
+  fn="get_${item//-/_}"
+  if ! declare -f "$fn" >/dev/null; then echo "${R}ไม่รู้จัก: $item$N"; FAILED+=("$item"); continue; fi
+  "$fn" || { echo "${R}ไม่สำเร็จ: $item$N"; FAILED+=("$item"); }
+done
+echo
+if (( ${#FAILED[@]} )); then echo "${R}ไม่สำเร็จ: ${FAILED[*]}$N  (ลองใหม่: t3-get ${FAILED[*]} หรือเปิด T3 Doctor)"; exit 1
+else echo "${G}เสร็จแล้ว$N"; fi

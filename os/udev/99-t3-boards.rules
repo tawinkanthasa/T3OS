@@ -1,0 +1,47 @@
+# T3: maker boards and debug probes work without sudo.
+#  - uaccess: the person sitting at the machine gets access (no logout/login needed)
+#  - plugdev/dialout group as a fallback for ssh and services
+#  - ID_MM_DEVICE_IGNORE: ModemManager must not probe these ports; its probing can grab the
+#    port or reset an ESP32 right in the middle of flashing.
+
+ACTION!="add|change|bind", GOTO="t3_boards_end"
+
+# --- USB-serial bridges used on dev boards ---
+# Silicon Labs CP210x (ESP32 DevKit, NodeMCU)
+ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60|ea70|ea71", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# WCH CH340/CH341/CH343/CH9102 (cheap ESP32/Arduino clones)
+ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523|7522|5523|55d3|55d4|55d2", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# FTDI FT232/FT2232/FT4232 (also ESP-Prog, many JTAG adapters)
+ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001|6010|6011|6014|6015", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# Prolific PL2303
+ATTRS{idVendor}=="067b", ATTRS{idProduct}=="2303|23a3", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+
+# --- boards with native USB ---
+# Espressif (ESP32-S2/S3/C3/C6/H2 USB-Serial-JTAG, DFU, ESP-USB-Bridge)
+ATTRS{idVendor}=="303a", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# Raspberry Pi Pico / Pico 2 (BOOTSEL drive, picoprobe, debugprobe, MicroPython)
+ATTRS{idVendor}=="2e8a", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# Arduino (genuine + arduino.org)
+ATTRS{idVendor}=="2341|2a03", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# Adafruit, SparkFun, Seeed (Feather, XIAO, Pro Micro)
+ATTRS{idVendor}=="239a|1b4f|2886", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# Teensy
+ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="0478|0483|0486|0487|04[789]?", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+
+# --- debug probes / programmers ---
+# ST-Link V2 / V2-1 / V3 and STM32 DFU bootloader
+ATTRS{idVendor}=="0483", ATTRS{idProduct}=="3748|374b|374d|374e|374f|3752|3753|3754|df11", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# SEGGER J-Link
+ATTRS{idVendor}=="1366", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# CMSIS-DAP (ARM DAPLink, NXP LPC-Link)
+ATTRS{idVendor}=="0d28|1fc9", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# USBasp, USBtinyISP (AVR)
+ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="05dc", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+ATTRS{idVendor}=="1781", ATTRS{idProduct}=="0c9f", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# Atmel/Microchip programmers (AVRISP mkII, Atmel-ICE, PICkit, SAM-BA bootloader)
+ATTRS{idVendor}=="03eb|04d8", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# Cypress FX2 logic analysers (sigrok fx2lafw, Saleae clones)
+ATTRS{idVendor}=="0925", ATTRS{idProduct}=="3881", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+ATTRS{idVendor}=="1d50", ATTRS{idProduct}=="608c|608e", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+
+LABEL="t3_boards_end"

@@ -1,0 +1,8 @@
+# ISO only: drivers' firmware so Wi-Fi, Bluetooth, sound and graphics work on first boot
+# (Debian keeps these in non-free-firmware). CPU microcode fixes for Intel/AMD.
+firmware-linux firmware-linux-nonfree firmware-misc-nonfree
+firmware-iwlwifi firmware-realtek firmware-atheros firmware-brcm80211 firmware-mediatek firmware-libertas
+firmware-amd-graphics firmware-intel-graphics firmware-nvidia-graphics
+firmware-intel-sound firmware-sof-signed bluez-firmware
+intel-microcode amd64-microcode
+mesa-vulkan-drivers va-driver-all

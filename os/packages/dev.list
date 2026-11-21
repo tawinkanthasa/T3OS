@@ -4,3 +4,5 @@ python3-venv python3-pip python3-dev pipx nodejs npm golang-go rustc cargo
 git git-lfs lazygit meld
 podman podman-compose distrobox
 shellcheck ripgrep fd-find fzf tmux btop htop jq sqlitebrowser
+# ESP-IDF build prerequisites (so `t3-get esp-idf` only downloads ESP-IDF itself)
+flex bison gperf ccache libffi-dev libssl-dev libusb-1.0-0

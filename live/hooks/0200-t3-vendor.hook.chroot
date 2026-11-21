@@ -1,0 +1,29 @@
+#!/bin/sh
+# Software from outside Debian, from each vendor's official source.
+# A vendor being down must not kill the whole build: each part is allowed to fail, and
+# T3 Welcome offers whatever is missing on first login.
+export DEBIAN_FRONTEND=noninteractive
+apt-get install -y --no-install-recommends gnupg curl ca-certificates
+install -d -m 0755 /etc/apt/keyrings
+
+echo "== VS Code + Google Chrome (apt repos, so they update with the system) =="
+curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor --yes -o /etc/apt/keyrings/microsoft.gpg
+echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list
+curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor --yes -o /etc/apt/keyrings/google-chrome.gpg
+echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+apt-get update
+apt-get install -y code || echo "!! VS Code skipped"
+apt-get install -y google-chrome-stable || echo "!! Chrome skipped"
+# Chrome's package re-adds its own list file; keep only ours (same repo, our keyring)
+rm -f /etc/apt/sources.list.d/google-chrome.sources 2>/dev/null; true
+
+echo "== PlatformIO (system-wide pipx) =="
+PIPX_GLOBAL_HOME=/opt/pipx PIPX_GLOBAL_BIN_DIR=/usr/local/bin pipx install --global platformio || echo "!! PlatformIO skipped"
+
+echo "== Claude Code =="
+npm install -g @anthropic-ai/claude-code || echo "!! Claude Code skipped"
+
+echo "== Flathub + Arduino IDE 2 =="
+flatpak remote-add --if-not-exists --system flathub https://dl.flathub.org/repo/flathub.flatpakrepo || true
+flatpak install -y --system --noninteractive flathub cc.arduino.IDE2 || echo "!! Arduino IDE skipped (T3 Welcome offers it)"
+exit 0

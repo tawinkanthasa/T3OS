@@ -1,0 +1,5 @@
+# ISO only: the live session + installer (the installer removes the live-only parts after installing)
+live-boot live-config live-config-systemd
+calamares calamares-settings-debian
+# UEFI + Secure Boot (signed shim/GRUB), and legacy BIOS
+shim-signed grub-efi-amd64-signed grub-efi-amd64-bin grub-pc-bin

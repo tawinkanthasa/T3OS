@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+# T3 Doctor: check the things that usually break, say what's wrong in plain Thai and how to fix it.
+#   t3-doctor          run the checks (report also saved to ~/.cache/t3/doctor.txt)
+#   t3-doctor --ask    same, then offer to hand the report to Claude Code to fix
+# Needs no root. Every check is read-only.
+set -u
+LC_ALL=C.UTF-8
+REPORT="${XDG_CACHE_HOME:-$HOME/.cache}/t3/doctor.txt"
+mkdir -p "$(dirname "$REPORT")"; : > "$REPORT"
+ASK=0; [[ "${1:-}" == "--ask" ]] && ASK=1
+if [[ -t 1 ]]; then G=$'\e[32m' Y=$'\e[33m' R=$'\e[31m' B=$'\e[1m' D=$'\e[2m' N=$'\e[0m'; else G='' Y='' R='' B='' D='' N=''; fi
+OK=0 WARN=0 BAD=0
+PATH="$PATH:$HOME/.local/bin"   # per-user installs (Claude Code, pipx) even when not on PATH yet
+has() { command -v "$1" >/dev/null 2>&1; }
+log() { printf '%s\n' "$*" >> "$REPORT"; }
+section() { printf '\n%s%s%s\n' "$B" "$1" "$N"; log ""; log "## $1"; }
+ok()   { OK=$((OK+1));   printf '  %s✓%s %s\n' "$G" "$N" "$1"; log "  [ok]   $1"; }
+info() {                 printf '  %s·%s %s\n' "$D" "$N" "$1"; log "  [info] $1"; }
+warn() { WARN=$((WARN+1)); printf '  %s!%s %s\n' "$Y" "$N" "$1"; log "  [warn] $1"; [[ -n "${2:-}" ]] && fix "$2"; }
+bad()  { BAD=$((BAD+1)); printf '  %s✗%s %s\n' "$R" "$N" "$1"; log "  [FAIL] $1"; [[ -n "${2:-}" ]] && fix "$2"; }
+fix()  { printf '      %s→ %s%s\n' "$D" "$1" "$N"; log "         fix: $1"; }
+kernlog() { journalctl -k -b --no-pager -q 2>/dev/null || dmesg 2>/dev/null; }
+
+printf '%sT3 Doctor%s  %s\n' "$B" "$N" "$(date '+%Y-%m-%d %H:%M')"
+log "T3 Doctor report $(date -Iseconds)"
+
+# ---------------------------------------------------------------- system
+section "ระบบ"
+. /etc/os-release 2>/dev/null; info "${PRETTY_NAME:-Linux}, kernel $(uname -r), เปิดมา $(uptime -p 2>/dev/null | sed 's/^up //')"
+if has mokutil; then sb=$(mokutil --sb-state 2>/dev/null | head -1); [[ -n "$sb" ]] && info "Secure Boot: $sb"; fi
+failed=$(systemctl --failed --no-legend --plain 2>/dev/null | awk '{print $1}' | tr '\n' ' ')
+[[ -z "$failed" ]] && ok "บริการของระบบทำงานครบ" || bad "บริการที่ล้ม: $failed" "ดูสาเหตุ: journalctl -b -u <ชื่อบริการ>  แล้วลอง: sudo systemctl restart <ชื่อบริการ>"
+ufailed=$(systemctl --user --failed --no-legend --plain 2>/dev/null | awk '{print $1}' | tr '\n' ' ')
+[[ -n "$ufailed" ]] && warn "บริการของผู้ใช้ที่ล้ม: $ufailed" "journalctl --user -b -u <ชื่อบริการ>"
+
+# ---------------------------------------------------------------- disk + snapshots
+section "ดิสก์และจุดกู้คืน"
+for mp in / /home; do
+  read -r size avail pct < <(df -P -B1G "$mp" 2>/dev/null | awk 'NR==2{print $2, $4, $5}')
+  [[ -z "${size:-}" ]] && continue
+  free=$((100 - ${pct%\%}))
+  if   (( free < 5 ));  then bad  "$mp เหลือที่ว่าง ${avail} GB (${free}%)" "ลบไฟล์ใหญ่ (เปิด Filelight ดูว่าอะไรกินที่) และล้างแคช: sudo apt clean; flatpak uninstall --unused"
+  elif (( free < 15 )); then warn "$mp เหลือที่ว่าง ${avail} GB (${free}%)" "เปิด Filelight ดูว่าอะไรกินที่; จุดกู้คืนเก่าลบได้ใน Timeshift"
+  else ok "$mp ว่าง ${avail} GB จาก ${size} GB"; fi
+  [[ "$mp" == / ]] && rootfs=$(findmnt -no FSTYPE / 2>/dev/null)
+done
+if [[ "${rootfs:-}" == btrfs ]]; then
+  if [[ -s /etc/timeshift/timeshift.json ]] && grep -q '"btrfs_mode" *: *"true"' /etc/timeshift/timeshift.json; then
+    ok "จุดกู้คืน (Timeshift, Btrfs) ตั้งค่าแล้ว: สร้างให้อัตโนมัติก่อนอัปเดตทุกครั้ง"
+  else
+    warn "ยังไม่ได้ตั้งค่า Timeshift" "เปิดแอป 'จุดกู้คืน' (Timeshift) เลือกแบบ BTRFS แล้วกดตั้งค่าให้เสร็จ"
+  fi
+  if systemctl is-enabled grub-btrfsd >/dev/null 2>&1; then ok "เลือกบูตจากจุดกู้คืนได้ในเมนูตอนเปิดเครื่อง"
+  else warn "เมนูบูตยังไม่แสดงจุดกู้คืน" "sudo systemctl enable --now grub-btrfsd && sudo update-grub"; fi
+else
+  info "ระบบไฟล์ / เป็น ${rootfs:-?} (ไม่ใช่ Btrfs): ไม่มีจุดกู้คืนอัตโนมัติ"
+fi
+
+# ---------------------------------------------------------------- memory
+section "หน่วยความจำ"
+read -r mt ma < <(awk '/MemTotal/{t=$2}/MemAvailable/{a=$2}END{print int(t/1024), int(a/1024)}' /proc/meminfo)
+(( ma < mt / 10 )) && warn "RAM เหลือน้อย: ว่าง ${ma} MB จาก ${mt} MB" "ปิดแอป/แท็บที่ไม่ใช้; ดูว่าใครกิน RAM ด้วย: btop" || ok "RAM ว่าง ${ma} MB จาก ${mt} MB"
+swapon --show=NAME --noheadings 2>/dev/null | grep -q zram && ok "zram (swap บีบอัดใน RAM) ทำงาน" || info "ไม่มี zram swap"
+
+# ---------------------------------------------------------------- network
+section "อินเทอร์เน็ต"
+if has nmcli; then
+  conn=$(nmcli -t -f CONNECTIVITY general 2>/dev/null)
+  # NetworkManager can be wrong (VMs, WSL, manual setups): an actual request wins
+  [[ "$conn" != full && "$conn" != portal ]] && curl -sf -m 5 -o /dev/null https://deb.debian.org/ && conn=full
+  case "$conn" in
+    full) ok "ต่ออินเทอร์เน็ตได้" ;;
+    portal) warn "ต้องล็อกอินหน้าเว็บของ Wi-Fi ก่อน (เช่น Wi-Fi โรงแรม/มหาลัย)" "เปิดเบราว์เซอร์ไปที่เว็บใดก็ได้ หน้าล็อกอินจะขึ้นมาเอง" ;;
+    limited) bad "ต่อเครือข่ายได้แต่ออกเน็ตไม่ได้" "ปิด-เปิด Wi-Fi หรือรีสตาร์ทเราเตอร์; ตรวจ DNS: resolvectl status" ;;
+    *) bad "ไม่ได้ต่อเครือข่าย" "คลิกไอคอน Wi-Fi มุมขวาบนแล้วเลือกเครือข่าย" ;;
+  esac
+  if ! nmcli -t -f TYPE device 2>/dev/null | grep -qx wifi; then
+    if lspci 2>/dev/null | grep -qiE 'network controller|wireless' || lsusb 2>/dev/null | grep -qiE 'wireless|wlan|802\.11'; then
+      bad "มีการ์ด Wi-Fi แต่ระบบใช้งานไม่ได้" "มักขาด firmware: ดูชื่อไฟล์ที่ขาดใน 'journalctl -k -b | grep -i firmware' แล้วติดตั้งแพ็กเกจ firmware-* ที่ตรงกัน"
+    else info "เครื่องนี้ไม่มี Wi-Fi (ใช้สาย LAN)"; fi
+  fi
+else
+  info "ไม่มี nmcli"
+fi
+fw=$(kernlog | grep -iE 'firmware: failed to load|direct firmware load for .* failed' | sed -E 's/.*(load|for) ([^ ]+).*/\2/' | sort -u | head -5 | tr '\n' ' ')
+[[ -n "$fw" ]] && warn "ไดรเวอร์หา firmware ไม่เจอ: $fw" "ค้นว่าไฟล์อยู่แพ็กเกจไหน: apt-file search <ชื่อไฟล์> (มักเป็น firmware-misc-nonfree / firmware-realtek / firmware-iwlwifi)"
+
+# ---------------------------------------------------------------- sound, bluetooth, graphics
+section "เสียง บลูทูธ จอ"
+if has pactl; then
+  sink=$(pactl get-default-sink 2>/dev/null)
+  if [[ -z "$sink" || "$sink" == auto_null ]]; then
+    bad "ไม่เจออุปกรณ์เสียง" "เครื่อง Intel รุ่นใหม่มักขาด firmware-sof-signed: sudo apt install firmware-sof-signed แล้วรีบูต"
+  else
+    mute=$(pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | awk '{print $2}')
+    vol=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -oE '[0-9]+%' | head -1)
+    [[ "$mute" == yes ]] && warn "เสียงถูกปิดอยู่ (mute)" "กดไอคอนลำโพงมุมขวาบนเพื่อเปิดเสียง" || ok "เสียงออกที่ ${sink##*.} ระดับ ${vol:-?}"
+  fi
+fi
+if has bluetoothctl && compgen -G '/sys/class/bluetooth/*' >/dev/null; then
+  bluetoothctl show 2>/dev/null | grep -q 'Powered: yes' && ok "บลูทูธเปิดอยู่" || info "บลูทูธปิดอยู่ (เปิดได้จากมุมขวาบน)"
+fi
+info "หน้าจอ: ${XDG_SESSION_TYPE:-?}, $(lspci 2>/dev/null | grep -iE 'vga|3d|display' | sed 's/^[^:]*: //' | head -2 | paste -sd ';' -)"
+if lspci -k 2>/dev/null | grep -A3 -iE 'vga|3d' | grep -q 'in use: nouveau'; then
+  warn "การ์ดจอ NVIDIA ใช้ไดรเวอร์ทั่วไป (nouveau): ใช้งานได้แต่ช้า" "ถ้าต้องการความเร็ว: เปิด T3 Welcome > ติดตั้งเพิ่ม > ไดรเวอร์ NVIDIA"
+fi
+
+# ---------------------------------------------------------------- boards
+section "บอร์ดและพอร์ต"
+groups=" $(id -nG) "
+for g in dialout plugdev; do
+  [[ "$groups" == *" $g "* ]] && ok "อยู่ในกลุ่ม $g" || bad "ยังไม่อยู่ในกลุ่ม $g (แฟลชบอร์ดจะขึ้น Permission denied)" "sudo usermod -aG $g $USER แล้วออกจากระบบ-เข้าใหม่"
+done
+[[ -f /etc/udev/rules.d/99-t3-boards.rules ]] && ok "กฎ USB ของบอร์ด (ESP32, Pico, ST-Link ...) ติดตั้งแล้ว" || warn "ไม่มีกฎ USB ของ T3" "sudo install -m644 /usr/share/t3/udev/99-t3-boards.rules /etc/udev/rules.d/ && sudo udevadm control --reload && sudo udevadm trigger"
+ports=$(ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null)
+if [[ -z "$ports" ]]; then
+  info "ยังไม่ได้เสียบบอร์ด (ไม่มี /dev/ttyUSB* หรือ /dev/ttyACM*)"
+  lsusb 2>/dev/null | grep -qi '2e8a:0003' && ok "เจอ Pico ในโหมด BOOTSEL (ลากไฟล์ .uf2 ลงไดรฟ์ RPI-RP2 หรือใช้ picotool load)"
+else
+  for p in $ports; do
+    if [[ -r "$p" && -w "$p" ]]; then
+      if has fuser && fuser "$p" >/dev/null 2>&1; then warn "$p มีโปรแกรมอื่นเปิดค้างอยู่" "ปิด Serial Monitor ในแอปอื่นก่อนแฟลช (ดูว่าใครเปิด: fuser -v $p)"
+      else ok "$p พร้อมใช้"; fi
+    else bad "$p ไม่มีสิทธิ์อ่าน/เขียน" "ออกจากระบบแล้วเข้าใหม่ (ถ้าเพิ่งเพิ่มกลุ่ม dialout) หรือถอดแล้วเสียบใหม่"; fi
+  done
+fi
+systemctl is-active ModemManager >/dev/null 2>&1 && info "ModemManager ทำงาน (พอร์ตบอร์ดถูกยกเว้นไว้แล้วด้วยกฎ USB ของ T3)"
+if [[ -z "$(ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null)" ]] && lsusb 2>/dev/null | grep -qiE '10c4:ea60|1a86:7523|1a86:55d4'; then
+  bad "เสียบบอร์ดแล้วแต่ไม่เกิดพอร์ต" "Ubuntu/Debian บางเครื่องมี brltty แย่งพอร์ต CH340: sudo apt remove brltty แล้วเสียบใหม่"
+fi
+
+# ---------------------------------------------------------------- T3 + AI + tools
+section "T3, AI และเครื่องมือ"
+if curl -sf -m 2 http://127.0.0.1:7300/api/status >/dev/null 2>&1; then ok "T3 Bench (benchd) ทำงาน"
+else bad "T3 Bench (benchd) ไม่ทำงาน" "สั่งเปิดใหม่: (benchd >/dev/null 2>&1 &) ; ถ้ายังไม่ได้ ดู error: benchd"; fi
+AI="${XDG_CONFIG_HOME:-$HOME/.config}/bench/ai.toml"
+url=$( [[ -f "$AI" ]] && sed -n '/^\[ai.local\]/,/^\[/{s/^url *= *"\(.*\)"/\1/p}' "$AI" | head -1 )
+if [[ -z "$url" ]]; then info "ยังไม่ได้ใส่ URL ของ LM Studio (ตั้งได้ใน T3 Settings > AI)"
+elif curl -sf -m 4 "${url%/}/models" >/dev/null 2>&1; then ok "LM Studio ($url) ตอบกลับ"
+else warn "ติดต่อ LM Studio ที่ $url ไม่ได้" "เช็กว่าเครื่อง LM Studio เปิดอยู่ เปิด 'Serve on Local Network' และอยู่วงแลนเดียวกัน"; fi
+if has claude; then ok "Claude Code $(claude --version 2>/dev/null | head -1)"
+else warn "ยังไม่มี Claude Code" "t3-get claude"; fi
+for t in pio:PlatformIO esptool:esptool picotool:picotool arduino-cli:arduino-cli; do
+  has "${t%%:*}" && ok "${t#*:} พร้อม" || info "ไม่มี ${t#*:}"
+done
+[[ -f "$HOME/esp/esp-idf/export.sh" ]] && ok "ESP-IDF ติดตั้งแล้ว (เปิดใช้: get_idf)" || info "ยังไม่ได้ติดตั้ง ESP-IDF (ติดตั้งได้: t3-get esp-idf)"
+
+# ---------------------------------------------------------------- updates + time
+section "อัปเดตและเวลา"
+if has apt-get; then
+  n=$(apt-get -s -o Debug::NoLocking=1 upgrade 2>/dev/null | grep -c '^Inst ')
+  sec=$(apt-get -s -o Debug::NoLocking=1 upgrade 2>/dev/null | grep '^Inst ' | grep -ci security)
+  if (( n == 0 )); then ok "ระบบเป็นเวอร์ชันล่าสุด"
+  else warn "มีอัปเดต $n รายการ (ความปลอดภัย $sec)" "เปิด 'ร้านแอป' (Discover) > อัปเดต > อัปเดตทั้งหมด (ระบบสร้างจุดกู้คืนให้ก่อน)"; fi
+fi
+if has timedatectl; then
+  timedatectl show -p NTPSynchronized --value 2>/dev/null | grep -q yes && ok "นาฬิกาตรงกับอินเทอร์เน็ต" || warn "นาฬิกายังไม่ซิงก์" "sudo systemctl restart systemd-timesyncd"
+  if efibootmgr 2>/dev/null | grep -qi 'windows boot manager'; then
+    [[ "$(timedatectl show -p LocalRTC --value 2>/dev/null)" == yes ]] && ok "ตั้งเวลาให้ใช้ร่วมกับ Windows ได้แล้ว" \
+      || warn "มี Windows ในเครื่องเดียวกัน: เวลาใน Windows จะเพี้ยน 7 ชม. หลังใช้ T3" "sudo timedatectl set-local-rtc 1"
+  fi
+fi
+
+# ---------------------------------------------------------------- summary
+printf '\n%sสรุป:%s %s✓ %d%s  %s! %d%s  %s✗ %d%s\n' "$B" "$N" "$G" "$OK" "$N" "$Y" "$WARN" "$N" "$R" "$BAD" "$N"
+printf '%sรายงานเก็บไว้ที่ %s%s\n' "$D" "$REPORT" "$N"
+log ""; log "summary: ok=$OK warn=$WARN fail=$BAD"
+
+if (( ASK )); then
+  if (( WARN + BAD > 0 )) && has claude; then
+    printf '\nให้ Claude ช่วยดูและแก้ไหม? (มันจะถามก่อนรันทุกคำสั่ง) [y/N] '
+    read -r a
+    [[ "$a" == [yY]* ]] && exec claude "อ่านรายงาน T3 Doctor ที่ $REPORT แล้วช่วยแก้ปัญหาที่เป็น [warn] และ [FAIL] ทีละข้อ อธิบายเป็นภาษาไทย ถามก่อนรันคำสั่งที่ต้องใช้ sudo"
+  else
+    printf '\nกด Enter เพื่อปิด '; read -r _
+  fi
+fi
+(( BAD == 0 ))

@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Put the T3 desktop back the way it shipped (menu bar, dock, theme, shortcuts) without touching files.
+#   t3-reset-desktop            ask, then reset the running desktop
+#   t3-reset-desktop --yes      no question (from a terminal / Claude)
+#   t3-reset-desktop --session  used by the "T3 (รีเซ็ตหน้าจอ)" login choice: reset, then start Plasma
+#   t3-reset-desktop --undo     put the last backup back
+# The old settings are moved, never deleted: ~/.local/share/t3/desktop-backups/<time>/
+set -euo pipefail
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}"
+BK_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/t3/desktop-backups"
+# layout, theme, window manager, shortcuts, keyboard, notifications; nothing app-specific
+FILES=(plasma-org.kde.plasma.desktop-appletsrc plasmashellrc plasmarc kdeglobals kwinrc kwinrulesrc
+       kglobalshortcutsrc khotkeysrc kxkbrc plasmanotifyrc kscreenlockerrc ksplashrc kdedefaults)
+mode="${1:-}"
+
+restore() {
+  last=$(ls -1d "$BK_ROOT"/*/ 2>/dev/null | tail -1)
+  [[ -z "$last" ]] && { echo "ไม่มีข้อมูลสำรองให้ย้อนกลับ"; exit 1; }
+  cp -a "$last". "$CFG/"
+  echo "คืนค่าจาก $last แล้ว"
+}
+
+backup_and_clear() {
+  bk="$BK_ROOT/$(date +%Y%m%d-%H%M%S)"; mkdir -p "$bk"
+  for f in "${FILES[@]}"; do [[ -e "$CFG/$f" ]] && mv "$CFG/$f" "$bk/"; done
+  rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}"/plasmashell "${XDG_CACHE_HOME:-$HOME/.cache}"/plasma_theme_* \
+         "${XDG_CACHE_HOME:-$HOME/.cache}"/ksycoca6_* 2>/dev/null || true
+  # keep only the 10 newest backups
+  ls -1d "$BK_ROOT"/*/ 2>/dev/null | head -n -10 | xargs -r rm -rf
+  echo "ตั้งค่าเดิมย้ายไปไว้ที่ $bk"
+}
+
+restart_shell() {
+  kquitapp6 plasmashell >/dev/null 2>&1 || pkill -x plasmashell || true
+  for _ in $(seq 20); do pgrep -x plasmashell >/dev/null || break; sleep 0.25; done
+  (setsid kstart plasmashell >/dev/null 2>&1 || setsid plasmashell >/dev/null 2>&1) &
+  if command -v qdbus6 >/dev/null; then qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1 || true; fi
+}
+
+case "$mode" in
+  --undo)
+    restore; [[ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ]] && restart_shell ;;
+  --session)
+    backup_and_clear
+    exec $(sed -n 's/^Exec=//p' /usr/share/wayland-sessions/plasma.desktop | head -1) ;;
+  --yes)
+    backup_and_clear; restart_shell ;;
+  *)
+    msg="หน้าจอจะกลับเป็นแบบ T3 ตอนติดตั้ง (แถบเมนู, Dock, ธีม, คีย์ลัด)\nไฟล์และแอปของคุณไม่ถูกแตะ ตั้งค่าเดิมเก็บสำรองไว้ ย้อนกลับได้"
+    if command -v kdialog >/dev/null && [[ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ]]; then
+      kdialog --title "รีเซ็ตหน้าจอ T3" --warningcontinuecancel "$(printf "$msg")" --continue-label "รีเซ็ต" || exit 0
+    else
+      printf "$msg\nทำต่อ? [y/N] "; read -r a; [[ "$a" == [yY]* ]] || exit 0
+    fi
+    backup_and_clear; restart_shell ;;
+esac

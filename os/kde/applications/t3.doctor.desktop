@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=T3 Doctor
+GenericName=ตรวจเครื่อง
+Comment=ตรวจ Wi-Fi เสียง ดิสก์ บอร์ด AI แล้วบอกวิธีแก้ (ให้ Claude ช่วยแก้ได้)
+Exec=konsole --hidemenubar -p tabtitle="T3 Doctor" -e /usr/share/t3/bin/t3-doctor --ask
+Icon=t3-doctor
+Categories=System;Monitor;
+Keywords=t3;doctor;fix;problem;แก้ปัญหา;ตรวจ;wifi;sound;

@@ -1,0 +1,34 @@
+#!/bin/bash
+# Calamares step (in the installed system): finish the T3-specific setup.
+set -u
+USER_NAME="${1:-}"
+log() { echo "T3: $*"; }
+
+# live-session-only bits must not reach the installed system
+rm -f /etc/sddm.conf.d/zz-t3-live.conf /etc/sudoers.d/zz-t3-live
+
+# groups for flashing boards / reading logs (users.conf adds them too; this covers manual installs)
+[ -n "$USER_NAME" ] && id "$USER_NAME" >/dev/null 2>&1 && usermod -aG dialout,plugdev,adm "$USER_NAME"
+
+# dual boot with Windows: keep the hardware clock in local time so Windows doesn't jump 7 hours
+if efibootmgr 2>/dev/null | grep -qi 'windows boot manager' || os-prober 2>/dev/null | grep -qi windows; then
+  log "เจอ Windows: ตั้งนาฬิกาให้ใช้ร่วมกันได้"
+  printf '0.0 0 0.0\n0\nLOCAL\n' > /etc/adjtime
+fi
+
+# snapshots: only on a Btrfs root with the @ / @home layout
+if [ "$(findmnt -no FSTYPE /)" = btrfs ]; then
+  install -d /etc/timeshift
+  sed "s/@UUID@/$(findmnt -no UUID /)/" /usr/share/t3/timeshift.json.in > /etc/timeshift/timeshift.json
+  systemctl enable grub-btrfsd.service t3-snapshot.timer >/dev/null 2>&1
+  log "ตั้งค่าจุดกู้คืน (Timeshift + เมนูบูต) แล้ว"
+else
+  systemctl disable grub-btrfsd.service >/dev/null 2>&1
+  log "ไม่ใช่ Btrfs: ไม่มีจุดกู้คืนอัตโนมัติ"
+fi
+
+# the installer is gone after this; drop its launcher
+rm -f /usr/share/applications/calamares-install-debian.desktop /etc/xdg/autostart/calamares-desktop-icon.desktop
+
+update-grub >/dev/null 2>&1 || log "update-grub ล้มเหลว"
+exit 0

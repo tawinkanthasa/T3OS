@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Runs once a day (systemd user timer t3-update-check.timer): if a newer T3 is published,
+# show a notification with an "อัปเดต" button. Debian/app/firmware updates are announced by
+# Discover's own tray icon; this only covers T3's own files.
+set -uo pipefail
+# shellcheck disable=SC1091
+[[ -f /etc/t3/update.conf ]] && . /etc/t3/update.conf
+[[ -z "${repo:-}" ]] && exit 0
+have=$(cut -d' ' -f1 /usr/share/t3/VERSION 2>/dev/null)
+new=$(timeout 20 git ls-remote "$repo" "refs/heads/${branch:-main}" 2>/dev/null | cut -c1-12)
+[[ -z "$new" || "$new" == "${have:0:12}" ]] && exit 0
+state="${XDG_STATE_HOME:-$HOME/.local/state}/t3"; mkdir -p "$state"
+[[ "$(cat "$state/update-dismissed" 2>/dev/null)" == "$new" ]] && exit 0
+act=$(notify-send -a "T3" -i t3-logo -u normal -w \
+        --action=update="อัปเดต" --action=later="ไว้ทีหลัง" \
+        "T3 มีเวอร์ชันใหม่" "อัปเดตหน้าจอ, Bench และเครื่องมือของ T3 ได้เลย ไม่ต้องลงใหม่ ไฟล์และการตั้งค่าของคุณอยู่ครบ")
+case "$act" in
+  update) exec konsole --hold -e /usr/share/t3/bin/t3-get t3 ;;
+  later)  echo "$new" > "$state/update-dismissed" ;;
+esac

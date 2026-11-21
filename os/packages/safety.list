@@ -3,3 +3,5 @@
 # in the ISO since Debian doesn't package it), compressed RAM swap, out-of-memory guard,
 # automatic security updates.
 btrfs-progs timeshift zram-tools systemd-oomd unattended-upgrades
+# grub-btrfs (built in the ISO) needs these
+inotify-tools gawk git make
