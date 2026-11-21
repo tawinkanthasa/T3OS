@@ -22,6 +22,10 @@ var menu = bar.addWidget("org.kde.plasma.kickoff");        // T3 menu: apps, pla
 menu.currentConfigGroup = ["General"];
 menu.writeConfig("icon", "t3-logo");
 menu.writeConfig("favoritesDisplay", "1");                  // list, not grid
+// first page of the T3 menu; "รีสตาร์ทเข้า Windows" restarts into Windows once (asks first)
+menu.writeConfig("favorites", ["preferred://browser", "applications:org.kde.dolphin.desktop",
+    "applications:org.kde.discover.desktop", "applications:t3.settings.desktop",
+    "applications:t3.windows.desktop"].join(","));
 
 bar.addWidget("org.kde.plasma.appmenu");                    // the focused app's menus (File, Edit, ...)
 bar.addWidget("org.kde.plasma.panelspacer");
