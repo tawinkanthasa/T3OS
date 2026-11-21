@@ -6,7 +6,13 @@ $iso  = Get-ChildItem "C:\Users\tawin\T3OS\build\t3-*-amd64.iso" | Sort-Object L
 $dir  = "C:\Users\tawin\T3OS\vm"
 if (-not $iso) { throw "No ISO found in C:\Users\tawin\T3OS\build" }
 if (Get-VM -Name $name -ErrorAction SilentlyContinue) {
-  Write-Host "VM $name already exists: starting it"
+  # existing VM: put the newest ISO in its DVD drive and boot from it first
+  if ((Get-VM -Name $name).State -ne "Off") { Stop-VM -Name $name -TurnOff -Force }
+  $dvd = Get-VMDvdDrive -VMName $name
+  if (-not $dvd) { Add-VMDvdDrive -VMName $name -Path $iso.FullName; $dvd = Get-VMDvdDrive -VMName $name }
+  else { Set-VMDvdDrive -VMName $name -ControllerNumber $dvd.ControllerNumber -ControllerLocation $dvd.ControllerLocation -Path $iso.FullName }
+  Set-VMFirmware -VMName $name -FirstBootDevice (Get-VMDvdDrive -VMName $name)
+  Write-Host "VM $name now boots from $($iso.Name)"
 } else {
   New-Item -ItemType Directory -Force $dir | Out-Null
   New-VM -Name $name -Generation 2 -MemoryStartupBytes 6GB -NewVHDPath "$dir\t3-test.vhdx" `

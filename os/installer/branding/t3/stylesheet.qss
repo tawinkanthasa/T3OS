@@ -1,3 +1,6 @@
+QWidget { background-color: #1b1c1f; color: #e6e8ea; }
+QScrollArea, QAbstractScrollArea, QListView, QTreeView, QTextBrowser { background-color: #17181b; border: 0; }
+QLabel { background: transparent; }
 /* T3 installer: dark window, green primary button (matches the T3 design) */
 #mainApp { background: #1b1c1f; color: #e6e8ea; }
 #sidebarApp { background: #141517; }

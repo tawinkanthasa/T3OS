@@ -20,8 +20,8 @@ terminal-box: "term_*.png"
 }
 
 + progress_bar { id = "__timeout__" left = 50%-320 top = 35%+344 width = 640 height = 3
-  fg_color = "#3fb950" bg_color = "#1c2a21" border_color = "#1c2a21" show_text = false }
-+ label { left = 50%-320 top = 35%+358 width = 640 height = 20 align = "left"
+  fg_color = "#3fb950" bg_color = "#1c2a21" border_color = "#1c2a21" show_text = false text = "" font = "DejaVu Sans Mono Regular 13" }
++ label { left = 50%-320 top = 35%+376 width = 640 height = 20 align = "left"
           text = "@HINT@" color = "#8fa89a" font = "DejaVu Sans Mono Regular 13" }
-+ label { id = "__timeout__" left = 50%-320 top = 35%+358 width = 640 height = 20 align = "right"
++ label { id = "__timeout__" left = 50%-320 top = 35%+376 width = 640 height = 20 align = "right"
           text = "@TIMEOUT_NOTIFICATION_MIDDLE@" color = "#8fa89a" font = "DejaVu Sans Mono Regular 13" }
