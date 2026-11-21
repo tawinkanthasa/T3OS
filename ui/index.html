@@ -403,7 +403,15 @@ document.addEventListener('keydown',e=>{if(/^F[1-467]$/.test(e.key)){e.preventDe
 const term=new Terminal({fontFamily:'"JetBrains Mono",Consolas,monospace',fontSize:14,cursorBlink:true,allowProposedApi:true,
   theme:{background:'#0a0d0b',foreground:'#d3e6da',cursor:'#3fb950',selectionBackground:'#21362b',green:'#3fb950',brightGreen:'#56d364',yellow:'#ffb000',red:'#f85149',black:'#0a0d0b',brightBlack:'#76917f'}});
 const fitAddon=new FitAddon.FitAddon();term.loadAddon(fitAddon);term.open($('#term'));
-term.attachCustomKeyEventHandler(e=>!/^F[1-467]$/.test(e.key));
+// Copy/paste like Windows Terminal: Ctrl+C copies when text is selected (otherwise it stops the program as
+// usual), Ctrl+V pastes; Ctrl+Shift+C/V too. Returning false lets the browser's own copy/paste event reach
+// xterm (it fills/reads the clipboard itself), so no clipboard permission is needed.
+term.attachCustomKeyEventHandler(e=>{
+  if(/^F[1-467]$/.test(e.key))return false;
+  if(e.ctrlKey&&!e.altKey&&!e.metaKey){const k=e.key.toLowerCase();
+    if(k==='c'&&(e.shiftKey||term.hasSelection())){if(e.type==='keydown')setTimeout(()=>term.clearSelection(),0);return false}
+    if(k==='v')return false}
+  return true});
 let pty=null;
 function fit(){try{fitAddon.fit();pty?.readyState===1&&pty.send(JSON.stringify({type:'resize',cols:term.cols,rows:term.rows}))}catch{}}
 function typeIn(s){pty?.readyState===1&&pty.send(new TextEncoder().encode(s));term.focus()}
