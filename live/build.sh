@@ -51,8 +51,8 @@ git -C "$REPO" rev-parse --short=12 HEAD > "$SRC/COMMIT" 2>/dev/null || echo unk
 list maker > "$SRC/maker.list"
 
 # ---- hooks (run inside the image, in name order)
-cp "$REPO"/live/hooks/*.hook.chroot config/hooks/normal/
-chmod +x config/hooks/normal/*.hook.chroot
+# (lb config already put symlinks to its own root-owned hooks there: touch only ours)
+for h in "$REPO"/live/hooks/*.hook.chroot; do install -m 0755 "$h" config/hooks/normal/; done
 
 echo "== building T3 ISO in $WORK (log: $WORK/build.log) =="
 sudo lb build 2>&1 | tee build.log
