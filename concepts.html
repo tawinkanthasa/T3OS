@@ -1,0 +1,251 @@
+<title>T3 OS Concepts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans+Thai:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+/* Layout: a contact sheet of static OS screens — header, then one framed 16:10 screen per concept with a caption column. Single deliberate dark look. */
+:root{
+  --bg:#0e0f11; --fg:#e7e9ec; --mute:#8b929c; --line:#2a2e35; --card:#16181c;
+  --pcb:#3fb950; --amber:#ffb000; --info:#58a6ff; --bad:#f85149; --warn:#f0883e;
+  --display:"Chakra Petch","IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"IBM Plex Sans Thai",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--body);padding:32px max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+header h1{font-family:var(--display);font-size:clamp(28px,4vw,44px);margin:0;line-height:1.1;text-wrap:balance}
+header h1 b{background:var(--pcb);color:#04140a;padding:0 10px;margin-right:8px}
+header p{color:var(--mute);max-width:65ch;margin:10px 0 0}
+.concept{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:24px;align-items:start}
+.cap{display:flex;flex-direction:column;gap:10px}
+.cap .id{font-family:var(--mono);color:var(--mute);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.cap h2{font-family:var(--display);font-size:24px;margin:0;line-height:1.2}
+.cap p{margin:0;color:var(--mute);font-size:14px}
+.cap ul{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.pill{display:inline-block;font-family:var(--mono);font-size:11px;border:1px solid var(--line);padding:2px 8px;margin-right:4px}
+
+/* the screen frame: everything inside is sized in em off container width */
+.screen{container-type:inline-size;aspect-ratio:16/10;max-width:100%;border:1px solid var(--line);border-radius:6px;overflow:hidden;position:relative;box-shadow:0 20px 50px rgb(0 0 0 / .45)}
+.s{position:absolute;inset:0;font-size:1.45cqw;line-height:1.45;display:flex;flex-direction:column}
+.m{font-family:var(--mono)}
+
+/* 0 boot */
+.boot{background:radial-gradient(circle at 50% 40%,#13261b 0,#07100b 60%);color:#cfe8d6;align-items:center;justify-content:center;gap:2.2em}
+.boot .logo{font-family:var(--display);font-size:4.2em;font-weight:700;letter-spacing:.06em;line-height:1}
+.boot .logo span{color:var(--pcb)}
+.oss{display:flex;gap:2em}
+.os{width:15em;padding:1.4em;border:.12em solid #2a4535;background:#0b1711;display:flex;flex-direction:column;gap:.5em}
+.os.sel{border-color:var(--pcb);box-shadow:0 0 1.5em #3fb95055}
+.os b{font-family:var(--display);font-size:1.5em}
+.os small{color:#7fa08c;font-family:var(--mono);font-size:.8em}
+.boot .hint{font-family:var(--mono);font-size:.85em;color:#7fa08c}
+.boot .hint b{color:var(--pcb)}
+
+/* A terminal */
+.term{background:#0a0d0b;color:#cde3d4;font-family:var(--mono)}
+.tbar{display:flex;gap:1.6em;padding:.45em 1em;background:#122019;font-size:.85em;color:#8fb39d}
+.tbar b{color:var(--pcb)}
+.tbody{flex:1;display:grid;grid-template-columns:1fr 20em;min-height:0}
+.tl{padding:1em 1.2em;display:flex;flex-direction:column;gap:.15em;font-size:.95em}
+.p{color:var(--pcb)} .d{color:#6f8a7a} .e{color:var(--bad)} .ok{color:var(--pcb)} .w{color:var(--warn)}
+.claude{margin:.6em 0;border-left:.2em solid #d97757;padding:.4em .8em;background:#17120f;color:#f3d9cc}
+.claude .k{color:#d97757}
+.float{border-left:1px solid #1f3328;padding:.8em 1em;display:flex;flex-direction:column;gap:.9em;background:#0c1410;font-size:.85em}
+.float h5{margin:0;font-size:.85em;color:#6f8a7a;letter-spacing:.1em}
+.box{border:1px solid #1f3328;padding:.6em .7em}
+.cur{display:inline-block;width:.6em;height:1.1em;background:var(--pcb);vertical-align:text-bottom}
+
+/* B bench */
+.bench{background-color:#1d3b2c;background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:2.5em 2.5em;color:#eaf4ee}
+.dock{position:absolute;left:50%;bottom:1em;transform:translateX(-50%);display:flex;gap:.6em;background:#0d1a14dd;padding:.5em .8em;border-radius:1em;font-size:.8em}
+.dock span{padding:.3em .8em;border-radius:.6em;background:#1b3226}
+.obj{position:absolute;border-radius:.4em;box-shadow:0 .6em 1.2em #0007;font-size:.85em}
+.esp{left:8%;top:14%;width:20em;height:9em;background:#1b1b1b;border:.15em solid #333;color:#ddd;padding:.7em}
+.esp .pins{position:absolute;left:.6em;right:.6em;display:flex;justify-content:space-between}
+.esp .pins i{width:.55em;height:.55em;background:#c9a227;border-radius:50%}
+.esp .chipm{position:absolute;left:6em;top:2.2em;width:7em;height:4.6em;background:#888;border-radius:.2em;display:grid;place-items:center;color:#222;font-family:var(--mono);font-weight:700}
+.dht{left:52%;top:12%;width:8em;height:10em;background:#e8e8e8;color:#222;padding:.6em;display:flex;flex-direction:column;gap:.4em}
+.dht .grill{flex:1;background:repeating-linear-gradient(90deg,#bbb 0 .3em,#e8e8e8 .3em .6em)}
+.win{background:#0d1310f2;border:1px solid #2f5341;color:#cde3d4;font-family:var(--mono);padding:0}
+.win .wt{padding:.3em .7em;background:#18291f;font-size:.85em;color:#8fb39d;border-radius:.4em .4em 0 0}
+.win .wb{padding:.6em .8em}
+.scope{left:8%;top:52%;width:22em}
+.tw{left:40%;top:56%;width:22em}
+.note{right:5%;top:14%;width:14em;background:#ffe27a;color:#3b2f00;padding:.8em;transform:rotate(2deg);font-family:var(--body)}
+.note b{display:block;font-size:.85em}
+svg.wires{position:absolute;inset:0;width:100%;height:100%}
+
+/* C instrument */
+.inst{background:#141210;color:var(--amber);font-family:var(--mono)}
+.ibar{display:flex;justify-content:space-between;padding:.5em 1.2em;border-bottom:.15em solid #3d2b10;font-size:.9em}
+.ibody{flex:1;display:grid;grid-template-columns:1fr 15em;gap:1em;padding:1em 1.2em;min-height:0}
+.scr{border:.15em solid #3d2b10;background:#0c0904;position:relative;background-image:linear-gradient(#ffb00014 1px,transparent 1px),linear-gradient(90deg,#ffb00014 1px,transparent 1px);background-size:10% 12.5%}
+.scr svg{position:absolute;inset:0;width:100%;height:100%}
+.read{display:flex;flex-direction:column;gap:.7em}
+.rd{border:.15em solid #3d2b10;padding:.5em .7em}
+.rd small{color:#b08a4a;font-size:.75em;display:block}
+.rd b{font-size:1.9em;font-weight:700;line-height:1.1}
+.ai{border:.15em solid var(--amber);padding:.5em .7em;font-size:.85em;color:#ffd68a}
+.fk{display:grid;grid-template-columns:repeat(6,1fr);gap:.5em;padding:0 1.2em 1em}
+.fk span{border:.15em solid #3d2b10;padding:.4em;text-align:center;font-size:.8em}
+.fk span.on{background:var(--amber);color:#1a1000;border-color:var(--amber)}
+
+/* D logbook */
+.log{background:#f2efe8;color:#22201c;font-family:var(--body)}
+.lbar{display:flex;align-items:center;gap:1em;padding:.6em 1.4em;border-bottom:1px solid #d6d0c4;font-size:.9em}
+.lbar b{font-family:var(--display);font-size:1.3em}
+.lbody{flex:1;display:grid;grid-template-columns:17em 1fr;min-height:0}
+.tline{padding:1em 1.2em;border-right:1px solid #d6d0c4;display:flex;flex-direction:column;gap:.9em;font-size:.85em}
+.ev{display:grid;grid-template-columns:3.2em 1fr;gap:.6em}
+.ev time{font-family:var(--mono);color:#8a8273;font-size:.85em}
+.ev .t{border-left:.2em solid #c8c0b0;padding-left:.6em}
+.ev.er .t{border-color:var(--bad)} .ev.ai .t{border-color:#d97757} .ev.okk .t{border-color:#2f8f46}
+.lmain{padding:1.2em 1.6em;display:flex;flex-direction:column;gap:.9em}
+.lmain h3{margin:0;font-family:var(--display);font-size:1.7em;line-height:1.1}
+.lterm{background:#1d1c19;color:#e9e4d8;font-family:var(--mono);padding:.8em 1em;font-size:.9em;border-radius:.3em}
+.lterm .p{color:#8fd19e}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:.8em;font-size:.85em}
+.kv div{border-top:.15em solid #22201c;padding-top:.3em}
+.kv b{display:block;font-family:var(--mono);font-size:1.2em}
+
+@media (max-width:860px){.concept{grid-template-columns:minmax(0,1fr)}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1><b>T3</b>แบบหน้าตา 4 แนว + หน้าเลือก OS</h1>
+  <p>ทุกภาพเป็นภาพนิ่ง ดูแล้วเลือกแนวที่ชอบ (หรือเอาหลายแนวมารวมกันก็ได้) จากนั้นผมจะทำแบบที่เลือกให้กดได้จริง</p>
+</header>
+
+<!-- 0 BOOT -->
+<section class="concept">
+  <div class="screen"><div class="s boot">
+    <div class="logo">T<span>3</span></div>
+    <div class="oss">
+      <div class="os sel"><b>T3 OS</b><small>Linux 6.12 · ESP32 ●</small><small>▸ บูตใน 5 วินาที</small></div>
+      <div class="os"><b>Windows 11</b><small>NVMe · WD_BLACK</small><small>&nbsp;</small></div>
+    </div>
+    <div class="hint"><b>←→</b> เลือก &nbsp; <b>Enter</b> บูต &nbsp; <b>T</b> terminal อย่างเดียว &nbsp; <b>S</b> safe mode</div>
+  </div></div>
+  <div class="cap">
+    <span class="id">00 · ตอนเปิดเครื่อง</span>
+    <h2>หน้าเลือก OS</h2>
+    <p>ขึ้นทุกครั้งที่เสียบไดรฟ์ T3 ไว้ เป็นธีม GRUB ที่ทำเอง ถ้าถอดไดรฟ์ออก เครื่องจะเข้า Windows ตรง ๆ</p>
+    <ul><li>เลือก T3 แล้วกด <b>T</b> = เข้า terminal อย่างเดียว ไม่เปิดหน้าจอ</li><li>นับถอยหลังแล้วเข้าระบบที่ใช้ล่าสุดให้เอง</li></ul>
+  </div>
+</section>
+
+<!-- A TERMINAL -->
+<section class="concept">
+  <div class="screen"><div class="s term">
+    <div class="tbar"><span><b>T3</b></span><span>ESP32 <b>●</b> ttyUSB0</span><span>Pico ○</span><span>LM <b>●</b></span><span>Claude <b>●</b></span><span style="margin-left:auto">14:32</span></div>
+    <div class="tbody">
+      <div class="tl">
+        <div><span class="p">t3 ~/weather $</span> bench flash</div>
+        <div class="d">  build ········· ok  2.1s</div>
+        <div class="d">  flash ········· ok  ESP32-DevKitC</div>
+        <div><span class="p">t3 ~/weather $</span> bench serial</div>
+        <div class="d">  WiFi connecting…</div>
+        <div class="e">  Guru Meditation Error: LoadProhibited</div>
+        <div class="claude"><span class="k">✦ claude ›</span> dht.read() ถูกเรียกก่อน dht.begin() ที่ main.cpp:41<br><span class="ok">+ dht.begin();</span> &nbsp;แก้แล้ว flash ใหม่ไหม? <span class="k">[y/n]</span></div>
+        <div><span class="p">t3 ~/weather $</span> <span class="cur"></span></div>
+      </div>
+      <div class="float">
+        <h5>BOARD</h5>
+        <div class="box">ESP32-DevKitC<br><span class="d">GPIO4 → DHT22</span></div>
+        <h5>SERIAL LIVE</h5>
+        <div class="box"><span class="ok">temp=31.4</span><br><span class="w">rst:0x8</span><br><span class="e">panic</span></div>
+        <h5>WORKFLOWS</h5>
+        <div class="box">● night-watch<br>● resume-project</div>
+      </div>
+    </div>
+  </div></div>
+  <div class="cap">
+    <span class="id">A · Terminal เป็นหลัก</span>
+    <h2>Shell</h2>
+    <p>ทั้งจอเป็น terminal ของ T3 ข้อมูลบอร์ด serial และ workflow อยู่ในแผงด้านข้าง ส่วน Claude ตอบแทรกอยู่ใน terminal เลย</p>
+    <ul><li>ใกล้กับ Linux จริงที่สุด เบาที่สุด</li><li>รันได้แม้ไม่เปิดหน้าจอแบบมีหน้าต่าง</li><li>ต้องพิมพ์คำสั่งเป็นหลัก</li></ul>
+    <div><span class="pill">เบามาก</span><span class="pill">ทำง่ายสุด</span></div>
+  </div>
+</section>
+
+<!-- B BENCH -->
+<section class="concept">
+  <div class="screen"><div class="s bench">
+    <svg class="wires" viewBox="0 0 100 62.5" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M27 17 C40 10 45 14 52 16" stroke="#f85149" stroke-width=".5" fill="none"/>
+      <path d="M27 20 C40 26 45 22 52 21" stroke="#e8e8e8" stroke-width=".5" fill="none"/>
+      <path d="M27 23 C38 34 46 28 52 26" stroke="#ffd23e" stroke-width=".5" fill="none"/>
+    </svg>
+    <div class="obj esp"><b>ESP32-DevKitC</b><div class="pins" style="top:.2em"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="chipm">ESP32</div><div class="pins" style="bottom:.4em"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+    <div class="obj dht"><b style="font-size:.85em">DHT22</b><div class="grill"></div></div>
+    <div class="obj win scope"><div class="wt">serial · ttyUSB0</div><div class="wb">temp=31.4<br>temp=31.5<br><span style="color:var(--bad)">panic</span></div></div>
+    <div class="obj win tw"><div class="wt">terminal</div><div class="wb"><span style="color:var(--pcb)">$</span> bench flash<br>build ok · flash ok</div></div>
+    <div class="obj note"><b>✦ Claude</b>สาย DATA ของ DHT22 ต่อเข้า GPIO4 ถูกแล้ว ✓ ต้องมี R 10k pull-up ด้วย</div>
+    <div class="dock"><span>⌨ Terminal</span><span>∿ Serial</span><span>✦ Claude</span><span>⚙ Flows</span></div>
+  </div></div>
+  <div class="cap">
+    <span class="id">B · โต๊ะแล็บ</span>
+    <h2>Bench</h2>
+    <p>พื้นจอเป็นแผ่นรองตัด บอร์ดที่เสียบอยู่ขึ้นเป็นภาพวาง โยงสายบอกว่าต่อขาไหนไว้ terminal กับ serial เป็นหน้าต่างเล็ก ๆ วางบนโต๊ะ</p>
+    <ul><li>ดูออกทันทีว่าวงจรต่ออะไรไว้</li><li>Claude ตอบแปะเป็นโน้ตบนโต๊ะ</li><li>ทำยากสุด ใช้สเปกเครื่องมากกว่าแนวอื่น</li></ul>
+    <div><span class="pill">ไม่ซ้ำใคร</span><span class="pill">ทำยาก</span></div>
+  </div>
+</section>
+
+<!-- C INSTRUMENT -->
+<section class="concept">
+  <div class="screen"><div class="s inst">
+    <div class="ibar"><span>T3 ▸ CH1 ESP32-DevKitC</span><span>RUN ● 115200</span><span>14:32</span></div>
+    <div class="ibody">
+      <div class="scr">
+        <svg viewBox="0 0 100 50" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 L8 30 L10 12 L12 30 L22 30 L24 14 L26 30 L36 30 L38 11 L40 30 L50 30 L52 15 L54 30 L64 30 L66 38 L68 44 L70 30 L80 30 L82 13 L84 30 L100 30" stroke="#ffb000" stroke-width=".5" fill="none" vector-effect="non-scaling-stroke" style="stroke-width:2px"/></svg>
+      </div>
+      <div class="read">
+        <div class="rd"><small>TEMP</small><b>31.4°C</b></div>
+        <div class="rd"><small>VCC</small><b>3.12V</b></div>
+        <div class="rd"><small>RESETS</small><b>3</b></div>
+        <div class="ai">▸ Claude: ไฟตกตอน WiFi เริ่มส่ง (brownout) แนะนำใส่ตัวเก็บประจุ 100µF</div>
+      </div>
+    </div>
+    <div class="fk"><span class="on">F1 FLASH</span><span>F2 SERIAL</span><span>F3 PINS</span><span>F4 AI</span><span>F5 FLOWS</span><span>F6 TERM</span></div>
+  </div></div>
+  <div class="cap">
+    <span class="id">C · เครื่องมือวัด</span>
+    <h2>Instrument</h2>
+    <p>หน้าตาแบบออสซิลโลสโคป ค่าจากบอร์ดขึ้นเป็นกราฟสดกับตัวเลขใหญ่ ๆ สั่งงานด้วยปุ่ม F1–F6</p>
+    <ul><li>เด่นเรื่องดูค่าเซนเซอร์และไฟเลี้ยง</li><li>ใช้คีย์บอร์ดอย่างเดียวก็ได้</li><li>เขียนโค้ดต้องเปิด terminal (F6)</li></ul>
+    <div><span class="pill">เท่</span><span class="pill">เฉพาะทาง</span></div>
+  </div>
+</section>
+
+<!-- D LOGBOOK -->
+<section class="concept">
+  <div class="screen"><div class="s log">
+    <div class="lbar"><b>T3</b><span>สมุดโปรเจกต์ · weather-station</span><span style="margin-left:auto;font-family:var(--mono);font-size:.85em">ESP32 ● · Claude ● · LM ●</span></div>
+    <div class="lbody">
+      <div class="tline">
+        <div class="ev"><time>09:10</time><div class="t">เสียบ ESP32 · เปิดโปรเจกต์ต่อ</div></div>
+        <div class="ev"><time>09:24</time><div class="t">flash #14 · build 2.1s</div></div>
+        <div class="ev er"><time>09:25</time><div class="t">panic: LoadProhibited</div></div>
+        <div class="ev ai"><time>09:25</time><div class="t">Claude: เจอสาเหตุ main.cpp:41</div></div>
+        <div class="ev okk"><time>09:27</time><div class="t">แก้แล้ว · flash #15 ผ่าน</div></div>
+        <div class="ev"><time>11:00</time><div class="t">night-watch: ไม่มี error 90 นาที</div></div>
+      </div>
+      <div class="lmain">
+        <h3>วันนี้: แก้บอร์ดรีสตาร์ทได้แล้ว</h3>
+        <div class="kv"><div>flash วันนี้<b>15</b></div><div>error<b>1 → 0</b></div><div>อุณหภูมิล่าสุด<b>31.4°C</b></div></div>
+        <div class="lterm"><span class="p">t3 $</span> claude "ต่อไปทำส่วนส่งเข้า LINE"<br>✦ เพิ่ม HTTPClient แล้ว ต้องใช้ LINE token ใส่ใน secrets.h</div>
+        <div style="font-size:.85em;color:#8a8273">ถัดไป: ส่งค่าเข้า LINE ทุก 10 นาที · ซื้อ R 10k</div>
+      </div>
+    </div>
+  </div></div>
+  <div class="cap">
+    <span class="id">D · สมุดบันทึก</span>
+    <h2>Logbook</h2>
+    <p>ทุกอย่างที่เกิดขึ้นถูกจดเป็นไทม์ไลน์ให้อัตโนมัติ ทั้งเสียบบอร์ด flash error และที่ Claude แก้ให้ เปิดมาก็รู้ทันทีว่าทำถึงไหน</p>
+    <ul><li>แก้ปัญหา "ลืมว่าทำถึงไหน" ได้ตรงที่สุด</li><li>โทนสว่างเหมือนสมุดจริง</li><li>terminal ฝังอยู่ในหน้า</li></ul>
+    <div><span class="pill">ช่วยจำ</span><span class="pill">อ่านง่าย</span></div>
+  </div>
+</section>
+</div>

@@ -1,0 +1,428 @@
+<title>T3 OS Mockup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: OS desktop = top bar / nav rail + 3 work panes / status bar. Each skin is a full, deliberate look (not host light/dark). */
+:root{
+  --bg:#0b1310; --panel:#101b17; --panel2:#15241e; --line:#21382f; --fg:#d5e6dc; --mute:#7f9a8c;
+  --accent:#3fb950; --accent-ink:#04140a; --warn:#f0883e; --bad:#f85149; --info:#58a6ff;
+  --display:"Chakra Petch","IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"IBM Plex Sans Thai",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --radius:6px; --glow:none; color-scheme:dark;
+}
+:root[data-skin="cyber"]{--bg:#0d0a17;--panel:#140f22;--panel2:#1c1530;--line:#33264f;--fg:#ece4ff;--mute:#9a8bbf;--accent:#ff3ea5;--accent-ink:#1a0010;--warn:#ffd23e;--bad:#ff5470;--info:#2de2ff;--radius:2px;--glow:0 0 12px color-mix(in srgb,var(--accent) 45%,transparent);color-scheme:dark}
+:root[data-skin="mini"]{--bg:#eef0f2;--panel:#ffffff;--panel2:#f5f6f8;--line:#d9dde2;--fg:#1d232b;--mute:#66707c;--accent:#2457d6;--accent-ink:#ffffff;--warn:#b85c00;--bad:#c4302b;--info:#2457d6;--radius:8px;color-scheme:light}
+:root[data-skin="amber"]{--bg:#120c04;--panel:#1a1207;--panel2:#22180a;--line:#3d2b10;--fg:#ffcf7a;--mute:#b08a4a;--accent:#ffb000;--accent-ink:#1a1000;--warn:#ff7a1a;--bad:#ff4d2e;--info:#ffd68a;--radius:0px;--glow:0 0 8px color-mix(in srgb,var(--accent) 35%,transparent);color-scheme:dark}
+:root[data-skin="amber"] body{text-shadow:0 0 4px color-mix(in srgb,var(--accent) 30%,transparent)}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--body);display:flex;flex-direction:column;overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono)}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:12px;padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.logo{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.04em;display:flex;align-items:center;gap:6px}
+.logo b{background:var(--accent);color:var(--accent-ink);padding:0 7px;border-radius:var(--radius);box-shadow:var(--glow)}
+.crumb{color:var(--mute);font-family:var(--mono);font-size:12px}
+.sp{flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-family:var(--mono);padding:3px 9px;border:1px solid var(--line);border-radius:99px;background:var(--panel2)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.dot.off{background:var(--mute)} .dot.warn{background:var(--warn)}
+.skins{display:flex;gap:4px;border:1px solid var(--line);border-radius:var(--radius);padding:3px}
+.skins button{border:0;background:none;padding:3px 9px;font-size:12px;border-radius:var(--radius);color:var(--mute)}
+.skins button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+
+/* main */
+.main{flex:1;display:flex;min-height:0}
+.rail{display:flex;flex-direction:column;gap:4px;padding:8px 6px;border-right:1px solid var(--line);background:var(--panel)}
+.rail button{border:0;background:none;width:44px;height:44px;border-radius:var(--radius);color:var(--mute);font-size:11px;display:grid;place-items:center;line-height:1.1}
+.rail button svg{width:20px;height:20px}
+.rail button[aria-current="true"]{background:var(--panel2);color:var(--accent);box-shadow:inset 2px 0 0 var(--accent)}
+.view{flex:1;min-width:0;display:none}
+.view.on{display:grid}
+
+/* workspace */
+#v-work{grid-template-columns:240px minmax(0,1fr) 320px}
+.pane{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+.pane:last-child{border-right:0}
+.ph{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-family:var(--display);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.pb{padding:12px;overflow:auto;min-height:0;display:flex;flex-direction:column;gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:6px}
+.card.live{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));box-shadow:var(--glow)}
+.card h4{margin:0;font-family:var(--display);font-size:15px;display:flex;align-items:center;gap:6px}
+.card small{color:var(--mute);font-family:var(--mono);font-size:11px}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--panel2);padding:4px 10px;border-radius:var(--radius);font-size:12px}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.sub{font-family:var(--display);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:6px}
+.wf{display:flex;align-items:center;gap:8px;font-size:13px}
+.wf .n{flex:1;font-family:var(--mono);font-size:12px}
+
+.center{display:grid;grid-template-rows:minmax(0,1.1fr) minmax(0,1fr)}
+.code{font-family:var(--mono);font-size:12.5px;margin:0;padding:10px 0;overflow:auto;background:var(--bg)}
+.code div{padding:0 12px;white-space:pre}
+.code i{font-style:normal;color:var(--mute);display:inline-block;width:28px;user-select:none}
+.code .hl{background:color-mix(in srgb,var(--warn) 14%,transparent);box-shadow:inset 2px 0 0 var(--warn)}
+.k{color:var(--info)} .s{color:var(--accent)} .c{color:var(--mute)}
+.serial{border-top:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.log{flex:1;overflow:auto;font-family:var(--mono);font-size:12px;padding:8px 12px;background:var(--bg)}
+.log div{white-space:pre-wrap;word-break:break-word}
+.log .t{color:var(--mute)} .log .e{color:var(--bad)} .log .a{color:var(--warn)} .log .ok{color:var(--accent)}
+
+.chat{flex:1}
+.msg{font-size:13px;padding:8px 10px;border-radius:var(--radius);background:var(--panel)}
+.msg.me{background:var(--panel2);align-self:flex-end;max-width:90%}
+.who{font-family:var(--mono);font-size:11px;color:var(--accent);margin-bottom:2px}
+.diff{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin:6px 0}
+.diff div{padding:1px 8px;white-space:pre}
+.diff .m{background:color-mix(in srgb,var(--bad) 15%,transparent)} .diff .p{background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.ask{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--line)}
+.ask input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:6px 10px}
+.route{display:flex;gap:4px;padding:8px 12px 0}
+.route button{flex:1;border:1px solid var(--line);background:none;border-radius:var(--radius);font-size:12px;padding:3px}
+.route button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+
+/* status */
+.status{display:flex;gap:14px;align-items:center;padding:5px max(16px,env(safe-area-inset-right,0px)) calc(5px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));border-top:1px solid var(--line);background:var(--panel);font-family:var(--mono);font-size:11.5px;color:var(--mute);flex-wrap:wrap}
+.bar{width:110px;height:6px;background:var(--panel2);border-radius:3px;overflow:hidden}
+.bar span{display:block;height:100%;width:100%;transform:scaleX(0);transform-origin:left;background:var(--accent);transition:transform .4s}
+
+/* workflows & settings */
+.page{grid-template-columns:minmax(0,1fr);overflow:auto;align-content:start;padding:20px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:980px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.page h2{font-family:var(--display);font-size:24px;margin:0;text-wrap:balance}
+.lead{color:var(--mute);margin:0;max-width:65ch}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.trig{font-family:var(--mono);font-size:11px;color:var(--mute)}
+.tg{width:38px;height:22px;border-radius:99px;border:1px solid var(--line);background:var(--panel2);position:relative;padding:0}
+.tg::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--mute);transition:left .15s}
+.tg[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
+.tg[aria-checked="true"]::after{left:18px;background:var(--accent-ink)}
+pre.yaml{margin:0;font-family:var(--mono);font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:12px;overflow:auto;white-space:pre}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px}
+label.f span{color:var(--mute);font-size:12px}
+.in{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:7px 10px;width:100%}
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.seg button{flex:1;border:0;background:none;padding:8px;font-size:13px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.note{font-size:12px;color:var(--mute)}
+.tag{font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:var(--radius);border:1px solid var(--line)}
+
+/* overlays */
+.toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(44px + env(safe-area-inset-bottom,0px));width:min(330px,calc(100% - 32px));background:var(--panel);border:1px solid var(--accent);border-radius:var(--radius);padding:12px;box-shadow:0 10px 30px rgb(0 0 0 / .35),var(--glow);display:flex;flex-direction:column;gap:8px;z-index:20;animation:in .25s ease-out}
+@keyframes in{from{transform:translateY(12px);opacity:.3}}
+.modal{position:fixed;inset:0;background:rgb(0 0 0 / .55);display:grid;place-items:center;z-index:30;padding:16px}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);width:min(620px,100%);max-height:90%;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.sheet h3{margin:0;font-family:var(--display)}
+.board{display:grid;grid-template-columns:1fr 120px 1fr;gap:0 8px;font-family:var(--mono);font-size:12px;align-items:center}
+.chipbody{grid-row:1 / span 10;grid-column:2;align-self:stretch;border:2px solid var(--accent);border-radius:var(--radius);display:grid;place-items:center;font-family:var(--display);color:var(--accent);min-height:220px}
+.pin{display:flex;align-items:center;gap:6px;padding:2px 0}
+.pin.r{justify-content:flex-start} .pin.l{justify-content:flex-end}
+.pin u{text-decoration:none;width:10px;height:10px;border-radius:50%;border:1px solid var(--mute)}
+.pin.used u{background:var(--accent);border-color:var(--accent)}
+.pin.no u{background:var(--bad);border-color:var(--bad)}
+.pin em{font-style:normal;color:var(--accent)}
+
+@media (max-width:1050px){#v-work{grid-template-columns:200px minmax(0,1fr)} #v-work .pane.ai{display:none}}
+@media (max-width:720px){
+  body{overflow:auto} .main{flex-direction:column}
+  .rail{flex-direction:row;justify-content:center;border-right:0;border-bottom:1px solid var(--line)}
+  #v-work{grid-template-columns:minmax(0,1fr)} #v-work .pane{border-right:0;border-bottom:1px solid var(--line)}
+  #v-work .pane.ai{display:flex} .center{grid-template-rows:300px 240px}
+  .grid2{grid-template-columns:minmax(0,1fr)} .row{grid-template-columns:minmax(0,1fr) auto auto} .row .ic{display:none}
+  .skins{order:9;width:100%;justify-content:space-between}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="logo"><b>T3</b><span>OS</span></div>
+  <span class="crumb">~/projects/weather-station</span>
+  <span class="sp"></span>
+  <span class="chip"><span class="dot" id="lmDot"></span>LM Studio</span>
+  <span class="chip"><span class="dot"></span>Claude Code</span>
+  <span class="chip" id="clock">14:32</span>
+  <div class="skins" role="group" aria-label="ธีม">
+    <button data-s="pcb" aria-pressed="true">PCB</button>
+    <button data-s="cyber" aria-pressed="false">Cyber</button>
+    <button data-s="mini" aria-pressed="false">Minimal</button>
+    <button data-s="amber" aria-pressed="false">Amber</button>
+  </div>
+</header>
+
+<div class="main">
+  <nav class="rail" aria-label="มุมมอง">
+    <button data-v="work" aria-current="true" title="Workspace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M9 4v16M15 4v16"/></svg></button>
+    <button data-v="flow" aria-current="false" title="Workflows"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 6h10M6 8l5 8M18 8l-5 8"/></svg></button>
+    <button data-v="ai" aria-current="false" title="AI Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="7" width="14" height="12" rx="2"/><path d="M12 3v4M9 12h.01M15 12h.01M9 16h6"/></svg></button>
+  </nav>
+
+  <!-- WORKSPACE -->
+  <section class="view on" id="v-work">
+    <div class="pane">
+      <div class="ph">Devices</div>
+      <div class="pb" id="devices">
+        <div class="card live">
+          <h4><span class="dot"></span>ESP32-DevKitC</h4>
+          <small>/dev/ttyUSB0 · CP2102 · 115200</small>
+          <small>โปรเจกต์: weather-station</small>
+          <div class="btns"><button class="btn pri" data-act="flash">Flash</button><button class="btn" data-act="pins">Pins</button></div>
+        </div>
+        <div class="card" id="pico">
+          <h4><span class="dot off"></span>Raspberry Pi Pico</h4>
+          <small>ไม่ได้เสียบ · ใช้ล่าสุด 3 วันก่อน</small>
+          <div class="btns"><button class="btn" id="plug">จำลองการเสียบบอร์ด</button></div>
+        </div>
+        <div class="sub">Workflows</div>
+        <div class="wf"><span class="dot"></span><span class="n">resume-project</span><small class="trig">USB</small></div>
+        <div class="wf"><span class="dot"></span><span class="n">night-watch</span><small class="trig">serial</small></div>
+        <div class="wf"><span class="dot off"></span><span class="n">flash-test</span><button class="btn" data-act="flash">Run</button></div>
+      </div>
+    </div>
+
+    <div class="pane center">
+      <div style="display:flex;flex-direction:column;min-height:0">
+        <div class="ph">main.cpp <span class="sp"></span><span class="tag">PlatformIO</span></div>
+        <div class="code" id="code"></div>
+      </div>
+      <div class="serial">
+        <div class="ph">Serial · 115200 <span class="sp"></span><span class="chip"><span class="dot warn"></span>AI watch</span><button class="btn" id="clr">ล้าง</button></div>
+        <div class="log" id="log" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="pane ai">
+      <div class="ph">Claude Code</div>
+      <div class="route" role="group" aria-label="ส่งให้ AI ตัวไหน">
+        <button data-r="local" aria-pressed="false">Local</button>
+        <button data-r="auto" aria-pressed="true">Auto</button>
+        <button data-r="claude" aria-pressed="false">Claude</button>
+      </div>
+      <div class="pb chat" id="chat">
+        <div class="msg"><div class="who">local · qwen2.5-coder</div>ตรวจพบ <b>Guru Meditation Error</b> ใน serial เป็นปัญหาที่ซับซ้อน ส่งต่อให้ Claude วิเคราะห์ไหม?</div>
+        <div class="msg"><div class="who">claude-code</div>บอร์ดรีสตาร์ทเพราะ <code class="mono">dht.read()</code> ถูกเรียกก่อน <code class="mono">dht.begin()</code> ที่บรรทัด 41 ทำให้ไปอ่าน pointer ที่เป็น null
+          <div class="diff"><div class="m">- dht.read();</div><div class="p">+ dht.begin();</div><div class="p">+ delay(2000);</div></div>
+          <div class="btns"><button class="btn pri" id="apply">แก้ + Flash</button><button class="btn" data-act="pins">ดู Pinout</button></div>
+        </div>
+      </div>
+      <form class="ask" id="ask"><input id="q" placeholder="ถาม Claude… เช่น ทำไม WiFi หลุด" autocomplete="off"><button class="btn pri">ส่ง</button></form>
+    </div>
+  </section>
+
+  <!-- WORKFLOWS -->
+  <section class="view page" id="v-flow">
+    <div class="wrap">
+      <div><h2>Workflows</h2><p class="lead">งานที่ Claude Code ทำเองเมื่อมีเหตุการณ์ เช่น เสียบบอร์ด เจอ error หรือถึงเวลาที่ตั้งไว้ คำสั่งที่แตะฮาร์ดแวร์จะถามก่อนทุกครั้ง</p></div>
+      <div class="card" style="padding:0" id="flows"></div>
+      <div class="grid2">
+        <div class="card">
+          <div class="sub" style="margin:0">สร้างใหม่ด้วยภาษาพูด</div>
+          <input class="in" id="nf" value="ทุกครั้งที่ flash เสร็จ ให้อ่าน serial 30 วินาทีแล้วสรุปผลส่งเข้ามือถือ">
+          <div class="btns"><button class="btn pri" id="gen">ให้ Claude เขียน workflow</button></div>
+          <p class="note">Claude จะสร้างไฟล์ YAML ให้ดูก่อน แล้วค่อยกดเปิดใช้</p>
+        </div>
+        <div class="card">
+          <div class="sub" style="margin:0" id="yname">night-watch.yaml</div>
+          <pre class="yaml" id="yaml"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI SETTINGS -->
+  <section class="view page" id="v-ai">
+    <div class="wrap">
+      <div><h2>ตั้งค่า AI</h2><p class="lead">T3 ไม่รันโมเดลเอง ให้ใส่ลิงก์ของเครื่องที่รัน LM Studio แล้วใช้ Claude Code เป็นตัวหลักสำหรับงานยาก</p></div>
+      <div class="grid2">
+        <div class="card">
+          <div class="sub" style="margin:0">Local AI · LM Studio</div>
+          <label class="f"><span>Endpoint</span><input class="in mono" id="ep" value="http://192.168.1.50:1234/v1"></label>
+          <label class="f"><span>Model</span><select class="in" id="lmModel"><option>qwen2.5-coder-14b-instruct</option><option>llama-3.1-8b-instruct</option></select></label>
+          <label class="f"><span>Fallback (Tailscale)</span><input class="in mono" id="fb" value="http://100.84.12.7:1234/v1"></label>
+          <div class="btns"><button class="btn pri" id="test">ทดสอบการเชื่อมต่อ</button><span class="note" id="testRes"></span></div>
+        </div>
+        <div class="card">
+          <div class="sub" style="margin:0">Claude Code</div>
+          <label class="f"><span>Model</span><select class="in" id="cm"><option>claude-sonnet-5-5</option><option>claude-opus-5-5</option><option>claude-haiku-5-5</option></select></label>
+          <label class="f"><span>สถานะบัญชี</span><input class="in" id="acct" value="เข้าสู่ระบบแล้ว · key เก็บใน keyring" readonly></label>
+          <label class="f"><span>MCP servers</span><input class="in mono" id="mcp" value="bench-mcp, lmstudio-bridge, datasheets" readonly></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sub" style="margin:0">โหมดการส่งงาน</div>
+        <div class="seg" role="group" id="mode">
+          <button aria-pressed="false" data-m="local">Local อย่างเดียว</button>
+          <button aria-pressed="true" data-m="auto">Auto</button>
+          <button aria-pressed="false" data-m="claude">Claude ตลอด</button>
+        </div>
+        <p class="note" id="modeNote">เริ่มที่ local ก่อน ถ้างานยากจะถามก่อนส่งให้ Claude</p>
+        <div class="wf"><span class="n" style="font-family:var(--body);font-size:13px">ถามก่อนส่งข้อมูลออกนอกเครื่อง</span><button class="tg" role="switch" aria-checked="true" aria-label="ถามก่อนส่ง"></button></div>
+        <div class="wf"><span class="n" style="font-family:var(--body);font-size:13px">ต้องอนุมัติทุกครั้งก่อน flash หรือสั่ง GPIO</span><button class="tg" role="switch" aria-checked="true" aria-label="อนุมัติก่อน flash"></button></div>
+        <div class="sub">โปรเจกต์ local-only</div>
+        <div class="btns"><span class="tag">client-door-lock</span><span class="tag">home-security</span><button class="btn">+ เพิ่ม</button></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer class="status">
+  <span id="job">พร้อมใช้งาน</span><span class="bar"><span id="prog"></span></span>
+  <span class="sp"></span><span>CPU 12%</span><span>RAM 1.2G</span><span>tailscale ●</span>
+</footer>
+
+<div id="overlay"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const save=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}, load=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+
+// skins
+function skin(s){document.documentElement.dataset.skin=s;$$('.skins button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===s));save('t3skin',s)}
+$$('.skins button').forEach(b=>b.onclick=()=>skin(b.dataset.s));
+skin(load('t3skin')||'pcb');
+
+// views
+function view(v){$$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));$$('.rail button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v))}
+$$('.rail button').forEach(b=>b.onclick=()=>view(b.dataset.v));
+
+// clock
+const tick=()=>{const d=new Date();$('#clock').textContent=d.toTimeString().slice(0,5)};tick();setInterval(tick,20000);
+
+// code
+const src=[
+['<span class="k">#include</span> <span class="s">&lt;WiFi.h&gt;</span>'],
+['<span class="k">#include</span> <span class="s">"DHT.h"</span>'],
+[''],
+['DHT dht(<span class="k">4</span>, DHT22);   <span class="c">// GPIO4</span>'],
+[''],
+['<span class="k">void</span> setup() {'],
+['  Serial.begin(<span class="k">115200</span>);'],
+['  WiFi.begin(SSID, PASS);'],
+['  dht.read();   <span class="c">// ⚠ เรียกก่อน begin()</span>',1],
+['}'],
+[''],
+['<span class="k">void</span> loop() {'],
+['  float t = dht.readTemperature();'],
+['  Serial.printf(<span class="s">"temp=%.1f\\n"</span>, t);'],
+['  delay(<span class="k">600000</span>);'],
+['}']];
+function renderCode(fixed){$('#code').innerHTML=src.map((l,i)=>{let t=l[0];if(fixed&&l[1])t='  dht.begin();  <span class="c">// แก้โดย Claude</span>';return `<div class="${l[1]&&!fixed?'hl':''}"><i>${i+33}</i>${t}</div>`}).join('')}
+renderCode(false);
+
+// serial
+const log=$('#log');
+function line(cls,txt){const d=document.createElement('div');const ts=new Date().toTimeString().slice(0,8);d.innerHTML=`<span class="t">[${ts}]</span> <span class="${cls}">${txt}</span>`;log.appendChild(d);log.scrollTop=log.scrollHeight}
+[['','ets Jun  8 2016 00:22:57'],['','WiFi connecting…'],['e','Guru Meditation Error: Core 1 panic\'ed (LoadProhibited)'],['a','⚠ AI: null pointer ใน dht_read() → ส่งต่อให้ Claude แล้ว'],['','Rebooting…']].forEach(x=>line(x[0],x[1]));
+$('#clr').onclick=()=>log.innerHTML='';
+
+// jobs
+let busy=false;
+function runFlash(after){
+  if(busy)return;busy=true;$$('[data-act="flash"],#apply').forEach(b=>b.disabled=true);
+  const steps=['build…','flash → /dev/ttyUSB0','รีเซ็ตบอร์ด','อ่าน serial','ตรวจผล','เสร็จ'];let i=0;
+  const go=()=>{$('#job').textContent=`flash-test ${i+1}/6 ${steps[i]}`;$('#prog').style.transform=`scaleX(${(i+1)/6})`;
+    if(i===3){line('','WiFi connected 192.168.1.77');line('ok','temp=31.4')}
+    if(++i<steps.length)setTimeout(go,650);else{busy=false;$$('[data-act="flash"],#apply').forEach(b=>b.disabled=false);line('ok','✓ flash-test ผ่าน');after&&after()}};
+  go();
+}
+function confirmBox(title,body,ok){
+  $('#overlay').innerHTML=`<div class="modal"><div class="sheet" role="dialog" aria-modal="true"><h3>${title}</h3><div>${body}</div><div class="btns"><button class="btn pri" id="yes">อนุมัติ</button><button class="btn" id="no">ยกเลิก</button></div></div></div>`;
+  $('#yes').onclick=()=>{$('#overlay').innerHTML='';ok()};$('#no').onclick=()=>$('#overlay').innerHTML='';$('#yes').focus();
+}
+document.addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]');if(!a)return;
+  if(a.dataset.act==='flash')confirmBox('อนุมัติการ Flash?','<p class="note">จะ build แล้ว flash ลง <b class="mono">ESP32-DevKitC · /dev/ttyUSB0</b></p>',()=>runFlash());
+  if(a.dataset.act==='pins')pinout();
+});
+$('#apply').onclick=()=>confirmBox('แก้โค้ดแล้ว Flash?','<div class="diff"><div class="m">- dht.read();</div><div class="p">+ dht.begin();</div></div><p class="note">ไฟล์ src/main.cpp · บอร์ด ESP32-DevKitC</p>',()=>{renderCode(true);runFlash(()=>addMsg('claude-code','✓ แก้แล้ว บอร์ดไม่รีสตาร์ทอีก อ่านอุณหภูมิได้ 31.4°C'))});
+
+// pinout
+function pinout(){
+  const L=[['3V3',''],['EN',''],['GPIO36','',''],['GPIO39',''],['GPIO34',''],['GPIO4','DHT22 data','used'],['GPIO5',''],['GPIO6','ห้ามใช้ (flash)','no'],['GPIO7','ห้ามใช้ (flash)','no'],['GND','']];
+  const R=[['GND',''],['GPIO23','MOSI'],['GPIO22','I2C SCL'],['TX0','USB serial','used'],['RX0','USB serial','used'],['GPIO21','I2C SDA'],['GPIO19','MISO'],['GPIO18','SCK'],['GPIO2','LED บนบอร์ด'],['5V','']];
+  let h='';for(let i=0;i<10;i++){const l=L[i],r=R[i];h+=`<div class="pin l ${l[2]||''}" style="grid-row:${i+1};grid-column:1">${l[1]?`<em>${l[1]}</em>`:''}${l[0]}<u></u></div><div class="pin r ${r[2]||''}" style="grid-row:${i+1};grid-column:3"><u></u>${r[0]}${r[1]?` <em>${r[1]}</em>`:''}</div>`}
+  $('#overlay').innerHTML=`<div class="modal"><div class="sheet" role="dialog" aria-modal="true"><h3>Pinout · ESP32-DevKitC</h3><div style="overflow-x:auto"><div class="board"><div class="chipbody">ESP32<br>WROOM</div>${h}</div></div><div class="msg"><div class="who">claude-code</div>GPIO4 ใช้กับ DHT22 ได้ ✓ ส่วน GPIO6–11 ต่ออยู่กับ flash ภายใน ห้ามใช้</div><div class="btns"><button class="btn" id="no">ปิด</button></div></div></div>`;
+  $('#no').onclick=()=>$('#overlay').innerHTML='';$('#no').focus();
+}
+
+// plug toast
+$('#plug').onclick=()=>{
+  const p=$('#pico');p.classList.add('live');p.innerHTML='<h4><span class="dot"></span>Raspberry Pi Pico</h4><small>/dev/ttyACM0 · RP2040</small><small>โปรเจกต์: plant-water</small><div class="btns"><button class="btn pri" data-act="flash">Flash</button><button class="btn" data-act="pins">Pins</button></div>';
+  line('ok','USB: Raspberry Pi Pico → /dev/ttyACM0');
+  const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');
+  t.innerHTML='<b style="font-family:var(--display)">Pi Pico เชื่อมต่อแล้ว</b><small class="mono" style="color:var(--mute)">workflow: resume-project</small><div>ครั้งก่อนค้างที่ <b>เซนเซอร์ความชื้นดินอ่านค่าแกว่ง</b> เปิดโปรเจกต์ plant-water ต่อเลยไหม?</div><div class="btns"><button class="btn pri">เปิดโปรเจกต์</button><button class="btn">Serial</button><button class="btn">ปิด</button></div>';
+  document.body.appendChild(t);t.querySelectorAll('button').forEach(b=>b.onclick=()=>t.remove());setTimeout(()=>t.remove(),9000);
+};
+
+// chat
+function addMsg(who,txt,me){const d=document.createElement('div');d.className='msg'+(me?' me':'');d.innerHTML=me?txt:`<div class="who">${who}</div>${txt}`;$('#chat').appendChild(d);$('#chat').scrollTop=1e6}
+let route='auto';
+$$('.route button').forEach(b=>b.onclick=()=>{route=b.dataset.r;$$('.route button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+$('#ask').onsubmit=e=>{e.preventDefault();const q=$('#q').value.trim();if(!q)return;addMsg('',q.replace(/</g,'&lt;'),1);$('#q').value='';
+  const who=route==='local'?'local · qwen2.5-coder':'claude-code';
+  setTimeout(()=>addMsg(who,'(ตัวอย่าง) ผมอ่าน serial log 200 บรรทัดล่าสุดกับ main.cpp แล้ว WiFi หลุดทุกครั้งหลัง deep sleep เพราะไม่ได้เรียก <code class="mono">WiFi.reconnect()</code> ให้เตรียม fix ไว้ใน branch ใหม่ไหม?'),700)};
+
+// workflows
+const flows=[
+ {n:'resume-project',t:'on: USB plug',on:true,y:`name: resume-project
+trigger:
+  usb: { any_known_board: true }
+steps:
+  - claude: |
+      หาโปรเจกต์ที่ผูกกับบอร์ดนี้
+      สรุปว่าครั้งก่อนค้างที่ไหน
+  - notify: desktop`},
+ {n:'night-watch',t:'on: serial match',on:true,y:`name: night-watch
+trigger:
+  serial_match: "Guru Meditation|Brownout|panic"
+steps:
+  - local_ai: "สรุป error นี้สั้น ๆ"
+  - claude: "หาสาเหตุ เตรียม fix เป็น branch ใหม่ ห้าม flash"
+  - notify: phone`},
+ {n:'flash-test',t:'manual · /flash-test',on:false,y:`name: flash-test
+trigger: manual
+steps:
+  - run: pio run
+  - flash: { board: auto, approve: required }
+  - serial_read: { seconds: 30 }
+  - claude: "เทียบกับ tests/expected.txt ถ้าไม่ผ่านให้แก้แล้ววนใหม่ (สูงสุด 3 รอบ)"`},
+ {n:'daily-backup',t:'on: 23:00',on:false,y:`name: daily-backup
+trigger:
+  cron: "0 23 * * *"
+steps:
+  - run: git -C ~/projects add -A && git commit -m "auto backup"
+  - claude: "สรุปงานวันนี้ลงใน journal.md"`}];
+function renderFlows(sel){
+  $('#flows').innerHTML=flows.map((f,i)=>`<div class="row"><span class="dot ic ${f.on?'':'off'}"></span><div><button class="btn" style="border:0;background:none;padding:0;font-family:var(--mono)" data-y="${i}">${f.n}</button><div class="trig">${f.t}</div></div><button class="tg" role="switch" aria-checked="${f.on}" aria-label="เปิดใช้ ${f.n}" data-t="${i}"></button><button class="btn" data-run="${i}">Run</button></div>`).join('');
+  const f=flows[sel??1];$('#yname').textContent=f.n+'.yaml';$('#yaml').textContent=f.y;
+}
+renderFlows();
+$('#flows').onclick=e=>{const y=e.target.closest('[data-y]'),t=e.target.closest('[data-t]'),r=e.target.closest('[data-run]');
+  if(y)renderFlows(+y.dataset.y);if(t){flows[t.dataset.t].on=!flows[t.dataset.t].on;renderFlows(+t.dataset.t)}
+  if(r){view('work');if(flows[r.dataset.run].n==='flash-test')runFlash();else line('a','▶ workflow '+flows[r.dataset.run].n+' กำลังทำงาน')}};
+$('#gen').onclick=()=>{const txt=$('#nf').value.trim()||'workflow ใหม่';const f={n:'after-flash-report',t:'on: flash done',on:false,y:`# สร้างจาก: "${txt}"
+name: after-flash-report
+trigger:
+  event: flash_done
+steps:
+  - serial_read: { seconds: 30 }
+  - claude: "สรุปผลการทำงานของบอร์ดสั้น ๆ เป็นภาษาไทย"
+  - notify: phone`};
+  if(!flows.find(x=>x.n===f.n))flows.push(f);renderFlows(flows.length-1)};
+
+// settings
+document.addEventListener('click',e=>{const t=e.target.closest('#v-ai .tg');if(t)t.setAttribute('aria-checked',t.getAttribute('aria-checked')!=='true')});
+const notes={local:'ใช้ LM Studio อย่างเดียว ไม่มีข้อมูลออกนอกบ้าน',auto:'เริ่มที่ local ก่อน ถ้างานยากจะถามก่อนส่งให้ Claude',claude:'ส่งทุกงานให้ Claude Code ส่วน local ใช้แค่เฝ้า serial'};
+$$('#mode button').forEach(b=>b.onclick=()=>{$$('#mode button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#modeNote').textContent=notes[b.dataset.m]});
+$('#test').onclick=()=>{const r=$('#testRes');r.textContent='กำลังเชื่อมต่อ…';setTimeout(()=>{r.innerHTML='<span style="color:var(--accent)">● เชื่อมต่อได้ · 38 tok/s (ตัวอย่าง)</span>'},800)};
+</script>

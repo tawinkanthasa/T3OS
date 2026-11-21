@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "bench": {
+      "command": "C:\\Users\\tawin\\T3OS\\bench\\.venv\\Scripts\\bench-mcp.exe",
+      "args": [],
+      "env": { "BENCH_SIM": "1" }
+    }
+  }
+}

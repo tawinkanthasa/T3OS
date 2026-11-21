@@ -1,0 +1,394 @@
+<title>T3 OS Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans+Thai:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+/* Layout: boot chooser → OS screen = status bar / [logbook rail | mode stage (Shell, Bench, Scope)] / F-key bar. Single deliberate dark look, amber accent inside Scope. */
+:root{
+  --bg:#0a0d0b; --panel:#0f1612; --panel2:#152019; --line:#21362b; --fg:#d3e6da; --mute:#76917f;
+  --acc:#3fb950; --acc-ink:#04140a; --amber:#ffb000; --clay:#d97757; --bad:#f85149; --warn:#f0883e;
+  --mat:#1d3b2c;
+  --display:"Chakra Petch","IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"IBM Plex Sans Thai",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--body);overflow:hidden}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.mono{font-family:var(--mono)}
+
+/* BOOT */
+#boot{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;background:radial-gradient(circle at 50% 40%,#13261b 0,#07100b 65%);z-index:50;padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
+.blogo{font-family:var(--display);font-size:clamp(56px,10vw,96px);font-weight:700;letter-spacing:.06em;line-height:1}
+.blogo span{color:var(--acc)}
+.oss{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.os{width:min(240px,80vw);padding:20px;border:2px solid #2a4535;background:#0b1711;display:flex;flex-direction:column;gap:6px;text-align:left;border-radius:0}
+.os[aria-selected="true"]{border-color:var(--acc);box-shadow:0 0 24px #3fb95055}
+.os b{font-family:var(--display);font-size:22px}
+.os small{color:#7fa08c;font-family:var(--mono);font-size:12px}
+.bhint{font-family:var(--mono);font-size:12px;color:#7fa08c;text-align:center}
+.bhint b{color:var(--acc)}
+#winmsg{font-family:var(--mono);color:#7fa08c;text-align:center}
+
+/* OS */
+#os{height:100%;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:14px;padding:6px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px));background:var(--panel2);font-family:var(--mono);font-size:12px;color:var(--mute);flex-wrap:wrap}
+.top .logo{font-family:var(--display);font-weight:700;font-size:15px;color:var(--fg)}
+.top .logo span{color:var(--acc)}
+.top b{color:var(--acc);font-weight:400}
+.top .off{color:var(--mute)}
+.top .sp{flex:1}
+.tbtn{border:1px solid var(--line);background:none;padding:2px 8px;font-family:var(--mono);font-size:11px;color:var(--fg)}
+.tbtn:hover{border-color:var(--acc)}
+
+.main{flex:1;display:grid;grid-template-columns:250px minmax(0,1fr);min-height:0}
+/* logbook rail */
+.book{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.bh{padding:10px 14px;border-bottom:1px solid var(--line)}
+.bh small{font-family:var(--mono);color:var(--mute);font-size:11px;letter-spacing:.1em}
+.bh h2{margin:2px 0 0;font-family:var(--display);font-size:17px;line-height:1.25}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.stats div{font-size:11px;color:var(--mute);border-top:2px solid var(--line);padding-top:3px}
+.stats b{display:block;font-family:var(--mono);font-size:16px;color:var(--fg);font-variant-numeric:tabular-nums}
+.events{flex:1;overflow:auto;padding:10px 14px;display:flex;flex-direction:column;gap:10px}
+.ev{display:grid;grid-template-columns:42px 1fr;gap:8px;font-size:12.5px;animation:ein .3s ease-out}
+@keyframes ein{from{opacity:.2;transform:translateY(-4px)}}
+.ev time{font-family:var(--mono);color:var(--mute);font-size:11px;padding-top:1px}
+.ev div{border-left:2px solid var(--line);padding-left:8px}
+.ev.er div{border-color:var(--bad)} .ev.ai div{border-color:var(--clay)} .ev.ok div{border-color:var(--acc)} .ev.hw div{border-color:var(--amber)}
+.next{padding:10px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--mute)}
+.next b{color:var(--fg)}
+
+/* stage */
+.stage{position:relative;min-width:0;min-height:0}
+.mode{position:absolute;inset:0;display:none}
+.mode.on{display:flex}
+
+/* shell */
+#m-shell{flex-direction:column;background:var(--bg);font-family:var(--mono);font-size:13.5px}
+#out{flex:1;overflow:auto;padding:14px 18px;display:flex;flex-direction:column;gap:1px}
+#out div{white-space:pre-wrap;word-break:break-word}
+.p{color:var(--acc)} .d{color:var(--mute)} .e{color:var(--bad)} .ok{color:var(--acc)} .w{color:var(--warn)} .am{color:var(--amber)}
+.cl{margin:6px 0;border-left:3px solid var(--clay);padding:6px 10px;background:#17120f;color:#f3d9cc}
+.cl .k{color:var(--clay)}
+.cl .add{color:var(--acc)} .cl .del{color:var(--bad)}
+#cmdline{display:flex;gap:8px;padding:10px 18px 14px;align-items:center;border-top:1px solid var(--line)}
+#cmd{flex:1;min-width:0;background:none;border:0;outline:0;font-family:var(--mono);caret-color:var(--acc)}
+.sugs{display:flex;gap:6px;flex-wrap:wrap;padding:0 18px 10px}
+.sugs button{border:1px dashed var(--line);background:none;font-family:var(--mono);font-size:11px;padding:2px 8px;color:var(--mute)}
+.sugs button:hover{color:var(--fg);border-color:var(--acc)}
+
+/* bench */
+#m-bench{background-color:var(--mat);background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:32px 32px;overflow:hidden;touch-action:none}
+#wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.obj{position:absolute;box-shadow:0 10px 20px #0007;user-select:none;cursor:grab;border-radius:5px}
+.obj:active{cursor:grabbing}
+.obj .lbl{font-family:var(--mono);font-size:11px}
+.esp{width:250px;height:110px;background:#1b1b1b;border:2px solid #333;color:#ddd;padding:8px}
+.pins{position:absolute;left:8px;right:8px;display:flex;justify-content:space-between}
+.pins i{width:7px;height:7px;background:#c9a227;border-radius:50%}
+.chipm{position:absolute;left:78px;top:30px;width:90px;height:56px;background:#888;border-radius:3px;display:grid;place-items:center;color:#222;font-family:var(--mono);font-weight:700}
+.led{position:absolute;right:14px;top:40px;width:9px;height:9px;border-radius:50%;background:#400}
+.led.on{background:#ff4040;box-shadow:0 0 8px #ff4040}
+.dht{width:96px;height:120px;background:#e8e8e8;color:#222;padding:8px;display:flex;flex-direction:column;gap:6px}
+.dht .grill{flex:1;background:repeating-linear-gradient(90deg,#bbb 0 4px,#e8e8e8 4px 8px)}
+.pico{width:200px;height:80px;background:#2e7d32;border:2px solid #1b5e20;color:#e8f5e9;padding:8px}
+.win{background:#0d1310f2;border:1px solid #2f5341;color:#cde3d4;font-family:var(--mono);font-size:12px;width:230px}
+.win .wt{padding:4px 9px;background:#18291f;font-size:11px;color:#8fb39d;border-radius:5px 5px 0 0}
+.win .wb{padding:8px 10px;height:88px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+.sticky{width:200px;background:#ffe27a;color:#3b2f00;padding:10px 12px;transform:rotate(1.5deg);font-size:13px;line-height:1.4}
+.sticky b{display:block;font-size:12px}
+.benchhint{position:absolute;left:12px;bottom:12px;font-family:var(--mono);font-size:11px;color:#cfe3d6;background:#0d1a14cc;padding:4px 8px}
+
+/* scope */
+#m-scope{background:#141210;color:var(--amber);font-family:var(--mono);flex-direction:column;padding:14px 18px;gap:12px}
+.sbar{display:flex;justify-content:space-between;font-size:12px;flex-wrap:wrap;gap:8px}
+.sbody{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:14px;min-height:0}
+.scr{border:2px solid #3d2b10;background:#0c0904;position:relative;min-height:160px}
+#cv{position:absolute;inset:0;width:100%;height:100%}
+.read{display:flex;flex-direction:column;gap:10px;overflow:auto}
+.rd{border:2px solid #3d2b10;padding:6px 10px}
+.rd small{color:#b08a4a;font-size:10px;display:block;letter-spacing:.1em}
+.rd b{font-size:24px;font-variant-numeric:tabular-nums}
+.rd.alert{border-color:var(--bad);color:var(--bad)}
+.aib{border:2px solid var(--amber);padding:8px 10px;font-size:12px;color:#ffd68a;min-height:60px}
+.sbtns{display:flex;gap:8px;flex-wrap:wrap}
+.sbtns button{border:2px solid #3d2b10;background:none;color:var(--amber);font-family:var(--mono);font-size:12px;padding:4px 10px}
+.sbtns button:hover{border-color:var(--amber)}
+
+/* F-keys */
+.fkeys{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:var(--panel2);border-top:1px solid var(--line)}
+.fkeys button{border:1px solid var(--line);background:var(--bg);font-family:var(--mono);font-size:12px;padding:6px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fkeys button b{color:var(--acc);font-weight:700;margin-right:4px}
+.fkeys button[aria-pressed="true"]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.fkeys button[aria-pressed="true"] b{color:var(--acc-ink)}
+
+/* toast + modal */
+.toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:calc(48px + env(safe-area-inset-top,0px));width:min(320px,calc(100% - 32px));background:var(--panel);border:1px solid var(--acc);padding:12px;display:flex;flex-direction:column;gap:8px;z-index:40;box-shadow:0 10px 30px #0008;animation:ein .25s ease-out}
+.toast b{font-family:var(--display)}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--panel2);padding:4px 10px;font-size:12px}
+.btn.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
+.modal{position:fixed;inset:0;background:#000a;display:grid;place-items:center;z-index:45;padding:16px}
+.sheet{background:var(--panel);border:1px solid var(--line);width:min(560px,100%);max-height:90%;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.sheet h3{margin:0;font-family:var(--display)}
+.pinout{display:grid;grid-template-columns:1fr 90px 1fr;gap:0 8px;font-family:var(--mono);font-size:12px;min-width:420px}
+.pinout .body{grid-row:1/span 10;grid-column:2;border:2px solid var(--acc);display:grid;place-items:center;color:var(--acc);font-family:var(--display);text-align:center}
+.pn{display:flex;align-items:center;gap:6px;padding:2px 0}
+.pn.l{justify-content:flex-end}
+.pn u{text-decoration:none;width:10px;height:10px;border-radius:50%;border:1px solid var(--mute)}
+.pn.used u{background:var(--acc);border-color:var(--acc)} .pn.no u{background:var(--bad);border-color:var(--bad)}
+.pn em{font-style:normal;color:var(--acc)} .pn.no em{color:var(--bad)}
+
+@media (max-width:760px){
+  body{overflow:auto}
+  .main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(420px,1fr)}
+  .book{border-right:0;border-bottom:1px solid var(--line);max-height:260px}
+  .sbody{grid-template-columns:minmax(0,1fr)}
+  .fkeys{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .esp{width:200px} .chipm{left:56px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<!-- BOOT -->
+<div id="boot">
+  <div class="blogo">T<span>3</span></div>
+  <div class="oss" role="listbox" aria-label="เลือกระบบปฏิบัติการ">
+    <button class="os" role="option" aria-selected="true" data-os="t3"><b>T3 OS</b><small>Linux 6.12 · Seagate USB</small><small id="cd">▸ บูตใน 5 วินาที</small></button>
+    <button class="os" role="option" aria-selected="false" data-os="win"><b>Windows 11</b><small>NVMe · WD_BLACK</small><small>&nbsp;</small></button>
+  </div>
+  <div class="bhint"><b>← →</b> เลือก &nbsp; <b>Enter</b> บูต &nbsp; <b>T</b> เข้า terminal อย่างเดียว</div>
+  <div id="winmsg" hidden></div>
+</div>
+
+<!-- OS -->
+<div id="os" hidden>
+  <div class="top">
+    <span class="logo">T<span>3</span></span>
+    <span>ESP32 <b>●</b> ttyUSB0</span>
+    <span id="picoStat" class="off">Pico ○</span>
+    <span>LM Studio <b>●</b></span>
+    <span>Claude Code <b>●</b></span>
+    <span class="sp"></span>
+    <button class="tbtn" id="plugBtn">+ จำลองเสียบ Pi Pico</button>
+    <span id="clock">14:32</span>
+  </div>
+  <div class="main">
+    <aside class="book" aria-label="สมุดโปรเจกต์">
+      <div class="bh"><small>LOGBOOK · weather-station</small><h2 id="headline">วันนี้: บอร์ดรีสตาร์ทเอง กำลังหาสาเหตุ</h2></div>
+      <div class="stats"><div>flash<b id="stFlash">14</b></div><div>error<b id="stErr">1</b></div><div>temp<b id="stTemp">—</b></div></div>
+      <div class="events" id="events"></div>
+      <div class="next">ถัดไป: <b>ส่งค่าเข้า LINE ทุก 10 นาที</b></div>
+    </aside>
+    <div class="stage">
+      <section class="mode on" id="m-shell" aria-label="Shell">
+        <div id="out" aria-live="polite"></div>
+        <div class="sugs" id="sugs"></div>
+        <form id="cmdline"><span class="p">t3 ~/weather $</span><input id="cmd" autocomplete="off" spellcheck="false" aria-label="พิมพ์คำสั่ง"></form>
+      </section>
+      <section class="mode" id="m-bench" aria-label="Bench">
+        <svg id="wires" aria-hidden="true"></svg>
+        <div class="obj esp" id="o-esp" style="left:6%;top:12%"><span class="lbl">ESP32-DevKitC · ttyUSB0</span><div class="pins" style="top:3px"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="chipm">ESP32</div><span class="led" id="led"></span><div class="pins" style="bottom:5px"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+        <div class="obj dht" id="o-dht" style="left:52%;top:10%"><span class="lbl">DHT22</span><div class="grill"></div></div>
+        <div class="obj win" id="o-ser" style="left:6%;top:52%"><div class="wt">serial · ttyUSB0</div><div class="wb" id="benchSer"></div></div>
+        <div class="obj sticky" id="o-note" style="left:66%;top:48%"><b>✦ Claude</b><span id="noteTxt">สาย DATA ของ DHT22 ต่อ GPIO4 ถูกแล้ว ✓ อย่าลืม R 10k pull-up</span></div>
+        <div class="benchhint">ลากชิ้นส่วนย้ายได้ · ดับเบิลคลิก ESP32 = ดู pinout</div>
+      </section>
+      <section class="mode" id="m-scope" aria-label="Scope">
+        <div class="sbar"><span>CH1 ▸ ESP32-DevKitC</span><span>CH2 ▸ VCC 3V3</span><span id="runSt">RUN ●</span></div>
+        <div class="sbody">
+          <div class="scr"><canvas id="cv"></canvas></div>
+          <div class="read">
+            <div class="rd"><small>TEMP · DHT22</small><b id="rTemp">31.4°C</b></div>
+            <div class="rd" id="rdV"><small>VCC</small><b id="rV">3.30V</b></div>
+            <div class="rd"><small>RESETS วันนี้</small><b id="rRst">3</b></div>
+            <div class="aib" id="aib">▸ Claude เฝ้ากราฟอยู่ ยังไม่มีอะไรผิดปกติ</div>
+          </div>
+        </div>
+        <div class="sbtns"><button id="brown">จำลองไฟตก (brownout)</button><button id="hold">หยุดกราฟ</button></div>
+      </section>
+    </div>
+  </div>
+  <nav class="fkeys" aria-label="ปุ่มลัด">
+    <button data-m="shell" aria-pressed="true"><b>F1</b>Shell</button>
+    <button data-m="bench" aria-pressed="false"><b>F2</b>Bench</button>
+    <button data-m="scope" aria-pressed="false"><b>F3</b>Scope</button>
+    <button data-k="flash" aria-pressed="false"><b>F4</b>Flash</button>
+    <button data-k="pins" aria-pressed="false"><b>F6</b>Pins</button>
+    <button data-k="claude" aria-pressed="false"><b>F7</b>Claude</button>
+  </nav>
+</div>
+
+<div id="ov"></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const now=()=>new Date().toTimeString().slice(0,5);
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+/* ---------- BOOT ---------- */
+let sel='t3',left=5,timer;
+function pick(o){sel=o;$$('.os').forEach(b=>b.setAttribute('aria-selected',b.dataset.os===o))}
+function boot(o,termOnly){
+  clearInterval(timer);
+  if(o==='win'){$('#winmsg').hidden=false;$('#winmsg').innerHTML='กำลังเข้า Windows 11… (นี่คือตัวอย่าง)<br><br><button class="btn pri" id="back">กลับไปเลือกใหม่</button>';$('#back').onclick=()=>{$('#winmsg').hidden=true;pick('t3')};return}
+  $('#boot').hidden=true;$('#os').hidden=false;startOS(termOnly);
+}
+$$('.os').forEach(b=>{b.onclick=()=>{pick(b.dataset.os);boot(b.dataset.os)};b.onfocus=()=>pick(b.dataset.os)});
+timer=setInterval(()=>{left--;$('#cd').textContent=left>0?`▸ บูตใน ${left} วินาที`:'▸ กำลังบูต…';if(left<=0)boot('t3')},1000);
+document.addEventListener('keydown',e=>{
+  if(!$('#boot').hidden){
+    if(e.key==='ArrowLeft'||e.key==='ArrowRight'){clearInterval(timer);$('#cd').textContent='▸ กด Enter เพื่อบูต';pick(sel==='t3'?'win':'t3');e.preventDefault()}
+    else if(e.key==='Enter'){boot(sel);e.preventDefault()}
+    else if(e.key.toLowerCase()==='t'){boot('t3',true)}
+    return;
+  }
+  const map={F1:'shell',F2:'bench',F3:'scope'};
+  if(map[e.key]){e.preventDefault();mode(map[e.key])}
+  if(e.key==='F4'){e.preventDefault();doFlash()}
+  if(e.key==='F6'){e.preventDefault();pinout()}
+  if(e.key==='F7'){e.preventDefault();mode('shell');$('#cmd').value='claude "';$('#cmd').focus()}
+  if(e.key==='Escape')$('#ov').innerHTML='';
+});
+
+/* ---------- LOGBOOK ---------- */
+function ev(cls,txt){const d=document.createElement('div');d.className='ev '+cls;d.innerHTML=`<time>${now()}</time><div>${txt}</div>`;$('#events').prepend(d)}
+function initBook(){[['','เปิดโปรเจกต์ weather-station ต่อ (resume-project)'],['hw','เสียบ ESP32-DevKitC'],['','flash #14 · build 2.1s'],['er','panic: LoadProhibited · บอร์ดรีสตาร์ท'],['ai','Claude: สาเหตุอยู่ที่ main.cpp:41']].forEach(x=>ev(x[0],x[1]))}
+
+/* ---------- MODES ---------- */
+function mode(m){$$('.mode').forEach(x=>x.classList.toggle('on',x.id==='m-'+m));$$('.fkeys [data-m]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));if(m==='bench')drawWires();if(m==='shell')$('#cmd').focus()}
+$$('.fkeys button').forEach(b=>b.onclick=()=>{if(b.dataset.m)mode(b.dataset.m);if(b.dataset.k==='flash')doFlash();if(b.dataset.k==='pins')pinout();if(b.dataset.k==='claude'){mode('shell');$('#cmd').value='claude "';$('#cmd').focus()}});
+
+/* ---------- SHELL ---------- */
+const out=$('#out');
+function o(html,cls){const d=document.createElement('div');if(cls)d.className=cls;d.innerHTML=html;out.appendChild(d);out.scrollTop=out.scrollHeight;return d}
+let pending=null,fixed=false,flashes=14,errs=1,temp=31.4,picoIn=false;
+function sugs(){const s=pending?['y','n']:['help','bench boards','bench flash','bench serial',fixed?'claude "ต่อไปทำส่วนส่งเข้า LINE"':'claude "ทำไมบอร์ดรีสตาร์ท"','log'];$('#sugs').innerHTML=s.map(x=>`<button type="button">${esc(x)}</button>`).join('');$$('#sugs button').forEach(b=>b.onclick=()=>run(b.textContent))}
+function startOS(termOnly){
+  initBook();
+  o('<span class="d">T3 OS 0.1 · Debian base · tty1</span>');
+  o('<span class="d">resume-project: เปิด ~/weather ต่อจากครั้งก่อน</span>');
+  o('');
+  o('<span class="p">t3 ~/weather $</span> bench serial');
+  o('<span class="d">  WiFi connecting…</span>');
+  o('<span class="e">  Guru Meditation Error: Core 1 panic\'ed (LoadProhibited)</span>');
+  claudeFix();
+  if(termOnly){$('.book').hidden=true;$('.fkeys').hidden=true;$('.main').style.gridTemplateColumns='minmax(0,1fr)';o('<span class="am">โหมด terminal อย่างเดียว · พิมพ์ "desktop" เพื่อเปิด logbook และ F-keys</span>')}
+  sugs();$('#cmd').focus();tickClock();setInterval(tickClock,20000);
+  serialLoop();initScope();initDrag();
+}
+function claudeFix(){
+  o('<span class="k">✦ claude ›</span> <code>dht.read()</code> ถูกเรียกก่อน <code>dht.begin()</code> ที่ main.cpp:41 ทำให้อ่าน pointer ที่เป็น null\n<span class="del">- dht.read();</span>\n<span class="add">+ dht.begin();</span>\n<span class="add">+ delay(2000);</span>\nแก้แล้ว flash ใหม่ไหม? <span class="k">[y/n]</span>','cl');
+  pending='fix';
+}
+function run(raw){
+  const c=raw.trim();if(!c)return;
+  o(`<span class="p">t3 ~/weather $</span> ${esc(c)}`);$('#cmd').value='';
+  if(pending){const a=c.toLowerCase();if(a==='y'||a==='yes'){if(pending==='fix'){pending=null;fixed=true;o('<span class="d">  แก้ src/main.cpp ✓</span>');ev('ai','Claude แก้ main.cpp:41 (อนุมัติแล้ว)');doFlash(true)}else if(pending==='flash'){pending=null;doFlash(true)}}else if(a==='n'||a==='no'){pending=null;o('<span class="d">  ยกเลิก</span>')}else o('<span class="w">  ตอบ y หรือ n</span>');sugs();return}
+  const [cmd,...rest]=c.split(' ');const arg=rest.join(' ');
+  if(cmd==='help')o('<span class="d">  bench boards · bench flash · bench serial · bench pins\n  claude "คำถาม" · log · scope · bench · clear · desktop</span>');
+  else if(c==='bench boards'){o('  ESP32-DevKitC   /dev/ttyUSB0  CP2102  <span class="ok">● weather-station</span>');o(picoIn?'  Raspberry Pi Pico /dev/ttyACM0 RP2040 <span class="ok">● plant-water</span>':'  Raspberry Pi Pico <span class="d">○ ไม่ได้เสียบ</span>')}
+  else if(c==='bench flash')doFlash();
+  else if(c==='bench serial'){o(fixed?`<span class="ok">  temp=${temp.toFixed(1)}</span>`:'<span class="e">  panic · rebooting…</span>')}
+  else if(c==='bench pins'||cmd==='pins')pinout();
+  else if(cmd==='claude'){const q=arg.replace(/^"|"$/g,'');setTimeout(()=>{if(!fixed&&/รีสตาร์ท|reset|panic/i.test(q))claudeFix();else if(/LINE/i.test(q)){o('<span class="k">✦ claude ›</span> เพิ่ม HTTPClient กับ src/line.cpp แล้ว ต้องใช้ LINE token ใส่ใน <code>secrets.h</code> · ทดสอบด้วย <code>bench flash</code>','cl');ev('ai','Claude เพิ่มส่วนส่งเข้า LINE')}else o(`<span class="k">✦ claude ›</span> (ตัวอย่าง) ผมดู serial log กับโค้ดแล้ว: ${esc(q)||'มีอะไรให้ช่วย?'} → แนะนำให้เปิด Scope (F3) ดูไฟเลี้ยงประกอบด้วย`,'cl');sugs()},500)}
+  else if(cmd==='log')o('<span class="d">  ดูที่ Logbook ด้านซ้าย · '+$$('.ev').length+' รายการวันนี้</span>');
+  else if(cmd==='scope')mode('scope');
+  else if(cmd==='bench')mode('bench');
+  else if(cmd==='clear')out.innerHTML='';
+  else if(cmd==='desktop'){$('.book').hidden=false;$('.fkeys').hidden=false;$('.main').style.gridTemplateColumns=''}
+  else o(`<span class="w">  ไม่รู้จักคำสั่ง "${esc(cmd)}" · ลอง help หรือถาม claude</span>`);
+  sugs();
+}
+$('#cmdline').onsubmit=e=>{e.preventDefault();run($('#cmd').value)};
+
+let busy=false;
+function doFlash(ok){
+  if(busy)return;
+  if(!ok){mode('shell');o('<span class="w">  Flash ลง ESP32-DevKitC (/dev/ttyUSB0)? [y/n]</span>');pending='flash';sugs();return}
+  busy=true;const steps=['build ········· ok  2.0s','flash ········· 100%','reset ········· ok'];let i=0;
+  const go=()=>{o('<span class="d">  '+steps[i]+'</span>');if(++i<steps.length)setTimeout(go,500);else{busy=false;flashes++;$('#stFlash').textContent=flashes;
+    if(fixed){errs=0;$('#stErr').textContent='0';ev('ok',`flash #${flashes} ผ่าน · ไม่รีสตาร์ทแล้ว`);$('#headline').textContent='วันนี้: แก้บอร์ดรีสตาร์ทได้แล้ว';$('#noteTxt').textContent='แก้แล้ว ✓ บอร์ดเสถียร อ่านค่าได้ปกติ';o('<span class="ok">  ✓ บอร์ดทำงานปกติ · temp='+temp.toFixed(1)+'</span>')}
+    else{ev('er',`flash #${flashes} · ยัง panic อยู่`);o('<span class="e">  panic อีกครั้ง</span>')}sugs()}};go();
+}
+
+/* serial feed (bench window + led) */
+function serialLoop(){
+  const box=$('#benchSer');
+  setInterval(()=>{
+    let line;
+    if(fixed){temp=+(31+Math.random()*0.8).toFixed(1);line=`<span class="ok">temp=${temp.toFixed(1)}</span>`;$('#stTemp').textContent=temp.toFixed(1);$('#rTemp').textContent=temp.toFixed(1)+'°C'}
+    else line=Math.random()<.5?'<span class="d">WiFi connecting…</span>':'<span class="e">panic · reboot</span>';
+    const d=document.createElement('div');d.innerHTML=line;box.appendChild(d);while(box.children.length>5)box.firstChild.remove();
+    $('#led').classList.toggle('on');
+  },1200);
+}
+
+/* ---------- BENCH drag + wires ---------- */
+function initDrag(){
+  $$('.obj').forEach(el=>{
+    el.addEventListener('pointerdown',e=>{
+      const st=$('#m-bench').getBoundingClientRect(),r=el.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;el.setPointerCapture(e.pointerId);el.style.zIndex=5;
+      const mv=ev2=>{el.style.left=Math.max(0,Math.min(st.width-r.width,ev2.clientX-st.left-dx))+'px';el.style.top=Math.max(0,Math.min(st.height-r.height,ev2.clientY-st.top-dy))+'px';drawWires()};
+      const up=()=>{el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up);el.style.zIndex=''};
+      el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);
+    });
+  });
+  $('#o-esp').addEventListener('dblclick',pinout);
+  window.addEventListener('resize',drawWires);
+}
+function drawWires(){
+  const st=$('#m-bench').getBoundingClientRect();if(!st.width)return;
+  const a=$('#o-esp').getBoundingClientRect(),b=$('#o-dht').getBoundingClientRect();
+  const ax=a.right-st.left,bx=b.left-st.left;const cols=['#f85149','#e8e8e8','#ffd23e'];let p='';
+  cols.forEach((c,i)=>{const ay=a.top-st.top+30+i*20,by=b.bottom-st.top-30+i*-8 - 20;const mx=(ax+bx)/2;p+=`<path d="M${ax} ${ay} C${mx} ${ay} ${mx} ${by} ${bx} ${by}" stroke="${c}" stroke-width="3" fill="none" stroke-linecap="round"/>`});
+  if(picoIn&&$('#o-pico')){const q=$('#o-pico').getBoundingClientRect();p+=`<path d="M${q.left-st.left+20} ${q.top-st.top} C${q.left-st.left+20} ${q.top-st.top-60} ${st.width-30} ${q.top-st.top-60} ${st.width-10} 0" stroke="#999" stroke-width="4" fill="none" stroke-dasharray="2 6"/>`}
+  $('#wires').innerHTML=p;
+}
+
+/* ---------- SCOPE ---------- */
+let hold=false,brownT=0,resets=3;
+function initScope(){
+  const cv=$('#cv'),ctx=cv.getContext('2d');let t=0;const buf=[];
+  function frame(){
+    const w=cv.clientWidth,h=cv.clientHeight;if(cv.width!==w*2){cv.width=w*2;cv.height=h*2}
+    ctx.setTransform(2,0,0,2,0,0);ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle='rgba(255,176,0,.09)';ctx.lineWidth=1;for(let i=1;i<10;i++){ctx.beginPath();ctx.moveTo(w*i/10,0);ctx.lineTo(w*i/10,h);ctx.stroke()}for(let i=1;i<8;i++){ctx.beginPath();ctx.moveTo(0,h*i/8);ctx.lineTo(w,h*i/8);ctx.stroke()}
+    if(!hold){t++;let v=3.3+(Math.random()-.5)*.03;if(t%40<3)v-=.06;if(brownT>0){v=3.3-Math.sin((60-brownT)/60*Math.PI)*0.55;brownT--}buf.push(v);if(buf.length>w/2)buf.shift();$('#rV').textContent=v.toFixed(2)+'V'}
+    ctx.strokeStyle='#ffb000';ctx.lineWidth=2;ctx.beginPath();buf.forEach((v,i)=>{const y=h*0.5-(v-3.3)*h*0.7;i?ctx.lineTo(i*2,y):ctx.moveTo(0,y)});ctx.stroke();
+    ctx.fillStyle='#b08a4a';ctx.font='11px "JetBrains Mono",monospace';ctx.fillText('3.30V',6,h*0.5-4);ctx.fillText('2.80V brownout',6,h*0.5+0.5*h*0.7-4);
+    ctx.strokeStyle='rgba(248,81,73,.5)';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(0,h*0.5+0.5*h*0.7);ctx.lineTo(w,h*0.5+0.5*h*0.7);ctx.stroke();ctx.setLineDash([]);
+    requestAnimationFrame(frame);
+  }
+  frame();
+}
+$('#brown').onclick=()=>{brownT=60;resets++;$('#rRst').textContent=resets;$('#rdV').classList.add('alert');ev('hw','VCC ตกถึง 2.75V · บอร์ดรีเซ็ต');
+  setTimeout(()=>{$('#rdV').classList.remove('alert');$('#aib').textContent='▸ Claude: ไฟตกตอน WiFi เริ่มส่งข้อมูล (brownout) แนะนำใส่ตัวเก็บประจุ 100µF ใกล้ขา 3V3 หรือใช้สาย USB ที่สั้นลง';ev('ai','Claude: brownout ตอน WiFi ส่ง → ใส่ C 100µF')},1100)};
+$('#hold').onclick=e=>{hold=!hold;e.target.textContent=hold?'เดินกราฟต่อ':'หยุดกราฟ';$('#runSt').textContent=hold?'STOP ■':'RUN ●'};
+
+/* ---------- PLUG ---------- */
+$('#plugBtn').onclick=()=>{
+  if(picoIn)return;picoIn=true;$('#plugBtn').disabled=true;$('#picoStat').innerHTML='Pico <b>●</b> ttyACM0';$('#picoStat').className='';
+  ev('hw','เสียบ Raspberry Pi Pico → plant-water');
+  const p=document.createElement('div');p.className='obj pico';p.id='o-pico';p.style.left='36%';p.style.top='70%';p.innerHTML='<span class="lbl">Raspberry Pi Pico · ttyACM0</span>';$('#m-bench').appendChild(p);initDragOne(p);drawWires();
+  if($('#m-shell').classList.contains('on'))o('<span class="d">  usb: Raspberry Pi Pico → /dev/ttyACM0 (plant-water)</span>');
+  const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');
+  t.innerHTML='<b>Pi Pico เชื่อมต่อแล้ว</b><span style="font-size:13px">ครั้งก่อนค้างที่ <b>เซนเซอร์ความชื้นดินอ่านค่าแกว่ง</b> เปิดโปรเจกต์ plant-water ต่อไหม?</span><div class="row"><button class="btn pri">เปิดต่อ</button><button class="btn">ดูบนโต๊ะ</button><button class="btn">ปิด</button></div>';
+  document.body.appendChild(t);const bs=t.querySelectorAll('button');bs[0].onclick=()=>{t.remove();ev('','เปิด plant-water ไว้อีกแท็บ')};bs[1].onclick=()=>{t.remove();mode('bench')};bs[2].onclick=()=>t.remove();setTimeout(()=>t.remove(),10000);
+};
+function initDragOne(el){el.addEventListener('pointerdown',e=>{const st=$('#m-bench').getBoundingClientRect(),r=el.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;el.setPointerCapture(e.pointerId);const mv=v=>{el.style.left=(v.clientX-st.left-dx)+'px';el.style.top=(v.clientY-st.top-dy)+'px';drawWires()};const up=()=>{el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up)};el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up)})}
+
+/* ---------- PINOUT ---------- */
+function pinout(){
+  const L=[['3V3',''],['EN',''],['GPIO36',''],['GPIO39',''],['GPIO34',''],['GPIO4','DHT22','used'],['GPIO5',''],['GPIO6','ห้ามใช้','no'],['GPIO7','ห้ามใช้','no'],['GND','']];
+  const R=[['GND',''],['GPIO23','MOSI'],['GPIO22','SCL'],['TX0','USB','used'],['RX0','USB','used'],['GPIO21','SDA'],['GPIO19','MISO'],['GPIO18','SCK'],['GPIO2','LED','used'],['5V','']];
+  let h='';for(let i=0;i<10;i++){const l=L[i],r=R[i];h+=`<div class="pn l ${l[2]||''}" style="grid-row:${i+1};grid-column:1">${l[1]?`<em>${l[1]}</em>`:''}${l[0]}<u></u></div><div class="pn ${r[2]||''}" style="grid-row:${i+1};grid-column:3"><u></u>${r[0]}${r[1]?` <em>${r[1]}</em>`:''}</div>`}
+  $('#ov').innerHTML=`<div class="modal"><div class="sheet" role="dialog" aria-modal="true" aria-label="Pinout"><h3>Pinout · ESP32-DevKitC</h3><div style="overflow-x:auto"><div class="pinout"><div class="body">ESP32<br>WROOM</div>${h}</div></div><div class="cl"><span class="k">✦ claude ›</span> GPIO4 ใช้กับ DHT22 ได้ ✓ ส่วน GPIO6–11 ต่อกับ flash ภายใน ห้ามใช้</div><div class="row"><button class="btn" id="cls">ปิด (Esc)</button></div></div></div>`;
+  $('#cls').onclick=()=>$('#ov').innerHTML='';$('#cls').focus();
+}
+
+function tickClock(){$('#clock').textContent=now()}
+</script>
