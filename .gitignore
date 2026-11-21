@@ -8,3 +8,4 @@ dist/
 live/cache/
 live/chroot/
 .impeccable/
+vm/
