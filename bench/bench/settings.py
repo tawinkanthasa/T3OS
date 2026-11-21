@@ -7,6 +7,7 @@ import re
 import platform
 import shutil
 import subprocess
+import threading
 import time
 import tomllib
 import urllib.request
@@ -149,8 +150,10 @@ def launch(name: str) -> dict:
     exe = cmd[0] if os.path.isabs(cmd[0]) else shutil.which(cmd[0])
     if not exe or not os.path.exists(exe):
         return {"ok": False, "error": f"{cmd[0]} ยังไม่ได้ติดตั้ง"}
-    subprocess.Popen([exe, *cmd[1:]], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                     start_new_session=True)
+    p = subprocess.Popen([exe, *cmd[1:]], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         start_new_session=True)
+    # reap it when it exits, or every launch leaves a zombie under benchd
+    threading.Thread(target=p.wait, daemon=True).start()
     return {"ok": True}
 
 

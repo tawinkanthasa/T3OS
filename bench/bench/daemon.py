@@ -307,8 +307,10 @@ def notify(title: str, body: str, urgent: bool = False) -> None:
     if not shutil.which("notify-send"):
         return
     import subprocess
-    subprocess.Popen(["notify-send", "-a", "T3", "-u", "critical" if urgent else "normal", title, body],
-                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    import threading
+    p = subprocess.Popen(["notify-send", "-a", "T3", "-u", "critical" if urgent else "normal", title, body],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    threading.Thread(target=p.wait, daemon=True).start()  # reap, or each notification leaves a zombie
 
 
 async def api_settings_get(request: web.Request) -> web.Response:
