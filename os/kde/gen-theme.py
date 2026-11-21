@@ -8,16 +8,14 @@ from pathlib import Path
 K = Path(__file__).resolve().parent
 
 # ---- dock tiles: icon name(s) -> (tile colour, glyph colour, 24px stroke path) -------------
+# Only T3's own and the system apps get a T3 tile; other apps (Chrome, VS Code, Arduino, KiCad, ...)
+# keep their real logo, which is easier to recognise.
 TILES = {
     ("t3-apps",): ("#3a3d42", "#e6e8ea", "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"),
     ("org.kde.dolphin", "system-file-manager"): ("#2f6fb3", "#ffffff", "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"),
-    ("google-chrome",): ("#e8eaed", "#1b1c1f", "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"),
-    ("vscode", "code", "com.visualstudio.code"): ("#1f5fa8", "#ffffff", "M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"),
     ("utilities-terminal", "org.kde.konsole"): ("#17181a", "#56d364", "M5 7l5 5-5 5M12 18h7"),
     ("t3-bench",): ("#1f6f35", "#ffffff", "M7 7h10v10H7zM9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"),
     ("t3-scope",): ("#15181a", "#3fb950", "M3 12h3l2-6 4 12 3-9 2 3h4"),
-    ("cc.arduino.IDE2", "arduino"): ("#0f7c7e", "#ffffff", "M4 6h16v12H4zM12 15V9M9 12l3-3 3 3"),
-    ("kicad", "org.kicad.kicad"): ("#33415c", "#ffffff", "M4 4h16v16H4zM8 8h3v3H8zM11 9.5h5v5M16 14.5v2"),
     ("plasmadiscover", "org.kde.discover"): ("#2b5797", "#ffffff", "M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"),
     ("preferences-system", "systemsettings"): ("#4a4d52", "#ffffff", "M4 7h16M4 12h16M4 17h16M9 5v4M15 10v4M11 15v4"),
     ("user-trash", "user-trash-full"): ("#3a3d42", "#e6e8ea", "M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13"),
@@ -38,6 +36,8 @@ def icon_theme():
     out = K / "icons-theme" / "T3"
     apps = out / "scalable" / "apps"
     apps.mkdir(parents=True, exist_ok=True)
+    for old in apps.glob("*.svg"):      # drop tiles no longer in TILES
+        old.unlink()
     for names, (bg, fg, d) in TILES.items():
         for n in names:
             (apps / f"{n}.svg").write_text(tile(bg, fg, d))
