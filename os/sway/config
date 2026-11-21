@@ -32,18 +32,17 @@ exec mako --config $t3/mako/config
 exec lxpolkit
 exec nm-applet --indicator
 exec swayidle -w timeout 600 'swaylock -f -c 0a0d0b' before-sleep 'swaylock -f -c 0a0d0b'
-bar {
-    swaybar_command waybar -c $t3/waybar/config.jsonc -s $t3/waybar/style.css
-}
+exec waybar -c $t3/waybar/config.jsonc -s $t3/waybar/style.css
 
 # ---------- T3 windows (cog = WebKit viewer for benchd's UI) ----------
-set $t3open sh -c 'for i in $(seq 50); do curl -sf $ui/ >/dev/null && break; sleep 0.2; done; exec cog --platform=wl "$0"'
-exec $t3open "$ui/?view=bench"
-for_window [app_id="cog|com.igalia.Cog"] border pixel 2
-bindsym $mod+b exec $t3open "$ui/?view=bench"
-bindsym $mod+s exec $t3open "$ui/?view=scope"
-bindsym $mod+l exec $t3open "$ui/?view=logbook"
-bindsym $mod+t exec $t3open "$ui/"
+set $t3open $t3/bin/t3-open
+exec $t3open bench
+for_window [app_id="^t3\."] border pixel 2
+for_window [app_id="^t3\.logbook$"] resize set width 320px
+bindsym $mod+b exec $t3open bench
+bindsym $mod+s exec $t3open scope
+bindsym $mod+l exec $t3open logbook
+bindsym $mod+t exec $t3open
 
 # ---------- apps ----------
 bindsym $mod+space exec fuzzel --config $t3/fuzzel/fuzzel.ini

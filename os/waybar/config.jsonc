@@ -13,7 +13,7 @@
   "custom/bench": {
     "exec": "curl -sf http://127.0.0.1:7300/api/waybar || echo '{\"text\":\"bench ○\",\"class\":\"off\"}'",
     "return-type": "json", "interval": 2,
-    "on-click": "swaymsg exec \"cog --platform=wl 'http://127.0.0.1:7300/?view=bench'\""
+    "on-click": "/usr/share/t3/bin/t3-open bench"
   },
   "custom/ai": {
     "exec": "curl -sf 'http://127.0.0.1:7300/api/waybar?part=ai' || echo '{\"text\":\"\"}'",

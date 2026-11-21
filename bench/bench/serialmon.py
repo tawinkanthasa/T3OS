@@ -23,12 +23,13 @@ _SIM_BOOT = [
 ]
 
 
-def _sim_lines(board: Board) -> Iterator[str]:
+def _sim_lines(board: Board, every: int = 17) -> Iterator[str]:
+    """Simulated output; a brownout every `every` readings."""
     yield from _SIM_BOOT
     for i in itertools.count():
         t = 24.0 + random.uniform(-0.6, 0.6)
         yield f"temp={t:.2f}C hum={55 + random.uniform(-3, 3):.1f}% vcc={3.30 - random.uniform(0, 0.05):.2f}V"
-        if i % 17 == 16:
+        if i % every == every - 1:
             yield "Brownout detector was triggered"
             yield from _SIM_BOOT[:2]
 
@@ -45,7 +46,8 @@ def lines(board: Board, baud: int = 115200, seconds: float | None = None,
                (stop is not None and stop())
 
     if board.simulated:
-        for line in _sim_lines(board):
+        # fast (tests): brownout often; live speed (benchd): roughly once a minute
+        for line in _sim_lines(board, every=17 if sim_delay < 0.1 else 150):
             if done():
                 return
             time.sleep(sim_delay)

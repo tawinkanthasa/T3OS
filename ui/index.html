@@ -17,6 +17,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--body);overflow:hidden}
 button,input,select{font:inherit;color:inherit}
@@ -131,6 +132,9 @@ body.v .main{grid-template-columns:minmax(0,1fr)}
 body.v:not(.v-logbook) .book{display:none}
 body.v-logbook .stage{display:none}
 body.v-logbook .book{border-right:0}
+body.v{overflow:hidden}
+body.v .main{grid-template-rows:minmax(0,1fr)!important}
+body.v .book{max-height:none!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -299,7 +303,11 @@ function drag(el){el.addEventListener('pointerdown',e=>{if(e.button!==0)return;c
   const up=()=>{el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up);el.style.zIndex='';if(el.dataset.port){const pos=store.get('t3.pos',{});pos[el.dataset.port]={left:el.style.left,top:el.style.top};store.set('t3.pos',pos)}};
   el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up)})}
 drag($('#o-note'));
-function drawWires(){const st=$('#m-bench').getBoundingClientRect();if(!st.width)return;let p='';
+function clampBoards(){const st=$('#m-bench').getBoundingClientRect();if(!st.width)return;
+  $$('#m-bench .obj').forEach(el=>{const r=el.getBoundingClientRect();
+    if(r.right>st.right)el.style.left=Math.max(0,st.width-r.width-8)+'px';
+    if(r.bottom>st.bottom)el.style.top=Math.max(0,st.height-r.height-8)+'px'})}
+function drawWires(){clampBoards();const st=$('#m-bench').getBoundingClientRect();if(!st.width)return;let p='';
   $$('.board').forEach((el,i)=>{const q=el.getBoundingClientRect(),x=q.left-st.left+24,y=q.top-st.top,tx=st.width-40-i*24;
     p+=`<path d="M${x} ${y} C${x} ${y-70} ${tx} ${Math.max(0,y-90)} ${tx} 0" stroke="#999" stroke-width="4" fill="none" stroke-dasharray="2 6" stroke-linecap="round"/>`});
   $('#wires').innerHTML=p}

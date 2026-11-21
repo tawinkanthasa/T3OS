@@ -102,9 +102,9 @@ class Hub:
                 msg = {"type": "serial", "port": board.port, "line": item, "alert": alert}
                 if alert:
                     now = asyncio.get_running_loop().time()
-                    if now - self.last_notify.get(board.port, 0) > 30:  # don't spam
+                    if now - self.last_notify.get(board.port, -1e9) > 300:  # max one per board per 5 min
                         self.last_notify[board.port] = now
-                        notify(f"{board.name}: มีปัญหา", item[:120], urgent=True)
+                        notify(f"{board.name}: มีปัญหา", item[:120] + "\nดูต่อใน Logbook (Super+L)")
                 await self.send(msg)
                 m = dict((k, float(v)) for k, v in METRIC_RE.findall(item))
                 if m:
@@ -325,7 +325,13 @@ def make_app() -> web.Application:
 def main() -> None:
     host = os.environ.get("BENCHD_HOST", "127.0.0.1")
     print(f"benchd on http://{host}:{PORT}  (ui: {UI_DIR})", flush=True)
-    web.run_app(make_app(), host=host, port=PORT, print=None)
+    import signal
+    # nothing to flush (logbook writes are per-line); serial threads can block shutdown, so exit hard
+    signal.signal(signal.SIGTERM, lambda *_: os._exit(0))
+    signal.signal(signal.SIGINT, lambda *_: os._exit(0))
+    web.run_app(make_app(), host=host, port=PORT, print=None, handle_signals=False)
+    # serial reader threads may sit in a blocking read; don't let them keep the process alive
+    os._exit(0)
 
 
 if __name__ == "__main__":
