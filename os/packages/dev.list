@@ -1,0 +1,6 @@
+# Programming: compilers/runtimes, containers, git tools, terminal power tools.
+build-essential cmake ninja-build pkg-config gdb valgrind clangd
+python3-venv python3-pip python3-dev pipx nodejs npm golang-go rustc cargo
+git git-lfs lazygit meld
+podman podman-compose distrobox
+shellcheck ripgrep fd-find fzf tmux btop htop jq sqlitebrowser

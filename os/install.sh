@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Install the T3 desktop files into a root filesystem.
+#   sudo os/install.sh            -> this machine (/)
+#   os/install.sh /some/chroot    -> an ISO chroot, or a throwaway tree for the WSL trial
+# Packages come separately (os/packages/*.list). Safe to re-run.
+set -euo pipefail
+SRC="$(cd "$(dirname "$0")" && pwd)"; REPO="$(dirname "$SRC")"; K="$SRC/kde"
+ROOT="${1:-/}"; ROOT="${ROOT%/}"
+T3="$ROOT/usr/share/t3"; SHARE="$ROOT/usr/share"; XDG="$ROOT/etc/xdg"
+
+install -d "$T3/bin" "$T3/wallpapers" "$SHARE/plasma/look-and-feel" "$SHARE/plasma/plasmoids" \
+           "$SHARE/color-schemes" "$SHARE/applications" "$SHARE/icons/hicolor/scalable/apps" \
+           "$XDG/autostart" "$ROOT/etc/sddm.conf.d" "$SHARE/sddm/themes/breeze"
+install -m 0755 "$SRC"/bin/* "$T3/bin/"
+cp -r "$REPO/ui" "$T3/"
+install -m 0644 "$K"/wallpapers/* "$T3/wallpapers/"
+rm -rf "$SHARE/plasma/look-and-feel/org.t3.desktop" "$SHARE/plasma/plasmoids/org.t3.boards"
+cp -r "$K/look-and-feel/org.t3.desktop" "$SHARE/plasma/look-and-feel/"
+cp -r "$K/plasmoids/org.t3.boards" "$SHARE/plasma/plasmoids/"
+install -m 0644 "$K"/color-schemes/* "$SHARE/color-schemes/"
+install -m 0644 "$K"/applications/* "$SHARE/applications/"
+install -m 0644 "$K"/icons/* "$SHARE/icons/hicolor/scalable/apps/"
+for f in kwinrc kglobalshortcutsrc kxkbrc plasmanotifyrc; do install -m 0644 "$K/xdg/$f" "$XDG/$f"; done
+install -m 0644 "$K"/xdg/autostart/* "$XDG/autostart/"
+# KDE reads colours from kdeglobals itself, so the scheme's groups are appended to the defaults
+{ cat "$K/xdg/kdeglobals"; grep -v '^\[General\]$\|^ColorScheme=\|^Name=\|^shadeSortColumn=' "$K/color-schemes/T3Dark.colors"; } > "$XDG/kdeglobals"
+install -m 0644 "$K/sddm/t3.conf" "$ROOT/etc/sddm.conf.d/t3.conf"
+install -m 0644 "$K/sddm/theme.conf.user" "$SHARE/sddm/themes/breeze/theme.conf.user"
+
+if [[ "$ROOT" != "" ]]; then
+  # installed somewhere other than /: point every reference at that tree
+  grep -rlI /usr/share/t3 "$T3/bin" "$SHARE/plasma" "$SHARE/applications" "$SHARE/sddm" 2>/dev/null \
+    | xargs -r sed -i "s#/usr/share/t3#$T3#g"
+fi
+command -v gtk-update-icon-cache >/dev/null && [[ -z "$ROOT" ]] && gtk-update-icon-cache -q /usr/share/icons/hicolor || true
+echo "T3 desktop files installed into ${ROOT:-/}"

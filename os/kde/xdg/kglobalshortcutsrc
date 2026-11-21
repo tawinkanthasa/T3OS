@@ -1,0 +1,6 @@
+# Extra default shortcuts (T3 apps carry theirs in X-KDE-Shortcuts; Meta+1..9 opens dock apps)
+[services][org.kde.krunner.desktop]
+_launch=Meta+Space\tAlt+Space\tAlt+F2\tSearch
+
+[services][org.kde.konsole.desktop]
+_launch=Meta+Return\tCtrl+Alt+T

@@ -268,25 +268,31 @@ async def api_release(request: web.Request) -> web.Response:
     return web.json_response({"released": port, "seconds": secs})
 
 
-async def api_waybar(request: web.Request) -> web.Response:
-    """JSON for waybar custom modules: ?part=ai for AI status, default = boards."""
-    hub: Hub = request.app["hub"]
-    if request.query.get("part") == "ai":
-        l = hub.ai.get("local", {})
-        c = hub.ai.get("claude", {})
-        parts = []
-        if l.get("configured"):
-            parts.append("local ●" if l.get("up") else "local ✕")
-        if c.get("installed"):
-            parts.append("claude ●")
-        return web.json_response({"text": "  ".join(parts), "tooltip": l.get("url") or "",
-                                  "class": "down" if l.get("configured") and not l.get("up") else "ok"})
+def _ai_status(hub: "Hub") -> dict:
+    l = hub.ai.get("local", {})
+    c = hub.ai.get("claude", {})
+    parts = []
+    if l.get("configured"):
+        parts.append("local ●" if l.get("up") else "local ✕")
+    if c.get("installed"):
+        parts.append("claude ●")
+    return {"text": "  ".join(parts), "tooltip": l.get("url") or "",
+            "class": "down" if l.get("configured") and not l.get("up") else "ok"}
+
+
+def _board_status(hub: "Hub") -> dict:
     bs = list(hub.boards.values())
     names = {"esp32": "ESP32", "rp2040": "Pico", "avr": "AVR"}
     text = "  ".join(f"{names.get(b.family, b.family)} ●" for b in bs) or "no board"
     recent_alert = any(e["kind"] == "alert" for e in logbook.tail(5))
-    return web.json_response({"text": text, "tooltip": "\n".join(f"{b.port}  {b.name}" for b in bs),
-                              "class": "alert" if recent_alert else ("ok" if bs else "none")})
+    return {"text": text, "tooltip": "\n".join(f"{b.port}  {b.name}" for b in bs),
+            "class": "alert" if recent_alert else ("ok" if bs else "none")}
+
+
+async def api_status(request: web.Request) -> web.Response:
+    """Menu-bar widget feed: boards + AI, each {text, tooltip, class}."""
+    hub: Hub = request.app["hub"]
+    return web.json_response({"boards": _board_status(hub), "ai": _ai_status(hub)})
 
 
 def notify(title: str, body: str, urgent: bool = False) -> None:
@@ -367,7 +373,7 @@ def make_app() -> web.Application:
     app.on_startup.append(start_bg)
     app.on_cleanup.append(stop_bg)
     app.add_routes([web.get("/", index), web.get("/ws", ws_events), web.get("/pty", ws_pty),
-                    web.get("/api/pins/{family}", api_pins), web.get("/api/waybar", api_waybar),
+                    web.get("/api/pins/{family}", api_pins), web.get("/api/status", api_status),
                     web.post("/api/release", api_release),
                     web.get("/api/settings", api_settings_get), web.post("/api/settings/ai", api_settings_ai),
                     web.post("/api/ai/test", api_ai_test), web.post("/api/settings/prefs", api_prefs),

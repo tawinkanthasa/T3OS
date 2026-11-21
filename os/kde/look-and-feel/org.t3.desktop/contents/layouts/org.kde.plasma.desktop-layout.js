@@ -1,0 +1,65 @@
+// T3 default desktop: menu bar on top, floating dock at the bottom (Mac-style layout).
+// Runs once for a new user (LookAndFeelPackage=org.t3.desktop in /etc/xdg/kdeglobals),
+// or again from System Settings > Global Theme > T3 with "Desktop and window layout" ticked.
+
+var T3 = "/usr/share/t3";
+
+// wallpaper on every screen
+desktopsForActivity(currentActivity()).forEach(function (d) {
+    d.wallpaperPlugin = "org.kde.image";
+    d.currentConfigGroup = ["Wallpaper", "org.kde.image", "General"];
+    d.writeConfig("Image", "file://" + T3 + "/wallpapers/t3.svg");
+});
+
+// ---- top: menu bar ----
+var bar = new Panel;
+bar.location = "top";
+bar.height = Math.round(gridUnit * 1.6);
+bar.floating = false;
+
+var menu = bar.addWidget("org.kde.plasma.kickoff");        // T3 menu: apps, places, sleep/restart/shut down
+menu.currentConfigGroup = ["General"];
+menu.writeConfig("icon", "t3-logo");
+menu.writeConfig("favoritesDisplay", "1");                  // list, not grid
+
+bar.addWidget("org.kde.plasma.appmenu");                    // the focused app's menus (File, Edit, ...)
+bar.addWidget("org.kde.plasma.panelspacer");
+bar.addWidget("org.t3.boards");                             // ESP32 ● Pico ● claude ●
+bar.addWidget("org.kde.plasma.systemtray");                 // Wi-Fi, sound, Bluetooth, battery, EN/TH
+var clock = bar.addWidget("org.kde.plasma.digitalclock");
+clock.currentConfigGroup = ["Appearance"];
+clock.writeConfig("showDate", "true");
+clock.writeConfig("dateDisplayFormat", "BesideTime");
+
+// ---- bottom: floating dock ----
+var dock = new Panel;
+dock.location = "bottom";
+dock.height = Math.round(gridUnit * 3.2);
+dock.lengthMode = "fit";
+dock.alignment = "center";
+dock.hiding = "dodgewindows";                               // slides away when a window touches it
+dock.floating = true;
+
+var grid = dock.addWidget("org.kde.plasma.kickerdash");     // full-screen app grid
+grid.currentConfigGroup = ["General"];
+grid.writeConfig("icon", "view-app-grid-symbolic");
+
+var tasks = dock.addWidget("org.kde.plasma.icontasks");
+tasks.currentConfigGroup = ["General"];
+tasks.writeConfig("launchers", [
+    "applications:org.kde.dolphin.desktop",
+    "applications:google-chrome.desktop",
+    "applications:code.desktop",
+    "applications:org.kde.konsole.desktop",
+    "applications:t3.bench.desktop",
+    "applications:t3.scope.desktop",
+    "applications:cc.arduino.IDE2.desktop",
+    "applications:org.kicad.kicad.desktop",
+    "applications:org.kde.discover.desktop",
+    "applications:systemsettings.desktop"
+].join(","));
+tasks.writeConfig("groupingStrategy", "1");                 // one icon per app
+tasks.writeConfig("indicateAudioStreams", "true");
+
+dock.addWidget("org.kde.plasma.marginsseparator");
+dock.addWidget("org.kde.plasma.trash");

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Logbook
+GenericName=T3 Logbook
+Comment=บันทึกเหตุการณ์ของบอร์ด
+Exec=/usr/share/t3/bin/t3-open logbook
+Icon=t3-logbook
+StartupWMClass=t3.logbook
+Categories=Development;Electronics;
+Keywords=t3;bench;esp32;arduino;
+X-KDE-Shortcuts=Meta+J

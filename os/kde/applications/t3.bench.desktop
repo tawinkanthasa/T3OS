@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Bench
+GenericName=T3 Bench
+Comment=บอร์ด สายไฟ และ serial
+Exec=/usr/share/t3/bin/t3-open bench
+Icon=t3-bench
+StartupWMClass=t3.bench
+Categories=Development;Electronics;
+Keywords=t3;bench;esp32;arduino;
+X-KDE-Shortcuts=Meta+B

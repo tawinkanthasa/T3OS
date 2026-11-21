@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import platform
 import shutil
 import subprocess
@@ -102,28 +103,35 @@ def write_prefs(new: dict) -> dict:
 
 
 def apply_wallpaper(value: str) -> bool:
-    """#rrggbb colour or an image path; applied live through swaymsg."""
-    if not shutil.which("swaymsg") or not os.environ.get("SWAYSOCK"):
+    """#rrggbb colour or an image path; applied live to every Plasma desktop over D-Bus."""
+    if not shutil.which("dbus-send"):
         return False
-    if value.startswith("#") and len(value) == 7:
-        cmd = ["swaymsg", "output", "*", "bg", value, "solid_color"]
+    if re.fullmatch(r"#[0-9a-fA-F]{6}", value):
+        plugin, group, key, val = "org.kde.color", "General", "Color", value
     elif Path(value).expanduser().is_file():
-        cmd = ["swaymsg", "output", "*", "bg", str(Path(value).expanduser()), "fill"]
+        plugin, group, key, val = "org.kde.image", "General", "Image", "file://" + str(Path(value).expanduser())
     else:
         return False
+    script = ("desktops().forEach(function(d){d.wallpaperPlugin=%s;"
+              "d.currentConfigGroup=['Wallpaper',%s,%s];d.writeConfig(%s,%s);});"
+              % tuple(json.dumps(x) for x in (plugin, plugin, group, key, val)))
+    cmd = ["dbus-send", "--session", "--type=method_call", "--dest=org.kde.plasmashell",
+           "/PlasmaShell", "org.kde.PlasmaShell.evaluateScript", "string:" + script]
     return subprocess.run(cmd, capture_output=True).returncode == 0
 
 
 # ---- launching system tools (whitelist only) -------------------------------
 APPS = {
-    "wifi": ["nm-connection-editor"],
-    "bluetooth": ["blueman-manager"],
-    "sound": ["pavucontrol"],
-    "display": ["wdisplays"],
-    "thai": ["fcitx5-config-qt"],
-    "apps": ["gnome-software"],
-    "files": ["thunar"],
-    "update": ["/usr/share/t3/bin/t3-update-now"],
+    "wifi": ["systemsettings", "kcm_networkmanagement"],
+    "bluetooth": ["systemsettings", "kcm_bluetooth"],
+    "sound": ["systemsettings", "kcm_pulseaudio"],
+    "display": ["systemsettings", "kcm_kscreen"],
+    "thai": ["systemsettings", "kcm_keyboard"],
+    "apps": ["plasma-discover"],
+    "files": ["dolphin"],
+    "update": ["plasma-discover", "--mode", "update"],
+    "snapshots": ["timeshift-launcher"],
+    "system": ["systemsettings"],
 }
 
 

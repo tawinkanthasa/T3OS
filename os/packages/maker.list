@@ -1,0 +1,5 @@
+# Hardware / maker. Installed with --no-install-recommends (KiCad's 3D models alone are ~5 GB).
+kicad kicad-symbols kicad-footprints kicad-templates xsltproc
+pulseview sigrok-cli sigrok-firmware-fx2lafw
+openocd gdb-multiarch dfu-util avrdude stlink-tools
+picocom minicom fritzing fritzing-parts

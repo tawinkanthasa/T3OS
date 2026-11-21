@@ -149,7 +149,7 @@ button{cursor:pointer}
 .kv dt{color:var(--mute)} .kv dd{margin:0}
 .keys{display:grid;grid-template-columns:max-content 1fr;gap:3px 14px;font-size:12px}
 .keys kbd{font-family:var(--mono);font-size:11px;color:var(--acc);border:1px solid var(--line);padding:0 5px;justify-self:start}
-/* single-panel windows inside the T3 desktop (?view=bench|scope|logbook): waybar replaces the top bar */
+/* single-panel windows inside the T3 desktop (?view=bench|scope|logbook): the T3 menu bar widget replaces the top bar */
 body.v .top,body.v .fkeys{display:none}
 body.v .main{grid-template-columns:minmax(0,1fr)}
 body.v:not(.v-logbook) .book{display:none}
@@ -423,9 +423,9 @@ function toastMsg(s){const t=document.createElement('div');t.className='toast';t
 
 /* ---------------- SETTINGS ---------------- */
 const post=(url,body)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-T3':'1'},body:JSON.stringify(body)}).then(r=>r.json());
-const TILES=[['wifi','WiFi / เครือข่าย','NetworkManager'],['bluetooth','Bluetooth','blueman'],['sound','เสียง','pavucontrol'],['display','จอ','wdisplays'],['thai','พิมพ์ไทย','fcitx5'],['apps','ร้านแอป','Flatpak · Flathub'],['update','อัปเดตระบบ','apt + flatpak'],['files','ไฟล์','thunar']];
+const TILES=[['wifi','WiFi / เครือข่าย','System Settings'],['bluetooth','Bluetooth','System Settings'],['sound','เสียง','System Settings'],['display','จอ','System Settings'],['thai','คีย์บอร์ด EN/TH','Alt+Shift สลับ'],['apps','ร้านแอป','Discover · Flathub'],['update','อัปเดตระบบ','Discover'],['snapshots','จุดกู้คืนระบบ','Timeshift'],['files','ไฟล์','Dolphin'],['system','ตั้งค่าทั้งหมด','System Settings']];
 const WALL=['#0a0d0b','#10241a','#1d3b2c','#141210','#1b1b2e','#2b1a14','#202020'];
-const KEYS=[['Super+Space','เปิดแอป'],['Super+Enter','terminal'],['Super+W','Chrome (Shift = Firefox)'],['Super+C','VS Code'],['Super+E','ไฟล์'],['Super+B / S / L','Bench / Scope / Logbook'],['Super+T','T3 Shell'],['Super+,','ตั้งค่า'],['Super+V','ประวัติคลิปบอร์ด'],['Super+.','อีโมจิ'],['Print','แคปส่วนของจอ → คลิปบอร์ด'],['Super+Shift+S','แคปจอ → ~/Pictures'],['Super+Shift+R','อัดจอ (กดซ้ำเพื่อหยุด)'],['Super+1…9','สลับ workspace'],['Super+Q','ปิดหน้าต่าง'],['Super+F','เต็มจอ'],['Super+Esc','ล็อกจอ'],['Super+Shift+E','ปิดเครื่อง / รีสตาร์ท'],['Alt+Shift','สลับ EN / TH']];
+const KEYS=[['Meta','เมนู T3'],['Meta+Space','ค้นหาแอป ไฟล์ คำนวณ'],['Meta+1…9','เปิดแอปตามลำดับใน Dock'],['Meta+W','ดูทุกหน้าต่าง'],['Meta+Enter','terminal'],['F12','terminal แบบดึงลง'],['Meta+E','ไฟล์'],['Meta+B / O / J','Bench / Scope / Logbook'],['Meta+T','T3 Shell'],['Meta+,','ตั้งค่า T3'],['Meta+V','ประวัติคลิปบอร์ด'],['Meta+.','อีโมจิ'],['Print','จับภาพหน้าจอ'],['Meta+Shift+S','จับภาพบางส่วน'],['Meta+Shift+R','อัดหน้าจอ'],['Meta+← / →','จัดหน้าต่างครึ่งจอ'],['Alt+F4','ปิดหน้าต่าง'],['Meta+L','ล็อกจอ'],['Ctrl+Alt+Del','ปิดเครื่อง / รีสตาร์ท'],['Alt+Shift','สลับ EN / TH']];
 async function initSettings(){
   let d;try{d=await fetch('/api/settings').then(r=>r.json())}catch{$('#aiRes').textContent='ต่อ benchd ไม่ได้';return}
   const a=d.ai;$('#aiUrl').value=a.local.url;$('#aiMode').value=a.router.mode;$('#aiClaude').value=a.claude.model;$('#aiAsk').checked=a.router.ask_before_cloud;

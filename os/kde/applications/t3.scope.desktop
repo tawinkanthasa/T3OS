@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Scope
+GenericName=T3 Scope
+Comment=กราฟแรงดันไฟเรียลไทม์
+Exec=/usr/share/t3/bin/t3-open scope
+Icon=t3-scope
+StartupWMClass=t3.scope
+Categories=Development;Electronics;
+Keywords=t3;bench;esp32;arduino;
+X-KDE-Shortcuts=Meta+O

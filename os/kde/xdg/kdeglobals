@@ -1,0 +1,13 @@
+# System-wide defaults for every T3 user (install.sh appends the T3Dark colour groups below this).
+[KDE]
+LookAndFeelPackage=org.t3.desktop
+widgetStyle=Breeze
+SingleClick=false
+
+[General]
+ColorScheme=T3Dark
+AccentColor=63,185,80
+
+[Icons]
+Theme=breeze-dark
+

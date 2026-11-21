@@ -1,0 +1,7 @@
+# English + Thai (Kedmanee), Alt+Shift to switch; EN/TH shows in the menu bar
+[Layout]
+DisplayNames=,
+LayoutList=us,th
+Use=true
+Options=grp:alt_shift_toggle
+ResetOldOptions=true

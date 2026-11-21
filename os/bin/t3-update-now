@@ -1,3 +1,0 @@
-#!/bin/sh
-# Run all updates in a terminal (clicked from the bar).
-exec foot -T "T3 update" sh -c 'sudo apt update && sudo apt full-upgrade; command -v flatpak >/dev/null && flatpak update; echo; read -p "เสร็จแล้ว กด Enter เพื่อปิด" _'

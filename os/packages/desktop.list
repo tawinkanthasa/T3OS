@@ -1,23 +1,19 @@
-# T3 desktop packages (used by scripts/setup-desktop.sh and the live-build ISO)
-# compositor + shell
-sway swaybg swaylock swayidle waybar fuzzel mako-notifier libnotify-bin
-xwayland xdg-desktop-portal-wlr xdg-desktop-portal-gtk lxpolkit xdg-utils
-# login screen; keyring unlocked by the login password (pam_gnome_keyring, wired up in the ISO)
-greetd tuigreet gnome-keyring libpam-gnome-keyring
-# T3 UI windows
-cog
-# everyday apps
-foot firefox-esr thunar thunar-archive-plugin file-roller mousepad imv mpv
-# settings backends
-network-manager network-manager-gnome pavucontrol blueman brightnessctl wdisplays
-# convenience
-grim slurp wl-clipboard cliphist wf-recorder gammastep udiskie jq
-# Thai input
-fcitx5 fcitx5-libthai fcitx5-frontend-gtk3 fcitx5-frontend-qt5 fcitx5-config-qt
-# fonts / theme (dark everywhere)
-fonts-jetbrains-mono fonts-noto-core fonts-noto-color-emoji fonts-thai-tlwg
-adwaita-icon-theme gnome-themes-extra adwaita-qt qt6-gtk-platformtheme
-# apps beyond Debian
-flatpak gnome-software gnome-software-plugin-flatpak
-# maker tools
-usbutils picocom pipx nodejs npm
+# T3 desktop: KDE Plasma 6, laid out Mac-style (top menu bar + floating dock + app grid).
+# Used by scripts/setup-desktop.sh and the live-build ISO.
+# -- Plasma core + login screen (kwallet unlocks with the login password, so Chrome never asks)
+kde-plasma-desktop plasma-workspace sddm sddm-theme-breeze kde-config-sddm libpam-kwallet5 kwalletmanager
+xdg-desktop-portal-kde xwayland appmenu-gtk3-module kde-config-gtk-style breeze-gtk-theme plasma-widgets-addons
+# -- system settings backends: Wi-Fi, sound, Bluetooth, power, screens, printers, phone link
+plasma-nm plasma-pa bluedevil powerdevil kscreen print-manager kdeconnect plasma-systemmonitor
+# -- app store + firmware updates (Flathub enabled by setup-extras.sh)
+flatpak plasma-discover plasma-discover-backend-flatpak plasma-discover-backend-fwupd fwupd
+# -- everyday apps: files, terminal, drop-down terminal (F12), editor, archives, photos, PDF, video,
+#    screenshots/recording, calculator, search, disk usage, partitions, office
+dolphin konsole yakuake kate ark gwenview okular haruna kde-spectacle kcalc kfind filelight partitionmanager
+ffmpegthumbs kdegraphics-thumbnailers
+libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-qt6 libreoffice-l10n-th
+firefox-esr
+# -- T3 panels + helpers
+cog curl jq libnotify-bin usbutils
+# -- fonts (Thai + emoji + code)
+fonts-noto-core fonts-noto-color-emoji fonts-thai-tlwg fonts-jetbrains-mono

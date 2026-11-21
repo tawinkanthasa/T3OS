@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=T3 Settings
+GenericName=T3 Settings
+Comment=AI, วอลเปเปอร์, ระบบ
+Exec=/usr/share/t3/bin/t3-open settings
+Icon=t3-settings
+StartupWMClass=t3.settings
+Categories=Development;Electronics;
+Keywords=t3;bench;esp32;arduino;
+X-KDE-Shortcuts=Meta+,

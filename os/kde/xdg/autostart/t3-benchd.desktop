@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=T3 bench daemon
+Comment=Watches USB boards and serves the T3 panels on 127.0.0.1:7300
+Exec=benchd
+NoDisplay=true
+X-KDE-autostart-phase=1

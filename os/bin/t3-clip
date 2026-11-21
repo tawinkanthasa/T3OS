@@ -1,3 +1,0 @@
-#!/bin/sh
-# Clipboard history picker (Super+V). History is collected by `wl-paste --watch cliphist store`.
-cliphist list | fuzzel --dmenu --prompt "clip › " --width 60 ${T3_FUZZEL:+--config "$T3_FUZZEL"} | cliphist decode | wl-copy

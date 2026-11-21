@@ -1,0 +1,5 @@
+# Installed system only (needs a Btrfs root, so not used in WSL):
+# snapshots before every apt run + restore from the boot menu (grub-btrfs is built from upstream
+# in the ISO since Debian doesn't package it), compressed RAM swap, out-of-memory guard,
+# automatic security updates.
+btrfs-progs timeshift zram-tools systemd-oomd unattended-upgrades

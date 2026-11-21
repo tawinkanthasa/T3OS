@@ -1,0 +1,12 @@
+{
+  "KPackageStructure": "Plasma/LookAndFeel",
+  "KPlugin": {
+    "Id": "org.t3.desktop",
+    "Name": "T3",
+    "Description": "T3: menu bar on top, floating dock, app grid. Dark graphite with T3 green.",
+    "Authors": [{ "Name": "T3" }],
+    "License": "GPL-2.0+",
+    "Version": "1.0"
+  },
+  "X-Plasma-APIVersion": "2"
+}

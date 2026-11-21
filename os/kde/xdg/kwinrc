@@ -1,0 +1,20 @@
+# Window buttons on the left (close, minimise, maximise), like macOS
+[org.kde.kdecoration2]
+library=org.kde.breeze
+theme=Breeze
+ButtonsOnLeft=XIA
+ButtonsOnRight=
+
+# Night light: warm screen after sunset (Bangkok)
+[NightColor]
+Active=true
+Mode=Location
+LatitudeFixed=13.7
+LongitudeFixed=100.5
+
+# Hot corner top-left: overview of all windows (like Mission Control)
+[Effect-overview]
+BorderActivate=7
+
+[Windows]
+Placement=Centered

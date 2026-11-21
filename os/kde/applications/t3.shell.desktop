@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=T3 Shell
+GenericName=T3 Shell
+Comment=terminal ที่มี bench และ claude
+Exec=/usr/share/t3/bin/t3-open shell
+Icon=t3-shell
+StartupWMClass=t3.shell
+Categories=Development;Electronics;
+Keywords=t3;bench;esp32;arduino;
+X-KDE-Shortcuts=Meta+T

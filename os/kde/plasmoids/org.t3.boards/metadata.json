@@ -1,0 +1,14 @@
+{
+  "KPackageStructure": "Plasma/Applet",
+  "KPlugin": {
+    "Id": "org.t3.boards",
+    "Name": "T3 Boards",
+    "Description": "Boards plugged in and AI status from benchd. Click to open Bench.",
+    "Icon": "t3-bench",
+    "Category": "System Information",
+    "Authors": [{ "Name": "T3" }],
+    "License": "GPL-2.0+",
+    "Version": "1.0"
+  },
+  "X-Plasma-API-Minimum-Version": "6.0"
+}
