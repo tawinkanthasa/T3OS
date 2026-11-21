@@ -126,6 +126,29 @@ button{cursor:pointer}
   .sbody{grid-template-columns:minmax(0,1fr)}
   .fkeys{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+/* settings */
+#m-settings{flex-direction:column;overflow:auto;padding:18px 22px 28px;gap:18px;background:var(--bg)}
+#m-settings h2{margin:0;font-family:var(--display);font-size:22px}
+.sgrp{border:1px solid var(--line);background:var(--panel);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.sgrp h3{margin:0;font-family:var(--display);font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sgrp h3 small{font-family:var(--mono);font-size:11px;color:var(--mute);font-weight:400}
+.sgrp label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}
+.sgrp input[type=text],.sgrp select{background:var(--bg);border:1px solid var(--line);padding:6px 8px;font-family:var(--mono);font-size:13px;color:var(--fg);min-width:0}
+.sgrp .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.chk{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--fg)!important;font-size:13px!important}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.tile{border:1px solid var(--line);background:var(--bg);padding:10px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.tile b{font-size:13px} .tile small{color:var(--mute);font-family:var(--mono);font-size:11px}
+.tile:hover{border-color:var(--acc)}
+.sw{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sw button{width:34px;height:34px;border:2px solid var(--line)}
+.sw button[aria-pressed="true"]{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-ink) inset}
+.res{font-family:var(--mono);font-size:12px;min-height:18px}
+.res.ok{color:var(--acc)} .res.bad{color:var(--bad)}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-family:var(--mono);font-size:12px}
+.kv dt{color:var(--mute)} .kv dd{margin:0}
+.keys{display:grid;grid-template-columns:max-content 1fr;gap:3px 14px;font-size:12px}
+.keys kbd{font-family:var(--mono);font-size:11px;color:var(--acc);border:1px solid var(--line);padding:0 5px;justify-self:start}
 /* single-panel windows inside the T3 desktop (?view=bench|scope|logbook): waybar replaces the top bar */
 body.v .top,body.v .fkeys{display:none}
 body.v .main{grid-template-columns:minmax(0,1fr)}
@@ -176,6 +199,32 @@ body.v .book{max-height:none!important}
           </div>
         </div>
         <div class="sbtns"><button id="hold">หยุดกราฟ</button></div>
+      </section>
+      <section class="mode" id="m-settings" aria-label="Settings">
+        <h2>ตั้งค่า T3</h2>
+        <form class="sgrp" id="aiForm">
+          <h3>AI <small id="aiStat"></small></h3>
+          <div class="two">
+            <label>LM Studio (เครื่องอื่น) · URL<input type="text" id="aiUrl" placeholder="http://192.168.1.50:1234/v1" spellcheck="false"></label>
+            <label>โมเดล local<select id="aiModel"><option value="">— กดทดสอบเพื่อดึงรายชื่อ —</option></select></label>
+            <label>โหมดเลือก AI<select id="aiMode"><option value="local">local อย่างเดียว (ข้อมูลไม่ออกจากบ้าน)</option><option value="auto">auto (local ก่อน งานยากส่ง Claude)</option><option value="claude">Claude อย่างเดียว</option></select></label>
+            <label>โมเดล Claude<input type="text" id="aiClaude" spellcheck="false"></label>
+          </div>
+          <label class="chk"><input type="checkbox" id="aiAsk"> ถามก่อนทุกครั้งที่จะส่งข้อมูลขึ้น cloud</label>
+          <div class="row"><button class="btn" type="button" id="aiTest">ทดสอบการเชื่อมต่อ</button><button class="btn pri">บันทึก</button></div>
+          <div class="res" id="aiRes" role="status"></div>
+        </form>
+        <div class="sgrp"><h3>ระบบ</h3>
+          <div class="tiles" id="sysTiles"></div>
+          <div class="res" id="launchRes" role="status"></div>
+        </div>
+        <div class="sgrp"><h3>วอลเปเปอร์ <small>สีพื้น หรือ path รูป</small></h3>
+          <div class="sw" id="wpSw"></div>
+          <div class="row"><input type="text" id="wpPath" placeholder="~/Pictures/wall.jpg" spellcheck="false" style="flex:1;min-width:0"><button class="btn" id="wpSet" type="button">ใช้รูปนี้</button></div>
+          <div class="res" id="wpRes" role="status"></div>
+        </div>
+        <div class="sgrp"><h3>ปุ่มลัด</h3><div class="keys" id="keys"></div></div>
+        <div class="sgrp"><h3>เกี่ยวกับเครื่องนี้</h3><dl class="kv" id="about"></dl></div>
       </section>
     </div>
   </div>
@@ -270,7 +319,7 @@ function logEntry(x,initial){
 function headline(x){return({alert:'วันนี้: บอร์ดมีปัญหา กำลังหาสาเหตุ',flash_fail:'วันนี้: flash ไม่ผ่าน',flash:'วันนี้: flash ล่าสุดผ่าน',plug:'วันนี้: '+x.msg,note:'โน้ต: '+x.msg})[x.kind]||$('#headline').textContent}
 
 /* ---------------- AI STATUS ---------------- */
-function setAi(ai){S.ai=ai||{};const l=S.ai.local||{},c=S.ai.claude||{};
+function setAi(ai){S.ai=ai||{};aiStatus(S.ai);const l=S.ai.local||{},c=S.ai.claude||{};
   $('#tLocal').innerHTML=!l.configured?'LM Studio <span title="ตั้ง url ใน ~/.config/bench/ai.toml">— ยังไม่ตั้ง</span>':l.up?'LM Studio <b>●</b>':'LM Studio <span class="bad">● ต่อไม่ได้</span>';
   $('#tClaude').innerHTML=c.installed?'Claude Code <b>●</b>':'Claude Code ○';}
 
@@ -372,9 +421,37 @@ async function pinout(port){
 }
 function toastMsg(s){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=s;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
 
+/* ---------------- SETTINGS ---------------- */
+const post=(url,body)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-T3':'1'},body:JSON.stringify(body)}).then(r=>r.json());
+const TILES=[['wifi','WiFi / เครือข่าย','NetworkManager'],['bluetooth','Bluetooth','blueman'],['sound','เสียง','pavucontrol'],['display','จอ','wdisplays'],['thai','พิมพ์ไทย','fcitx5'],['apps','ร้านแอป','Flatpak · Flathub'],['update','อัปเดตระบบ','apt + flatpak'],['files','ไฟล์','thunar']];
+const WALL=['#0a0d0b','#10241a','#1d3b2c','#141210','#1b1b2e','#2b1a14','#202020'];
+const KEYS=[['Super+Space','เปิดแอป'],['Super+Enter','terminal'],['Super+W','Chrome (Shift = Firefox)'],['Super+C','VS Code'],['Super+E','ไฟล์'],['Super+B / S / L','Bench / Scope / Logbook'],['Super+T','T3 Shell'],['Super+,','ตั้งค่า'],['Super+V','ประวัติคลิปบอร์ด'],['Super+.','อีโมจิ'],['Print','แคปส่วนของจอ → คลิปบอร์ด'],['Super+Shift+S','แคปจอ → ~/Pictures'],['Super+Shift+R','อัดจอ (กดซ้ำเพื่อหยุด)'],['Super+1…9','สลับ workspace'],['Super+Q','ปิดหน้าต่าง'],['Super+F','เต็มจอ'],['Super+Esc','ล็อกจอ'],['Super+Shift+E','ปิดเครื่อง / รีสตาร์ท'],['Alt+Shift','สลับ EN / TH']];
+async function initSettings(){
+  let d;try{d=await fetch('/api/settings').then(r=>r.json())}catch{$('#aiRes').textContent='ต่อ benchd ไม่ได้';return}
+  const a=d.ai;$('#aiUrl').value=a.local.url;$('#aiMode').value=a.router.mode;$('#aiClaude').value=a.claude.model;$('#aiAsk').checked=a.router.ask_before_cloud;
+  if(a.local.model)$('#aiModel').innerHTML=`<option>${esc(a.local.model)}</option>`;
+  $('#sysTiles').innerHTML=TILES.map(([k,t,s])=>`<button class="tile" data-app="${k}"><b>${t}</b><small>${s}</small></button>`).join('');
+  $$('#sysTiles .tile').forEach(b=>b.onclick=async()=>{const r=await post('/api/launch',{app:b.dataset.app});$('#launchRes').className='res '+(r.ok?'ok':'bad');$('#launchRes').textContent=r.ok?'เปิดแล้ว':r.error});
+  const wp=d.prefs.wallpaper;
+  $('#wpSw').innerHTML=WALL.map(c=>`<button style="background:${c}" data-c="${c}" aria-label="สี ${c}" aria-pressed="${c===wp}"></button>`).join('');
+  if(!wp.startsWith('#'))$('#wpPath').value=wp;
+  const setWp=async v=>{const r=await post('/api/settings/prefs',{wallpaper:v});$$('#wpSw button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===v));$('#wpRes').className='res '+(r.applied?'ok':'bad');$('#wpRes').textContent=r.applied?'เปลี่ยนแล้ว':'บันทึกแล้ว · จะใช้ตอนเข้า T3 ครั้งหน้า (หรือไม่พบไฟล์)'};
+  $$('#wpSw button').forEach(b=>b.onclick=()=>setWp(b.dataset.c));$('#wpSet').onclick=()=>$('#wpPath').value.trim()&&setWp($('#wpPath').value.trim());
+  $('#keys').innerHTML=KEYS.map(([k,v])=>`<kbd>${k}</kbd><span>${v}</span>`).join('');
+  const s=d.system;$('#about').innerHTML=[['ระบบ',s.os],['เครื่อง',s.hostname],['kernel',s.kernel],['RAM',s.mem_gb+' GB'],['ดิสก์ว่าง',`${s.disk_free_gb} / ${s.disk_total_gb} GB`],['เปิดมา',s.uptime_h+' ชม.'],['Claude Code',s.claude_code?'ติดตั้งแล้ว':'ยังไม่ติดตั้ง']].map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('');
+  aiStatus(S.ai);
+}
+function aiStatus(ai){const l=ai?.local||{};if(!$('#aiStat'))return;$('#aiStat').textContent=!l.configured?'ยังไม่ได้ตั้ง local':l.up?'local ● ต่อได้':'local ✕ ต่อไม่ได้'}
+$('#aiTest').onclick=async()=>{$('#aiRes').className='res';$('#aiRes').textContent='กำลังทดสอบ…';const r=await post('/api/ai/test',{url:$('#aiUrl').value.trim()});
+  if(r.ok){$('#aiRes').className='res ok';$('#aiRes').textContent=`ต่อได้ · ${r.ms} ms · ${r.models.length} โมเดล`;const cur=$('#aiModel').value;$('#aiModel').innerHTML=r.models.map(m=>`<option ${m===cur?'selected':''}>${esc(m)}</option>`).join('')||'<option value="">(ไม่มีโมเดลโหลดอยู่)</option>'}
+  else{$('#aiRes').className='res bad';$('#aiRes').textContent='ต่อไม่ได้: '+r.error}};
+$('#aiForm').onsubmit=async e=>{e.preventDefault();const r=await post('/api/settings/ai',{local:{url:$('#aiUrl').value,model:$('#aiModel').value},claude:{model:$('#aiClaude').value},router:{mode:$('#aiMode').value,ask_before_cloud:$('#aiAsk').checked}});
+  $('#aiRes').className='res '+(r.error?'bad':'ok');$('#aiRes').textContent=r.error||'บันทึกแล้ว → ~/.config/bench/ai.toml'};
+
 /* ---------------- CLOCK ---------------- */
 function tick(){$('#clock').textContent=hhmm()}tick();setInterval(tick,15000);
 connectEvents();
+if(VIEW==='settings'){mode('settings');initSettings()}
 </script>
 </body>
 </html>

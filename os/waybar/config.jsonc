@@ -5,11 +5,11 @@
   "spacing": 4,
   "modules-left": ["custom/logo", "sway/workspaces", "sway/mode", "custom/bench"],
   "modules-center": ["sway/window"],
-  "modules-right": ["custom/ai", "pulseaudio", "network", "battery", "sway/language", "tray", "clock"],
+  "modules-right": ["custom/updates", "custom/ai", "pulseaudio", "network", "bluetooth", "battery", "sway/language", "tray", "clock", "custom/settings", "custom/power"],
 
-  "custom/logo": { "format": "T3", "tooltip": false, "on-click": "fuzzel --config /usr/share/t3/fuzzel/fuzzel.ini" },
+  "custom/logo": { "format": "T3", "tooltip-format": "เปิดแอป (Super+Space)", "on-click": "fuzzel --config /usr/share/t3/fuzzel/fuzzel.ini" },
   "sway/workspaces": { "disable-scroll": false, "all-outputs": true },
-  "sway/window": { "max-length": 50 },
+  "sway/window": { "max-length": 50, "rewrite": { "(.*) - Google Chrome": "Chrome · $1" } },
   "custom/bench": {
     "exec": "curl -sf http://127.0.0.1:7300/api/waybar || echo '{\"text\":\"bench ○\",\"class\":\"off\"}'",
     "return-type": "json", "interval": 2,
@@ -17,15 +17,23 @@
   },
   "custom/ai": {
     "exec": "curl -sf 'http://127.0.0.1:7300/api/waybar?part=ai' || echo '{\"text\":\"\"}'",
-    "return-type": "json", "interval": 15
+    "return-type": "json", "interval": 15,
+    "on-click": "/usr/share/t3/bin/t3-open settings"
   },
-  "pulseaudio": { "format": "vol {volume}%", "format-muted": "vol mute", "on-click": "pavucontrol" },
+  "custom/updates": {
+    "exec": "/usr/share/t3/bin/t3-updates", "return-type": "json", "interval": 3600,
+    "on-click": "/usr/share/t3/bin/t3-update-now"
+  },
+  "pulseaudio": { "format": "vol {volume}%", "format-muted": "vol mute", "on-click": "pavucontrol", "on-click-right": "/usr/share/t3/bin/t3-osd vol mute" },
   "network": {
     "format-wifi": "wifi {signalStrength}%", "format-ethernet": "lan", "format-disconnected": "offline",
     "tooltip-format": "{ifname} {ipaddr}", "on-click": "nm-connection-editor"
   },
+  "bluetooth": { "format": "bt", "format-disabled": "", "format-connected": "bt {num_connections}", "on-click": "blueman-manager" },
   "battery": { "format": "bat {capacity}%", "states": { "warning": 25, "critical": 10 } },
   "sway/language": { "format": "{short}" },
   "tray": { "spacing": 8 },
-  "clock": { "format": "{:%H:%M}", "tooltip-format": "{:%A %d %B %Y}" }
+  "clock": { "format": "{:%H:%M}", "tooltip-format": "{:%A %d %B %Y}" },
+  "custom/settings": { "format": "⚙", "tooltip-format": "ตั้งค่า T3 (Super+,)", "on-click": "/usr/share/t3/bin/t3-open settings" },
+  "custom/power": { "format": "⏻", "tooltip-format": "ปิดเครื่อง / รีสตาร์ท / ล็อก", "on-click": "/usr/share/t3/bin/t3-power" }
 }

@@ -1,8 +1,9 @@
-# T3 desktop session (Sway).  $t3 = folder holding T3's configs and UI.
+# T3 desktop session (Sway).  $t3 = folder holding T3's configs, scripts and UI.
 # On the T3 image this is /usr/share/t3; scripts/t3-session.sh rewrites it for dev.
 set $t3 /usr/share/t3
 set $mod Mod4
-set $ui http://127.0.0.1:7300
+set $bin $t3/bin
+set $lock swaylock -f -c 0a0d0b
 
 # ---------- look ----------
 output * bg #0a0d0b solid_color
@@ -16,6 +17,7 @@ client.focused          #3fb950 #152019 #d3e6da #3fb950   #3fb950
 client.focused_inactive #21362b #0f1612 #76917f #21362b   #21362b
 client.unfocused        #21362b #0a0d0b #76917f #21362b   #21362b
 client.urgent           #f85149 #f85149 #ffffff #f85149   #f85149
+seat * xcursor_theme Adwaita 24
 
 input type:keyboard {
     xkb_layout us,th
@@ -27,43 +29,64 @@ input type:touchpad {
 }
 
 # ---------- session services ----------
+# dark theme for GTK apps (Qt follows via QT_QPA_PLATFORMTHEME=gtk3 in the session env)
+exec gsettings set org.gnome.desktop.interface color-scheme prefer-dark
+exec gsettings set org.gnome.desktop.interface gtk-theme Adwaita-dark
+exec gsettings set org.gnome.desktop.interface icon-theme Adwaita
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP
 exec benchd
 exec mako --config $t3/mako/config
 exec lxpolkit
 exec nm-applet --indicator
-exec swayidle -w timeout 600 'swaylock -f -c 0a0d0b' before-sleep 'swaylock -f -c 0a0d0b'
+exec udiskie --tray --notify
+exec wl-paste --watch cliphist store
+exec gammastep -l 13.7:100.5 -t 6500:4000
+exec fcitx5 -d --replace
+exec swayidle -w timeout 600 '$lock' timeout 900 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' before-sleep '$lock'
 exec waybar -c $t3/waybar/config.jsonc -s $t3/waybar/style.css
 
-# ---------- T3 windows (cog = WebKit viewer for benchd's UI) ----------
-set $t3open $t3/bin/t3-open
+# ---------- T3 windows ----------
+set $t3open $bin/t3-open
 exec $t3open bench
 for_window [app_id="^t3\."] border pixel 2
-for_window [app_id="^t3\.logbook$"] resize set width 320px
+for_window [app_id="^t3\.settings$"] floating enable, resize set 760 560
 bindsym $mod+b exec $t3open bench
 bindsym $mod+s exec $t3open scope
 bindsym $mod+l exec $t3open logbook
 bindsym $mod+t exec $t3open
+bindsym $mod+comma exec $t3open settings
 
 # ---------- apps ----------
+set $chrome google-chrome-stable --ozone-platform-hint=auto
 bindsym $mod+space exec fuzzel --config $t3/fuzzel/fuzzel.ini
 bindsym $mod+Return exec foot
 bindsym $mod+e exec thunar
-bindsym $mod+w exec firefox-esr
-bindsym Print exec grim -g "$(slurp)" - | wl-copy
-bindsym $mod+Shift+s exec grim -g "$(slurp)" ~/Pictures/shot-$(date +%H%M%S).png
-bindsym $mod+Escape exec swaylock -f -c 0a0d0b
-bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
-bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
-bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
-bindsym XF86MonBrightnessUp exec brightnessctl set +10%
-bindsym XF86MonBrightnessDown exec brightnessctl set 10%-
+bindsym $mod+w exec $chrome
+bindsym $mod+Shift+w exec firefox-esr
+bindsym $mod+c exec code --ozone-platform-hint=auto
+bindsym $mod+a exec gnome-software
+
+# ---------- tools ----------
+bindsym $mod+v exec $bin/t3-clip
+bindsym $mod+period exec $bin/t3-emoji
+bindsym Print exec grim -g "$(slurp)" - | wl-copy && notify-send -a T3 -t 1500 "คัดลอกภาพแล้ว"
+bindsym $mod+Shift+s exec mkdir -p ~/Pictures && grim -g "$(slurp)" ~/Pictures/t3-$(date +%Y%m%d-%H%M%S).png && notify-send -a T3 -t 1500 "บันทึกภาพแล้ว" "~/Pictures"
+bindsym $mod+Shift+r exec $bin/t3-record
+bindsym $mod+Escape exec $lock
+bindsym $mod+Shift+e exec $bin/t3-power
+bindsym XF86AudioRaiseVolume exec $bin/t3-osd vol up
+bindsym XF86AudioLowerVolume exec $bin/t3-osd vol down
+bindsym XF86AudioMute exec $bin/t3-osd vol mute
+bindsym XF86MonBrightnessUp exec $bin/t3-osd light up
+bindsym XF86MonBrightnessDown exec $bin/t3-osd light down
+bindsym XF86PowerOff exec $bin/t3-power
 
 # ---------- windows ----------
 bindsym $mod+q kill
 bindsym $mod+f fullscreen toggle
 bindsym $mod+Shift+space floating toggle
-bindsym $mod+h splith
-bindsym $mod+v splitv
+bindsym $mod+backslash splith
+bindsym $mod+minus splitv
 bindsym $mod+Left focus left
 bindsym $mod+Right focus right
 bindsym $mod+Up focus up
@@ -82,7 +105,8 @@ mode "resize" {
     bindsym Escape mode "default"
     bindsym Return mode "default"
 }
-for_window [app_id="pavucontrol|blueman-manager|nm-connection-editor|wdisplays"] floating enable
+for_window [app_id="pavucontrol|blueman-manager|nm-connection-editor|wdisplays|org.fcitx.fcitx5-config-qt"] floating enable
+for_window [title="^T3 update$"] floating enable, resize set 800 500
 
 # ---------- workspaces ----------
 bindsym $mod+1 workspace number 1
@@ -106,4 +130,3 @@ bindsym $mod+Shift+9 move container to workspace number 9
 
 # ---------- session ----------
 bindsym $mod+Shift+c reload
-bindsym $mod+Shift+e exec swaynag -t warning -m 'ออกจาก T3?' -B 'ออก' 'swaymsg exit'

@@ -13,6 +13,11 @@ window#waybar { background: #152019; color: #76917f; }
 #custom-bench.alert { color: #f85149; }
 #custom-ai.down { color: #f85149; }
 #custom-ai { color: #d97757; }
+#custom-updates, #bluetooth, #custom-settings, #custom-power { padding: 0 10px; }
+#custom-updates.pending { color: #ffb000; }
+#custom-settings { color: #d3e6da; font-size: 14px; }
+#custom-power { color: #f85149; font-size: 14px; padding-right: 14px; }
+#custom-power:hover, #custom-settings:hover, #custom-logo:hover { background: #21362b; }
 #battery.warning { color: #f0883e; }
 #battery.critical { color: #f85149; }
 #clock { color: #d3e6da; }

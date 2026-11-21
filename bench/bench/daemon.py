@@ -20,7 +20,7 @@ from pathlib import Path
 
 from aiohttp import WSMsgType, web
 
-from . import boards as B, logbook, pins as P, serialmon
+from . import boards as B, logbook, pins as P, serialmon, settings as ST
 
 PORT = int(os.environ.get("BENCHD_PORT", "7300"))
 UI_DIR = Path(os.environ.get("T3_UI", Path(__file__).resolve().parents[2] / "ui"))
@@ -35,6 +35,7 @@ class Hub:
         self.paused: set[str] = set()
         self.ai: dict = {}
         self.last_notify: dict[str, float] = {}
+        self.ai_changed = asyncio.Event()
 
     async def send(self, msg: dict) -> None:
         data = json.dumps(msg, ensure_ascii=False)
@@ -139,23 +140,22 @@ class Hub:
 
     # -- AI endpoints --------------------------------------------------------
     async def watch_ai(self) -> None:
-        cfg_path = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "bench" / "ai.toml"
         while True:
-            cfg = {}
-            if cfg_path.exists():
-                try:
-                    cfg = tomllib.loads(cfg_path.read_text(encoding="utf-8"))
-                except tomllib.TOMLDecodeError:
-                    pass
-            url = cfg.get("ai", {}).get("local", {}).get("url")
+            cfg = ST.read_ai()
+            url = cfg["local"]["url"]
             local = {"configured": bool(url), "url": url, "up": False}
             if url:
                 local["up"] = await asyncio.to_thread(_ping, url.rstrip("/") + "/models")
-            ai = {"local": local, "claude": {"installed": shutil.which("claude") is not None}}
+            ai = {"local": local, "claude": {"installed": shutil.which("claude") is not None},
+                  "mode": cfg["router"]["mode"]}
             if ai != self.ai:
                 self.ai = ai
                 await self.send({"type": "ai", "ai": ai})
-            await asyncio.sleep(15)
+            self.ai_changed.clear()
+            try:
+                await asyncio.wait_for(self.ai_changed.wait(), 15)
+            except asyncio.TimeoutError:
+                pass
 
 
 def _ping(url: str) -> bool:
@@ -298,16 +298,66 @@ def notify(title: str, body: str, urgent: bool = False) -> None:
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
+async def api_settings_get(request: web.Request) -> web.Response:
+    return web.json_response({"ai": ST.read_ai(), "prefs": ST.read_prefs(), "system": ST.system_info(),
+                              "apps": sorted(ST.APPS)})
+
+
+async def api_settings_ai(request: web.Request) -> web.Response:
+    try:
+        ai = ST.write_ai(await request.json())
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
+    request.app["hub"].ai_changed.set()
+    logbook.write("note", f"ตั้งค่า AI: local={ai['local']['url'] or '-'} mode={ai['router']['mode']}")
+    return web.json_response({"ai": ai})
+
+
+async def api_ai_test(request: web.Request) -> web.Response:
+    body = await request.json()
+    return web.json_response(await asyncio.to_thread(ST.test_local, str(body.get("url", ""))))
+
+
+async def api_prefs(request: web.Request) -> web.Response:
+    prefs = ST.write_prefs(await request.json())
+    applied = ST.apply_wallpaper(prefs["wallpaper"])
+    return web.json_response({"prefs": prefs, "applied": applied})
+
+
+async def api_launch(request: web.Request) -> web.Response:
+    return web.json_response(ST.launch(str((await request.json()).get("app", ""))))
+
+
+ALLOWED_HOSTS = {f"127.0.0.1:{PORT}", f"localhost:{PORT}"}
+
+
+@web.middleware
+async def guard(request: web.Request, handler):
+    """benchd exposes a shell and settings, so only T3's own pages may talk to it.
+    - Host must be localhost (blocks DNS-rebinding)
+    - Origin, when a browser sends one, must be T3 itself (blocks other websites, incl. WebSocket hijacking)
+    - state-changing calls from browsers must carry X-T3 (a cross-site page can't add it without CORS)"""
+    if request.host not in ALLOWED_HOSTS:
+        return web.Response(status=403, text="forbidden host")
+    origin = request.headers.get("Origin")
+    if origin is not None and origin.split("://", 1)[-1] not in ALLOWED_HOSTS:
+        return web.Response(status=403, text="forbidden origin")
+    if request.method == "POST" and origin is not None and request.headers.get("X-T3") != "1":
+        return web.Response(status=403, text="missing X-T3")
+    return await handler(request)
+
+
 async def index(_: web.Request) -> web.FileResponse:
     return web.FileResponse(UI_DIR / "index.html", headers={"Cache-Control": "no-cache"})
 
 
 def make_app() -> web.Application:
-    app = web.Application()
+    app = web.Application(middlewares=[guard])
     hub = Hub()
     app["hub"] = hub
 
     async def start_bg(app):
+        ST.apply_wallpaper(ST.read_prefs()["wallpaper"])
         app["bg"] = [asyncio.create_task(c) for c in (hub.watch_boards(), hub.watch_log(), hub.watch_ai())]
 
     async def stop_bg(app):
@@ -317,7 +367,11 @@ def make_app() -> web.Application:
     app.on_startup.append(start_bg)
     app.on_cleanup.append(stop_bg)
     app.add_routes([web.get("/", index), web.get("/ws", ws_events), web.get("/pty", ws_pty),
-                    web.get("/api/pins/{family}", api_pins), web.get("/api/waybar", api_waybar), web.post("/api/release", api_release),
+                    web.get("/api/pins/{family}", api_pins), web.get("/api/waybar", api_waybar),
+                    web.post("/api/release", api_release),
+                    web.get("/api/settings", api_settings_get), web.post("/api/settings/ai", api_settings_ai),
+                    web.post("/api/ai/test", api_ai_test), web.post("/api/settings/prefs", api_prefs),
+                    web.post("/api/launch", api_launch),
                     web.static("/", UI_DIR)])
     return app
 

@@ -1,0 +1,11 @@
+#!/bin/sh
+# Toggle screen recording (Super+Shift+R). Select an area, or press Esc in slurp for full screen.
+if pkill -INT -x wf-recorder; then
+  notify-send -a T3 "บันทึกจอแล้ว" "~/Videos"
+  exit 0
+fi
+mkdir -p "$HOME/Videos"
+out="$HOME/Videos/t3-$(date +%Y%m%d-%H%M%S).mp4"
+geo=$(slurp 2>/dev/null)
+notify-send -a T3 -t 1500 "กำลังบันทึกจอ" "กด Super+Shift+R อีกครั้งเพื่อหยุด"
+if [ -n "$geo" ]; then exec wf-recorder -g "$geo" -f "$out"; else exec wf-recorder -f "$out"; fi

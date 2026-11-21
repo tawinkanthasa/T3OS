@@ -1,0 +1,11 @@
+#!/bin/sh
+# Power menu (Super+Shift+E or the ⏻ on the bar).
+choice=$(printf '%s\n' "ล็อกจอ  lock" "ออกจากระบบ  logout" "พักเครื่อง  suspend" "รีสตาร์ท  reboot" "ปิดเครื่อง  shutdown" \
+  | fuzzel --dmenu --prompt "power › " --lines 5 --width 28 ${T3_FUZZEL:+--config "$T3_FUZZEL"})
+case "$choice" in
+  *lock)     swaylock -f -c 0a0d0b ;;
+  *logout)   swaymsg exit ;;
+  *suspend)  swaylock -f -c 0a0d0b && systemctl suspend ;;
+  *reboot)   systemctl reboot ;;
+  *shutdown) systemctl poweroff ;;
+esac

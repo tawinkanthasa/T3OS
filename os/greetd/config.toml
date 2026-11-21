@@ -1,0 +1,8 @@
+# T3 login screen: greetd + tuigreet (terminal-style, matches "Linux starts at a terminal").
+# Installed to /etc/greetd/config.toml on the T3 image.
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --time --remember --remember-user-session --asterisks --greeting 'T3 · พร้อมลุยบอร์ด' --theme 'border=green;text=gray;prompt=green;time=yellow;action=green;button=yellow;container=black;input=white' --cmd /usr/share/t3/bin/t3-start"
+user = "_greetd"
