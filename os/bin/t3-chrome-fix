@@ -3,6 +3,22 @@
 # give the system menu entry --ozone-platform=x11. A copy in /usr/local wins over /usr/share.
 # Run as root; also run after every apt (80-t3-chrome) so Chrome updates keep the fix.
 src=/usr/share/applications/google-chrome.desktop dst=/usr/local/share/applications/google-chrome.desktop
-[ -f "$src" ] || { rm -f "$dst"; exit 0; }
-mkdir -p "${dst%/*}"
-sed 's|^Exec=/usr/bin/google-chrome-stable|Exec=/usr/bin/google-chrome-stable --ozone-platform=x11|' "$src" > "$dst.tmp" && mv "$dst.tmp" "$dst"
+if [ -f "$src" ]; then
+  mkdir -p "${dst%/*}"
+  sed 's|^Exec=/usr/bin/google-chrome-stable|Exec=/usr/bin/google-chrome-stable --ozone-platform=x11|' "$src" > "$dst.tmp" && mv "$dst.tmp" "$dst"
+else
+  rm -f "$dst"
+fi
+
+# Same window buttons everywhere: browsers draw their own title bar by default, so they never get the
+# T3 red/yellow/green buttons. Ask them to use the system (KWin) title bar instead. These are defaults
+# for new profiles; a user can still switch back (Chrome: right-click the tab bar).
+ip=/opt/google/chrome/initial_preferences
+if [ -d /opt/google/chrome ] && [ ! -f "$ip" ]; then
+  printf '%s\n' '{"browser": {"custom_chrome_frame": false}}' > "$ip"
+fi
+if [ -d /usr/lib/firefox-esr/defaults/pref ]; then
+  printf '%s\n' '// T3: use the system title bar (T3 window buttons)' 'pref("browser.tabs.inTitlebar", 0);' \
+    > /usr/lib/firefox-esr/defaults/pref/t3.js
+fi
+exit 0
