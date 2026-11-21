@@ -16,10 +16,14 @@ cp -r "$REPO/os/." "$RUN/"
 # point configs at this checkout instead of /usr/share/t3
 grep -rl /usr/share/t3 "$RUN" | xargs sed -i "s#/usr/share/t3#$RUN#g"
 sed -i "s#^set \$t3 .*#set \$t3 $RUN#; s#^set \$mod .*#set \$mod Mod1#" "$RUN/sway/config"
+# WSL-only tweaks: WSLg owns /tmp/.X11-unix (no Xwayland) and there is no NetworkManager
+sed -i "/^exec nm-applet/d" "$RUN/sway/config"
+echo "xwayland disable" >> "$RUN/sway/config"
 
 export WLR_BACKENDS=wayland      # nested inside WSLg's compositor
 export WLR_RENDERER=pixman       # WSLg has no GPU path for wlroots
 export WLR_NO_HARDWARE_CURSORS=1
 export XDG_CURRENT_DESKTOP=sway
 echo "T3 session starting (configs: $RUN). mod key = Alt"
-exec sway -c "$RUN/sway/config"
+# WSL has no per-user D-Bus; give the session its own so mako/notify-send work
+exec dbus-run-session -- sway -c "$RUN/sway/config" 2> >(grep -v "sticky bit" >&2)
