@@ -20,6 +20,7 @@ install -m 0644 "$S/systemd/grub-btrfsd.conf" /etc/systemd/system/grub-btrfsd.se
 install -m 0644 "$S/systemd/t3-snapshot.service" "$S/systemd/t3-snapshot.timer" "$S/systemd/t3-boot-refresh.service" /etc/systemd/system/
 install -m 0644 "$S"/systemd-user/* /usr/lib/systemd/user/
 install -m 0644 "$S/profile.d/t3.sh" /etc/profile.d/t3.sh
+install -D -m 0644 "$S/polkit/org.t3.windows-next.policy" /usr/share/polkit-1/actions/org.t3.windows-next.policy
 install -m 0644 "$S/t3/timeshift.json.in" /usr/share/t3/timeshift.json.in
 # keep a repo URL the user already set
 [[ -f /etc/t3/update.conf ]] && grep -q '^repo=.\+' /etc/t3/update.conf || install -m 0644 "$S/t3/update.conf" /etc/t3/update.conf

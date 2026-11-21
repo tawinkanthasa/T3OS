@@ -1,0 +1,14 @@
+#!/bin/sh
+# "รีสตาร์ทเข้า Windows": restart into Windows once; the boot after that is T3 again.
+T="รีสตาร์ทเข้า Windows"
+k() { kdialog --title "$T" --icon t3-logo "$@"; }
+[ -d /sys/firmware/efi ] || { k --sorry "เครื่องนี้ไม่ได้บูตแบบ UEFI เลือก Windows จากเมนูบูตตอนเปิดเครื่องแทน"; exit 1; }
+k --warningcontinuecancel "รีสตาร์ทเข้า Windows ตอนนี้เลยไหม?\nงานที่ยังไม่บันทึกจะหาย\n\nรอบเดียว: ครั้งต่อไปเปิดเครื่องจะกลับมาเข้า T3" --continue-label "รีสตาร์ท" || exit 0
+pkexec /usr/share/t3/bin/t3-windows-next; rc=$?
+case $rc in
+  0) Q=$(command -v qdbus6 || command -v qdbus)
+     [ -n "$Q" ] && "$Q" org.kde.Shutdown /Shutdown logoutAndReboot 2>/dev/null || systemctl reboot ;;
+  3) k --sorry "ไม่เจอ Windows ในเครื่องนี้" ;;
+  126|127) ;;  # cancelled the password prompt
+  *) k --error "ตั้งให้บูตเข้า Windows ไม่สำเร็จ" ;;
+esac

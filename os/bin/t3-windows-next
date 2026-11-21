@@ -1,0 +1,6 @@
+#!/bin/sh
+# Root helper (via pkexec, polkit org.t3.windows-next): make the next boot, once, go to Windows.
+# Prints nothing and exits 3 when this computer has no Windows boot entry.
+n=$(efibootmgr 2>/dev/null | sed -n 's/^Boot\([0-9A-Fa-f]\{4\}\)\*\{0,1\} \{1,\}Windows Boot Manager.*/\1/p' | head -1)
+[ -n "$n" ] || exit 3
+efibootmgr --bootnext "$n" >/dev/null
