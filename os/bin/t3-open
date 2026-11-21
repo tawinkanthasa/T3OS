@@ -1,7 +1,21 @@
 #!/bin/sh
-# t3-open [bench|scope|logbook|shell]  open a T3 panel as its own window.
-# Each view gets its own app id, so cog doesn't fold them into one instance.
-view="${1:-}"
-url="http://127.0.0.1:7300/${view:+?view=$view}"
-for i in $(seq 50); do curl -sf http://127.0.0.1:7300/ >/dev/null && break; sleep 0.2; done
-exec cog --platform=wl --gapplication-app-id="t3.${view:-main}" --bg-color='#0a0d0bff' "$url"
+# t3-open [bench|scope|logbook|shell|settings]  open a T3 panel as its own window.
+# Qt WebEngine (t3-view.qml) instead of cog: cog doubled its window on fractional scales (115%)
+# and had no title bar. The window's app id must be t3.<view> so the dock matches the .desktop;
+# Qt builds it from the executable's name (symlinks are resolved), so run a copy of qml named
+# after the view. The copy is refreshed (atomically) whenever Qt updates qml.
+view="${1:-main}"
+case "$view" in main) url="http://127.0.0.1:7300/" ;; *) url="http://127.0.0.1:7300/?view=$view" ;; esac
+for _ in $(seq 50); do curl -sf http://127.0.0.1:7300/ >/dev/null && break; sleep 0.2; done
+QML=/usr/lib/qt6/bin/qml
+VIEWQML="$(dirname "$(readlink -f "$0")")/t3-view.qml"
+if [ -x "$QML" ] && [ -f "$VIEWQML" ]; then
+  dir="${XDG_RUNTIME_DIR:-/tmp/t3-$(id -u)}/t3-view"
+  mkdir -p "$dir"
+  bin="$dir/$view"
+  if ! cmp -s "$QML" "$bin"; then
+    cp "$QML" "$bin.$$" && chmod 755 "$bin.$$" && mv -f "$bin.$$" "$bin"
+  fi
+  exec "$bin" "$VIEWQML" -- "$url"
+fi
+exec cog --platform=wl --gapplication-app-id="t3.$view" --bg-color='#0a0d0bff' "$url"

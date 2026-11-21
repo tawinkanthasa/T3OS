@@ -14,7 +14,7 @@ ffmpegthumbs kdegraphics-thumbnailers
 libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-qt6 libreoffice-l10n-th
 firefox-esr
 # -- T3 panels + helpers
-plymouth librsvg2-bin fonts-dejavu-core cog curl jq libnotify-bin usbutils kdialog pciutils mokutil efibootmgr os-prober
+plymouth librsvg2-bin fonts-dejavu-core cog qml-qt6 qml6-module-qtwebengine qml6-module-qtquick-window curl jq libnotify-bin usbutils kdialog pciutils mokutil efibootmgr os-prober
 # -- fonts (Thai + emoji + code)
 fonts-noto-core fonts-noto-color-emoji fonts-thai-tlwg fonts-jetbrains-mono
 # -- Thai everywhere: locale, spell check, Firefox in Thai
