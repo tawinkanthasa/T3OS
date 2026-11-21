@@ -1,0 +1,1 @@
+DPkg::Post-Invoke { "[ -x /usr/share/t3/bin/t3-chrome-fix ] && /usr/share/t3/bin/t3-chrome-fix || true"; };

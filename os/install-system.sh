@@ -12,6 +12,8 @@ SRC="$(cd "$(dirname "$0")" && pwd)"; REPO="$(dirname "$SRC")"; S="$SRC/system"
 install -d /etc/default/grub.d /etc/systemd/system/grub-btrfsd.service.d /etc/t3 /usr/lib/systemd/user
 install -m 0644 "$S/apt/80-t3-snapshot" /etc/apt/apt.conf.d/80-t3-snapshot
 install -m 0644 "$S/apt/20auto-upgrades" /etc/apt/apt.conf.d/20auto-upgrades
+install -m 0644 "$S/apt/80-t3-chrome" /etc/apt/apt.conf.d/80-t3-chrome
+/usr/share/t3/bin/t3-chrome-fix || true
 install -m 0644 "$S/grub/t3.cfg" /etc/default/grub.d/t3.cfg
 install -m 0644 "$S/default/zramswap" /etc/default/zramswap
 install -m 0644 "$S/systemd/grub-btrfsd.conf" /etc/systemd/system/grub-btrfsd.service.d/t3.conf

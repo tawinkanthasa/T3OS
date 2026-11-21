@@ -1,0 +1,8 @@
+#!/bin/sh
+# Chrome freezes a couple of seconds after start under Plasma Wayland on some PCs (and in VMs):
+# give the system menu entry --ozone-platform=x11. A copy in /usr/local wins over /usr/share.
+# Run as root; also run after every apt (80-t3-chrome) so Chrome updates keep the fix.
+src=/usr/share/applications/google-chrome.desktop dst=/usr/local/share/applications/google-chrome.desktop
+[ -f "$src" ] || { rm -f "$dst"; exit 0; }
+mkdir -p "${dst%/*}"
+sed 's|^Exec=/usr/bin/google-chrome-stable|Exec=/usr/bin/google-chrome-stable --ozone-platform=x11|' "$src" > "$dst.tmp" && mv "$dst.tmp" "$dst"
