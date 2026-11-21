@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T3</title>
+<link rel="stylesheet" href="vendor/xterm.css">
+<style>
+/* Layout: status bar / [logbook rail | stage (Shell, Bench, Scope)] / F-key bar. Same look as the approved prototype, live data from benchd. */
+:root{
+  --bg:#0a0d0b; --panel:#0f1612; --panel2:#152019; --line:#21362b; --fg:#d3e6da; --mute:#76917f;
+  --acc:#3fb950; --acc-ink:#04140a; --amber:#ffb000; --clay:#d97757; --bad:#f85149; --warn:#f0883e;
+  --mat:#1d3b2c;
+  --display:"Chakra Petch","JetBrains Mono","Noto Sans Thai",sans-serif;
+  --body:"IBM Plex Sans Thai","Noto Sans Thai","Leelawadee UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,"Noto Sans Mono",monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--body);overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+#os{height:100%;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:14px;padding:6px 16px;background:var(--panel2);font-family:var(--mono);font-size:12px;color:var(--mute);flex-wrap:wrap}
+.top .logo{font-family:var(--display);font-weight:700;font-size:15px;color:var(--fg)}
+.top .logo span,.top b{color:var(--acc);font-weight:400}
+.top .bad{color:var(--bad)}
+.top .sp{flex:1}
+
+.main{flex:1;display:grid;grid-template-columns:250px minmax(0,1fr);min-height:0}
+.book{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.bh{padding:10px 14px;border-bottom:1px solid var(--line)}
+.bh small{font-family:var(--mono);color:var(--mute);font-size:11px;letter-spacing:.1em}
+.bh h2{margin:2px 0 0;font-family:var(--display);font-size:17px;line-height:1.25}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.stats div{font-size:11px;color:var(--mute);border-top:2px solid var(--line);padding-top:3px}
+.stats b{display:block;font-family:var(--mono);font-size:16px;color:var(--fg);font-variant-numeric:tabular-nums}
+.events{flex:1;overflow:auto;padding:10px 14px;display:flex;flex-direction:column;gap:10px}
+.ev{display:grid;grid-template-columns:42px 1fr;gap:8px;font-size:12.5px;animation:ein .3s ease-out}
+@keyframes ein{from{opacity:.2;transform:translateY(-4px)}}
+.ev time{font-family:var(--mono);color:var(--mute);font-size:11px;padding-top:1px}
+.ev div{border-left:2px solid var(--line);padding-left:8px;word-break:break-word}
+.ev div small{display:block;color:var(--mute);font-family:var(--mono);font-size:10.5px}
+.ev.er div{border-color:var(--bad)} .ev.ai div{border-color:var(--clay)} .ev.ok div{border-color:var(--acc)} .ev.hw div{border-color:var(--amber)}
+.empty{color:var(--mute);font-size:12px}
+.next{padding:10px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--mute);font-family:var(--mono)}
+
+.stage{position:relative;min-width:0;min-height:0}
+.mode{position:absolute;inset:0;display:none}
+.mode.on{display:flex}
+
+#m-shell{background:var(--bg);padding:10px 4px 4px 14px}
+#term{flex:1;min-width:0}
+
+#m-bench{background-color:var(--mat);background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:32px 32px;overflow:hidden;touch-action:none}
+#wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.obj{position:absolute;box-shadow:0 10px 20px #0007;user-select:none;cursor:grab;border-radius:5px}
+.obj:active{cursor:grabbing}
+.board{width:260px;display:flex;flex-direction:column}
+.pcb{position:relative;height:104px;padding:8px;border-radius:5px 5px 0 0;font-family:var(--mono);font-size:11px}
+.f-esp32 .pcb{background:#1b1b1b;border:2px solid #333;color:#ddd}
+.f-rp2040 .pcb{background:#2e7d32;border:2px solid #1b5e20;color:#e8f5e9}
+.f-avr .pcb{background:#0b5f8a;border:2px solid #084768;color:#e0f2fb}
+.f-generic .pcb,.f-unknown .pcb{background:#3a3a3a;border:2px solid #555;color:#eee}
+.pins{position:absolute;left:8px;right:8px;display:flex;justify-content:space-between}
+.pins i{width:7px;height:7px;background:#c9a227;border-radius:50%}
+.chipm{position:absolute;left:84px;top:30px;width:90px;height:52px;background:#888;border-radius:3px;display:grid;place-items:center;color:#222;font-weight:700}
+.led{position:absolute;right:14px;top:40px;width:9px;height:9px;border-radius:50%;background:#400}
+.led.on{background:#ff4040;box-shadow:0 0 8px #ff4040}
+.sim{position:absolute;right:8px;bottom:18px;font-size:10px;opacity:.6}
+.ser{background:#0d1310f2;border:1px solid #2f5341;border-top:0;color:#cde3d4;font-family:var(--mono);font-size:11.5px;padding:6px 9px;height:96px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;border-radius:0 0 5px 5px}
+.ser div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ser .a{color:var(--bad)}
+.sticky{width:220px;background:#ffe27a;color:#3b2f00;padding:10px 12px;transform:rotate(1.5deg);font-size:13px;line-height:1.4}
+.sticky b{display:block;font-size:12px}
+.benchempty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#cfe3d6;font-family:var(--mono);font-size:13px;pointer-events:none}
+.benchhint{position:absolute;left:12px;bottom:12px;font-family:var(--mono);font-size:11px;color:#cfe3d6;background:#0d1a14cc;padding:4px 8px}
+
+#m-scope{background:#141210;color:var(--amber);font-family:var(--mono);flex-direction:column;padding:14px 18px;gap:12px}
+.sbar{display:flex;justify-content:space-between;align-items:center;font-size:12px;flex-wrap:wrap;gap:8px}
+.sbar select{background:#0c0904;border:2px solid #3d2b10;color:var(--amber);font-family:var(--mono);font-size:12px;padding:2px 6px}
+.sbody{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:14px;min-height:0}
+.scr{border:2px solid #3d2b10;background:#0c0904;position:relative;min-height:160px}
+#cv{position:absolute;inset:0;width:100%;height:100%}
+.read{display:flex;flex-direction:column;gap:10px;overflow:auto}
+.rd{border:2px solid #3d2b10;padding:6px 10px}
+.rd small{color:#b08a4a;font-size:10px;display:block;letter-spacing:.1em}
+.rd b{font-size:24px;font-variant-numeric:tabular-nums}
+.rd.alert{border-color:var(--bad);color:var(--bad)}
+.aib{border:2px solid var(--amber);padding:8px 10px;font-size:12px;color:#ffd68a;min-height:60px}
+.sbtns{display:flex;gap:8px;flex-wrap:wrap}
+.sbtns button{border:2px solid #3d2b10;background:none;color:var(--amber);font-family:var(--mono);font-size:12px;padding:4px 10px}
+.sbtns button:hover{border-color:var(--amber)}
+
+.fkeys{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;padding:8px 16px;background:var(--panel2);border-top:1px solid var(--line)}
+.fkeys button{border:1px solid var(--line);background:var(--bg);font-family:var(--mono);font-size:12px;padding:6px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fkeys button b{color:var(--acc);font-weight:700;margin-right:4px}
+.fkeys button[aria-pressed="true"]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.fkeys button[aria-pressed="true"] b{color:var(--acc-ink)}
+
+.toast{position:fixed;right:16px;top:48px;width:min(320px,calc(100% - 32px));background:var(--panel);border:1px solid var(--acc);padding:12px;display:flex;flex-direction:column;gap:8px;z-index:40;box-shadow:0 10px 30px #0008;animation:ein .25s ease-out}
+.toast b{font-family:var(--display)}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--panel2);padding:4px 10px;font-size:12px}
+.btn.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
+.modal{position:fixed;inset:0;background:#000a;display:grid;place-items:center;z-index:45;padding:16px}
+.sheet{background:var(--panel);border:1px solid var(--line);width:min(600px,100%);max-height:90%;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.sheet h3{margin:0;font-family:var(--display)}
+.sheet label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}
+.sheet input,.sheet select{background:var(--bg);border:1px solid var(--line);padding:6px 8px;font-family:var(--mono);font-size:13px;color:var(--fg)}
+.pt{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+.pt td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.pt td:first-child{white-space:nowrap;color:var(--acc)}
+.pt tr.no td:first-child{color:var(--bad)} .pt tr.no td:last-child{color:#f6b3ad}
+.meta{font-family:var(--mono);font-size:12px;color:var(--mute)}
+.conn{position:fixed;left:50%;top:8px;transform:translateX(-50%);background:var(--bad);color:#fff;font-family:var(--mono);font-size:12px;padding:3px 10px;z-index:60}
+
+@media (max-width:760px){
+  body{overflow:auto}
+  .main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(420px,1fr)}
+  .book{border-right:0;border-bottom:1px solid var(--line);max-height:260px}
+  .sbody{grid-template-columns:minmax(0,1fr)}
+  .fkeys{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="os">
+  <div class="top">
+    <span class="logo">T<span>3</span></span>
+    <span id="tBoards">ไม่มีบอร์ด</span>
+    <span id="tLocal">LM Studio ○</span>
+    <span id="tClaude">Claude Code ○</span>
+    <span class="sp"></span>
+    <span id="tHost"></span>
+    <span id="clock"></span>
+  </div>
+  <div class="main">
+    <aside class="book" aria-label="Logbook">
+      <div class="bh"><small>LOGBOOK · วันนี้</small><h2 id="headline">ยังไม่มีอะไรเกิดขึ้น</h2></div>
+      <div class="stats"><div>flash<b id="stFlash">0</b></div><div>error<b id="stErr">0</b></div><div>temp<b id="stTemp">—</b></div></div>
+      <div class="events" id="events"><div class="empty">เสียบบอร์ด หรือพิมพ์ bench ใน Shell แล้วเหตุการณ์จะขึ้นที่นี่</div></div>
+      <div class="next" id="next">benchd ○</div>
+    </aside>
+    <div class="stage">
+      <section class="mode on" id="m-shell" aria-label="Shell"><div id="term"></div></section>
+      <section class="mode" id="m-bench" aria-label="Bench">
+        <svg id="wires" aria-hidden="true"></svg>
+        <div class="benchempty" id="benchEmpty">ยังไม่มีบอร์ดบนโต๊ะ<br>เสียบ USB ได้เลย</div>
+        <div class="obj sticky" id="o-note" style="right:4%;top:6%" hidden><b>✦ โน้ตล่าสุด</b><span id="noteTxt"></span></div>
+        <div class="benchhint">ลากบอร์ดย้ายได้ · ดับเบิลคลิก = pinout</div>
+      </section>
+      <section class="mode" id="m-scope" aria-label="Scope">
+        <div class="sbar"><label>CH1 ▸ <select id="chSel" aria-label="เลือกบอร์ด"></select></label><span>VCC / TEMP จาก serial</span><span id="runSt">RUN ●</span></div>
+        <div class="sbody">
+          <div class="scr"><canvas id="cv"></canvas></div>
+          <div class="read">
+            <div class="rd"><small>TEMP</small><b id="rTemp">—</b></div>
+            <div class="rd" id="rdV"><small>VCC</small><b id="rV">—</b></div>
+            <div class="rd"><small>RESETS วันนี้</small><b id="rRst">0</b></div>
+            <div class="aib" id="aib">▸ เฝ้า serial อยู่ ยังไม่มีอะไรผิดปกติ</div>
+          </div>
+        </div>
+        <div class="sbtns"><button id="hold">หยุดกราฟ</button></div>
+      </section>
+    </div>
+  </div>
+  <nav class="fkeys" aria-label="ปุ่มลัด">
+    <button data-m="shell" aria-pressed="true"><b>F1</b>Shell</button>
+    <button data-m="bench" aria-pressed="false"><b>F2</b>Bench</button>
+    <button data-m="scope" aria-pressed="false"><b>F3</b>Scope</button>
+    <button data-k="F4"><b>F4</b>Flash</button>
+    <button data-k="F6"><b>F6</b>Pins</button>
+    <button data-k="F7"><b>F7</b>Claude</button>
+  </nav>
+</div>
+<div id="ov"></div>
+<div class="conn" id="conn" hidden>ต่อ benchd ไม่ได้ · กำลังลองใหม่…</div>
+
+<script src="vendor/xterm.js"></script>
+<script src="vendor/addon-fit.js"></script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hhmm=d=>(d||new Date()).toTimeString().slice(0,5);
+const today=()=>new Date().toISOString().slice(0,10);
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const WSBASE=(location.protocol==='https:'?'wss://':'ws://')+location.host;
+
+const S={boards:[],ai:{},flashes:0,errs:0,resets:{},metrics:{},lastNote:null,mode:'shell',hold:false};
+
+/* ---------------- MODES & KEYS ---------------- */
+function mode(m){S.mode=m;$$('.mode').forEach(x=>x.classList.toggle('on',x.id==='m-'+m));$$('.fkeys [data-m]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));
+  if(m==='bench')drawWires();if(m==='shell'){fit();term.focus()}}
+function fkey(k){({F1:()=>mode('shell'),F2:()=>mode('bench'),F3:()=>mode('scope'),F4:flashDialog,F6:()=>pinout(),F7:()=>{mode('shell');typeIn('claude ')}})[k]?.()}
+$$('.fkeys button').forEach(b=>b.onclick=()=>b.dataset.m?mode(b.dataset.m):fkey(b.dataset.k));
+document.addEventListener('keydown',e=>{if(/^F[1-467]$/.test(e.key)){e.preventDefault();e.stopPropagation();fkey(e.key)}if(e.key==='Escape')$('#ov').innerHTML=''},true);
+
+/* ---------------- SHELL (real PTY) ---------------- */
+const term=new Terminal({fontFamily:'"JetBrains Mono",Consolas,monospace',fontSize:14,cursorBlink:true,allowProposedApi:true,
+  theme:{background:'#0a0d0b',foreground:'#d3e6da',cursor:'#3fb950',selectionBackground:'#21362b',green:'#3fb950',brightGreen:'#56d364',yellow:'#ffb000',red:'#f85149',black:'#0a0d0b',brightBlack:'#76917f'}});
+const fitAddon=new FitAddon.FitAddon();term.loadAddon(fitAddon);term.open($('#term'));
+term.attachCustomKeyEventHandler(e=>!/^F[1-467]$/.test(e.key));
+let pty=null;
+function fit(){try{fitAddon.fit();pty?.readyState===1&&pty.send(JSON.stringify({type:'resize',cols:term.cols,rows:term.rows}))}catch{}}
+function typeIn(s){pty?.readyState===1&&pty.send(new TextEncoder().encode(s));term.focus()}
+function connectPty(){
+  pty=new WebSocket(WSBASE+'/pty');pty.binaryType='arraybuffer';
+  pty.onopen=()=>{fit()};
+  pty.onmessage=e=>term.write(typeof e.data==='string'?e.data:new Uint8Array(e.data));
+  pty.onclose=()=>{term.write('\r\n\x1b[2m[shell ปิดแล้ว · กด Enter เพื่อเปิดใหม่]\x1b[0m\r\n');pty=null};
+}
+term.onData(d=>{if(!pty){if(d==='\r'){term.clear();connectPty()}return}pty.readyState===1&&pty.send(new TextEncoder().encode(d))});
+new ResizeObserver(()=>{if(S.mode==='shell')fit()}).observe($('#term'));
+connectPty();
+
+/* ---------------- EVENTS (benchd) ---------------- */
+let evWs;
+function connectEvents(){
+  evWs=new WebSocket(WSBASE+'/ws');
+  evWs.onopen=()=>{$('#conn').hidden=true;$('#next').innerHTML='benchd <b style="color:var(--acc)">●</b> '+esc(location.host)};
+  evWs.onclose=()=>{$('#conn').hidden=false;$('#next').textContent='benchd ○';setTimeout(connectEvents,2000)};
+  evWs.onmessage=e=>{const m=JSON.parse(e.data);(H[m.type]||(()=>{}))(m)};
+}
+const H={
+  hello(m){$('#events').innerHTML='';S.flashes=0;S.errs=0;S.resets={};m.log.forEach(x=>logEntry(x,true));setBoards(m.boards,[]);setAi(m.ai);$('#tHost').textContent=m.host||''},
+  boards(m){setBoards(m.boards,m.added)},
+  log(m){logEntry(m.entry)},
+  ai(m){setAi(m.ai)},
+  serial(m){serialLine(m)},
+  metric(m){metric(m)},
+};
+
+/* ---------------- LOGBOOK ---------------- */
+const KIND={plug:['hw','เสียบ'],unplug:['hw','ถอด'],flash:['ok','flash'],flash_fail:['er','flash ล้มเหลว'],flash_cancel:['','ยกเลิก flash'],alert:['er','แจ้งเตือน'],note:['ai','โน้ต']};
+function logEntry(x,initial){
+  if(!x)return;const isToday=(x.ts||'').startsWith(today());
+  const [cls]=KIND[x.kind]||[''];
+  const d=document.createElement('div');d.className='ev '+cls;
+  const t=x.ts?x.ts.slice(11,16):hhmm();
+  d.innerHTML=`<time>${isToday?t:x.ts.slice(5,10)}</time><div>${esc(x.msg)}${x.board?`<small>${esc(x.board)}</small>`:''}</div>`;
+  $('#events .empty')?.remove();$('#events').prepend(d);
+  while($('#events').children.length>80)$('#events').lastChild.remove();
+  if(isToday){
+    if(x.kind==='flash'){S.flashes++;$('#stFlash').textContent=S.flashes}
+    if(x.kind==='alert'||x.kind==='flash_fail'){S.errs++;$('#stErr').textContent=S.errs;if(x.board){S.resets[x.board]=(S.resets[x.board]||0)+(/Brownout|RST|WDT|panic|Guru/i.test(x.msg)?1:0)}}
+    $('#headline').textContent=headline(x);
+  }
+  if(x.kind==='note'){S.lastNote=x;$('#o-note').hidden=false;$('#noteTxt').textContent=x.msg}
+  if(!initial&&x.kind==='alert'&&/Brownout/i.test(x.msg))brownoutHint(x.board);
+  updateResets();
+}
+function headline(x){return({alert:'วันนี้: บอร์ดมีปัญหา กำลังหาสาเหตุ',flash_fail:'วันนี้: flash ไม่ผ่าน',flash:'วันนี้: flash ล่าสุดผ่าน',plug:'วันนี้: '+x.msg,note:'โน้ต: '+x.msg})[x.kind]||$('#headline').textContent}
+
+/* ---------------- AI STATUS ---------------- */
+function setAi(ai){S.ai=ai||{};const l=S.ai.local||{},c=S.ai.claude||{};
+  $('#tLocal').innerHTML=!l.configured?'LM Studio <span title="ตั้ง url ใน ~/.config/bench/ai.toml">— ยังไม่ตั้ง</span>':l.up?'LM Studio <b>●</b>':'LM Studio <span class="bad">● ต่อไม่ได้</span>';
+  $('#tClaude').innerHTML=c.installed?'Claude Code <b>●</b>':'Claude Code ○';}
+
+/* ---------------- BOARDS / BENCH ---------------- */
+const FAMNAME={esp32:'ESP32',rp2040:'RP2040',avr:'AVR'};
+function setBoards(list,added){
+  S.boards=list;const ports=new Set(list.map(b=>b.port));
+  $('#tBoards').innerHTML=list.length?list.map(b=>`${esc(FAMNAME[b.family]||b.family)} <b>●</b> ${esc(b.port)}`).join(' &nbsp; '):'ไม่มีบอร์ด';
+  $$('.board').forEach(el=>{if(!ports.has(el.dataset.port))el.remove()});
+  const pos=store.get('t3.pos',{});
+  list.forEach((b,i)=>{if(boardEl(b.port))return;
+    const el=document.createElement('div');el.className='obj board f-'+b.family;el.dataset.port=b.port;
+    const p=pos[b.port]||{left:(6+i*34)+'%',top:(14+(i%2)*8)+'%'};el.style.left=p.left;el.style.top=p.top;
+    const dots='<i></i>'.repeat(14);
+    el.innerHTML=`<div class="pcb"><span>${esc(b.name)} · ${esc(b.port)}</span><div class="pins" style="top:3px;${b.family==='esp32'?'':'display:none'}">${dots}</div><div class="chipm">${esc(FAMNAME[b.family]||'?')}</div><span class="led"></span>${b.simulated?'<span class="sim">sim</span>':''}<div class="pins" style="bottom:5px">${dots}</div></div><div class="ser" aria-live="off"></div>`;
+    $('#m-bench').appendChild(el);drag(el);el.addEventListener('dblclick',()=>pinout(b.port));
+  });
+  $('#benchEmpty').hidden=list.length>0;
+  const sel=$('#chSel'),cur=sel.value;sel.innerHTML=list.map(b=>`<option value="${esc(b.port)}">${esc(b.name)} · ${esc(b.port)}</option>`).join('')||'<option>— ไม่มีบอร์ด —</option>';
+  if(ports.has(cur))sel.value=cur;
+  drawWires();updateResets();
+  (added||[]).forEach(p=>{const b=list.find(x=>x.port===p);if(b)plugToast(b)});
+}
+const boardEl=p=>$$('.board').find(e=>e.dataset.port===p);
+function serialLine(m){const el=boardEl(m.port);if(!el)return;
+  const box=el.querySelector('.ser');const d=document.createElement('div');d.textContent=m.line;if(m.alert||m.err)d.className='a';box.appendChild(d);while(box.children.length>6)box.firstChild.remove();
+  el.querySelector('.led').classList.toggle('on');}
+function drag(el){el.addEventListener('pointerdown',e=>{if(e.button!==0)return;const st=$('#m-bench').getBoundingClientRect(),r=el.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;el.setPointerCapture(e.pointerId);el.style.zIndex=5;
+  const mv=v=>{el.style.left=Math.max(0,Math.min(st.width-r.width,v.clientX-st.left-dx))+'px';el.style.top=Math.max(0,Math.min(st.height-r.height,v.clientY-st.top-dy))+'px';drawWires()};
+  const up=()=>{el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up);el.style.zIndex='';if(el.dataset.port){const pos=store.get('t3.pos',{});pos[el.dataset.port]={left:el.style.left,top:el.style.top};store.set('t3.pos',pos)}};
+  el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up)})}
+drag($('#o-note'));
+function drawWires(){const st=$('#m-bench').getBoundingClientRect();if(!st.width)return;let p='';
+  $$('.board').forEach((el,i)=>{const q=el.getBoundingClientRect(),x=q.left-st.left+24,y=q.top-st.top,tx=st.width-40-i*24;
+    p+=`<path d="M${x} ${y} C${x} ${y-70} ${tx} ${Math.max(0,y-90)} ${tx} 0" stroke="#999" stroke-width="4" fill="none" stroke-dasharray="2 6" stroke-linecap="round"/>`});
+  $('#wires').innerHTML=p}
+window.addEventListener('resize',drawWires);
+
+function plugToast(b){
+  if(S.mode==='shell')term.write(`\r\n\x1b[2musb: ${b.name} → ${b.port}\x1b[0m\r\n`);
+  const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');
+  t.innerHTML=`<b>${esc(b.name)} เชื่อมต่อแล้ว</b><span class="meta">${esc(b.port)} · ${esc(b.vid)}:${esc(b.pid)} ${esc(b.chip)}</span><div class="row"><button class="btn pri">ดูบนโต๊ะ</button><button class="btn">Pinout</button><button class="btn">ปิด</button></div>`;
+  document.body.appendChild(t);const bs=t.querySelectorAll('button');
+  bs[0].onclick=()=>{t.remove();mode('bench')};bs[1].onclick=()=>{t.remove();pinout(b.port)};bs[2].onclick=()=>t.remove();setTimeout(()=>t.remove(),10000);
+}
+
+/* ---------------- SCOPE ---------------- */
+const BUF={};
+function metric(m){(BUF[m.port]??=[]);if(m.vcc!==undefined&&!S.hold){BUF[m.port].push(m.vcc);if(BUF[m.port].length>600)BUF[m.port].shift()}
+  S.metrics[m.port]={...S.metrics[m.port],...m};
+  if(m.temp!==undefined)$('#stTemp').textContent=m.temp.toFixed(1);
+  if(m.port===$('#chSel').value){if(m.temp!==undefined)$('#rTemp').textContent=m.temp.toFixed(1)+'°C';if(m.vcc!==undefined)$('#rV').textContent=m.vcc.toFixed(2)+'V'}}
+function updateResets(){$('#rRst').textContent=S.resets[$('#chSel').value]||0}
+$('#chSel').onchange=()=>{const mm=S.metrics[$('#chSel').value]||{};$('#rTemp').textContent=mm.temp!==undefined?mm.temp.toFixed(1)+'°C':'—';$('#rV').textContent=mm.vcc?mm.vcc.toFixed(2)+'V':'—';updateResets()};
+function brownoutHint(port){
+  $('#rdV').classList.add('alert');setTimeout(()=>$('#rdV').classList.remove('alert'),3000);
+  $('#aib').textContent=`▸ ${port}: brownout (ไฟตก) มักเกิดตอน WiFi เริ่มส่ง ลองใส่ C 100–470µF ใกล้ขา 3V3 หรือเปลี่ยนสาย USB ให้สั้นลง · ถาม Claude ต่อได้ใน F7`;
+}
+(function scope(){const cv=$('#cv'),ctx=cv.getContext('2d');
+  function frame(){const w=cv.clientWidth,h=cv.clientHeight;
+    if(w&&S.mode==='scope'){if(cv.width!==w*2||cv.height!==h*2){cv.width=w*2;cv.height=h*2}
+      ctx.setTransform(2,0,0,2,0,0);ctx.clearRect(0,0,w,h);
+      ctx.strokeStyle='rgba(255,176,0,.09)';ctx.lineWidth=1;for(let i=1;i<10;i++){ctx.beginPath();ctx.moveTo(w*i/10,0);ctx.lineTo(w*i/10,h);ctx.stroke()}for(let i=1;i<8;i++){ctx.beginPath();ctx.moveTo(0,h*i/8);ctx.lineTo(w,h*i/8);ctx.stroke()}
+      const y=v=>h*0.35-(v-3.3)*h*1.1;
+      ctx.fillStyle='#b08a4a';ctx.font='11px "JetBrains Mono",monospace';ctx.fillText('3.30V',6,y(3.3)-4);ctx.fillText('2.80V brownout',6,y(2.8)-4);
+      ctx.strokeStyle='rgba(248,81,73,.5)';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(0,y(2.8));ctx.lineTo(w,y(2.8));ctx.stroke();ctx.setLineDash([]);
+      const buf=BUF[$('#chSel').value]||[],n=Math.min(buf.length,Math.floor(w/4)),s=buf.slice(-n);
+      if(s.length){ctx.strokeStyle='#ffb000';ctx.lineWidth=2;ctx.beginPath();s.forEach((v,i)=>{const x=w-(s.length-1-i)*4;i?ctx.lineTo(x,y(v)):ctx.moveTo(x,y(v))});ctx.stroke()}
+      else{ctx.fillStyle='#b08a4a';ctx.fillText('รอค่า vcc= จาก serial…',w/2-70,h/2)}}
+    requestAnimationFrame(frame)}
+  frame()})();
+$('#hold').onclick=e=>{S.hold=!S.hold;e.target.textContent=S.hold?'เดินกราฟต่อ':'หยุดกราฟ';$('#runSt').textContent=S.hold?'STOP ■':'RUN ●'};
+
+/* ---------------- F4 FLASH / F6 PINS ---------------- */
+function currentBoard(port){return S.boards.find(b=>b.port===port)||S.boards.find(b=>b.port===$('#chSel').value)||S.boards[0]}
+function flashDialog(){
+  if(!S.boards.length){toastMsg('ยังไม่มีบอร์ดให้ flash');return}
+  const last=store.get('t3.fw','.pio/build/esp32dev/firmware.bin');
+  $('#ov').innerHTML=`<div class="modal"><form class="sheet" role="dialog" aria-modal="true" aria-label="Flash"><h3>Flash</h3>
+    <label>บอร์ด<select id="fBoard">${S.boards.map(b=>`<option value="${esc(b.port)}">${esc(b.name)} · ${esc(b.port)}</option>`).join('')}</select></label>
+    <label>ไฟล์ firmware (path ใน Shell)<input id="fFile" value="${esc(last)}" spellcheck="false"></label>
+    <span class="meta">จะพิมพ์คำสั่ง bench flash ลง Shell ให้ แล้ว bench จะแสดงแผนและถาม y/n ก่อนเขียนจริง</span>
+    <div class="row"><button class="btn pri">ไปที่ Shell</button><button class="btn" type="button" id="cls">ยกเลิก (Esc)</button></div></form></div>`;
+  $('#fBoard').value=currentBoard()?.port;$('#fFile').focus();$('#cls').onclick=()=>$('#ov').innerHTML='';
+  $('#ov form').onsubmit=e=>{e.preventDefault();const f=$('#fFile').value.trim(),p=$('#fBoard').value;store.set('t3.fw',f);$('#ov').innerHTML='';mode('shell');typeIn(`bench flash '${f.replace(/'/g,"'\\''")}' ${p}\r`)};
+}
+async function pinout(port){
+  const b=currentBoard(port);const fam=b?.family||'esp32';
+  let d;try{const r=await fetch('/api/pins/'+encodeURIComponent(fam));d=await r.json();if(d.error)throw 0}catch{toastMsg('ไม่มีข้อมูล pinout ของ '+fam);return}
+  const bad=n=>/DO NOT|INPUT ONLY|boot fails|strap|avoid/i.test(n);
+  $('#ov').innerHTML=`<div class="modal"><div class="sheet" role="dialog" aria-modal="true" aria-label="Pinout"><h3>Pinout · ${esc(d.board)}</h3><span class="meta">logic ${esc(d.logic)}${b?' · '+esc(b.port):''}</span>
+    <table class="pt">${Object.entries(d.pins).map(([k,v])=>`<tr class="${bad(v)?'no':''}"><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table>
+    <span class="meta">⚡ ${esc(d.power)}</span><div class="row"><button class="btn" id="cls">ปิด (Esc)</button></div></div></div>`;
+  $('#cls').onclick=()=>$('#ov').innerHTML='';$('#cls').focus();
+}
+function toastMsg(s){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=s;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
+
+/* ---------------- CLOCK ---------------- */
+function tick(){$('#clock').textContent=hhmm()}tick();setInterval(tick,15000);
+connectEvents();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# T3 desktop session: one fullscreen kiosk window showing benchd's UI.
+# Installed to /etc/sway/config.d/t3 or ~/.config/sway/config on the T3 image.
+
+set $mod Mod4
+output * bg #0a0d0b solid_color
+default_border none
+default_floating_border none
+focus_follows_mouse no
+seat * hide_cursor 8000
+input type:keyboard xkb_layout us,th
+input type:keyboard xkb_options grp:alt_shift_toggle
+
+# hardware core + UI
+exec benchd
+exec sh -c 'for i in $(seq 50); do curl -sf http://127.0.0.1:7300/ >/dev/null && break; sleep 0.2; done; exec cog --platform=wl http://127.0.0.1:7300/'
+for_window [app_id="cog|com.igalia.Cog"] fullscreen enable
+
+# escape hatches: a plain terminal and a way out
+bindsym $mod+Return exec foot
+bindsym $mod+Shift+r exec pkill -x cog; exec cog --platform=wl http://127.0.0.1:7300/
+bindsym $mod+Shift+e exec swaymsg exit
+bindsym $mod+Shift+q kill

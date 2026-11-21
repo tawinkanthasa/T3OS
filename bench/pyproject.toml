@@ -3,11 +3,12 @@ name = "t3-bench"
 version = "0.1.0"
 description = "T3 OS bench tool: detect, flash and monitor maker boards; exposes them to Claude Code over MCP"
 requires-python = ">=3.11"
-dependencies = ["pyserial>=3.5", "esptool>=4.7", "mcp>=2.3"]
+dependencies = ["pyserial>=3.5", "esptool>=4.7", "mcp>=2.3", "aiohttp>=3.9"]
 
 [project.scripts]
 bench = "bench.cli:main"
 bench-mcp = "bench.mcp_server:main"
+benchd = "bench.daemon:main"
 
 [build-system]
 requires = ["setuptools>=68"]

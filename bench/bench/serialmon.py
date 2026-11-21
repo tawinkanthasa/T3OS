@@ -34,20 +34,21 @@ def _sim_lines(board: Board) -> Iterator[str]:
 
 
 def lines(board: Board, baud: int = 115200, seconds: float | None = None,
-          max_lines: int | None = None) -> Iterator[str]:
+          max_lines: int | None = None, stop=None, sim_delay: float = 0.05) -> Iterator[str]:
     """Yield decoded lines until `seconds` or `max_lines` is reached. Alerts go to the logbook."""
     deadline = time.monotonic() + seconds if seconds else None
     count = 0
 
     def done() -> bool:
         return (deadline is not None and time.monotonic() >= deadline) or \
-               (max_lines is not None and count >= max_lines)
+               (max_lines is not None and count >= max_lines) or \
+               (stop is not None and stop())
 
     if board.simulated:
         for line in _sim_lines(board):
             if done():
                 return
-            time.sleep(0.05)
+            time.sleep(sim_delay)
             count += 1
             _check_alert(board, line)
             yield line

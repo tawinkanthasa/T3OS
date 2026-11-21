@@ -53,6 +53,17 @@ def _find_rpi_drive() -> Path | None:
     return None
 
 
+def _release_port(port: str) -> None:
+    """Ask a running benchd to let go of the serial port (best effort)."""
+    import os, urllib.parse, urllib.request
+    url = f"http://127.0.0.1:{os.environ.get('BENCHD_PORT', '7300')}/api/release?" + \
+        urllib.parse.urlencode({"port": port, "seconds": 90})
+    try:
+        urllib.request.urlopen(urllib.request.Request(url, method="POST"), timeout=1).read()
+    except Exception:
+        pass
+
+
 def flash(board: Board, firmware: Path, addr: int | None = None, log=print) -> dict:
     p = plan(board, firmware, addr)
     t0 = time.monotonic()
@@ -61,6 +72,7 @@ def flash(board: Board, firmware: Path, addr: int | None = None, log=print) -> d
             log(f"[sim] writing {p['file']} ... {pct}%")
             time.sleep(0.1)
     elif p["method"] == "esptool":
+        _release_port(board.port)
         cmd = [sys.executable, "-m", "esptool", "--port", board.port, "--baud", "460800",
                "write_flash", p["addr"], str(firmware)]
         log("$ " + " ".join(cmd))
