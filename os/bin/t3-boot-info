@@ -13,14 +13,19 @@ def grub_entries():
         text = Path("/boot/grub/grub.cfg").read_text(errors="replace")
     except OSError:
         return out
+    t3_main = False
     for m in re.finditer(r"^menuentry '((?:[^'\\]|\\.)*)'.*?\$menuentry_id_option '([^']+)'", text, re.M):
         title, mid = m.group(1).replace("'\\''", "'"), m.group(2)
         if mid == "uefi-firmware":
             continue
+        # T3 Settings lists one T3 (the first, newest kernel); older kernels and recovery stay in the boot menu only
+        main = True
+        if mid.startswith("gnulinux"):
+            main = not t3_main and "recovery" not in mid
+            t3_main = t3_main or main
         out.append({"id": mid, "title": title,
                     "kind": "windows" if "windows" in title.lower() else "t3" if mid.startswith("gnulinux") else "other",
-                    # per-kernel and recovery entries stay in the boot menu but not in the T3 Settings list
-                    "main": not mid.startswith("gnulinux") or mid.startswith("gnulinux-simple")})
+                    "main": main})
     return out
 
 

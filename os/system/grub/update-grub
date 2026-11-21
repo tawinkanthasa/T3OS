@@ -1,0 +1,10 @@
+#!/bin/sh
+# T3: update-grub = Debian's update-grub (diverted to update-grub.debian by install-system.sh),
+# then t3-grub-names gives the menu short names, icons and the order T3, Windows, recovery, BIOS.
+set -e
+if [ -x /usr/sbin/update-grub.debian ]; then
+  /usr/sbin/update-grub.debian "$@"
+else
+  grub-mkconfig -o /boot/grub/grub.cfg "$@"
+fi
+[ -x /usr/share/t3/bin/t3-grub-names ] && /usr/share/t3/bin/t3-grub-names /boot/grub/grub.cfg || true

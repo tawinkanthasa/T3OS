@@ -80,16 +80,16 @@ CFG
 cat > "$G/grub.cfg" <<'CFG'
 source /boot/grub/config.cfg
 
-menuentry "Try or install T3" --hotkey=t {
+menuentry "Try or install T3" --class t3 --hotkey=t {
 	linux	@KERNEL_LIVE@ @APPEND_LIVE@
 	initrd	@INITRD_LIVE@
 }
-menuentry "Try T3, safe graphics (if the screen stays black)" --hotkey=s {
+menuentry "Try T3, safe graphics (if the screen stays black)" --class recovery --hotkey=s {
 	linux	@KERNEL_LIVE@ @APPEND_LIVE@ nomodeset
 	initrd	@INITRD_LIVE@
 }
 if [ "${grub_platform}" = "efi" ]; then
-	menuentry "UEFI firmware settings" --hotkey=f {
+	menuentry "UEFI firmware settings" --class bios --hotkey=f {
 		fwsetup
 	}
 fi

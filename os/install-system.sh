@@ -73,6 +73,11 @@ fi
 if [[ -d /sys/firmware/efi ]] && mountpoint -q /boot/efi && command -v grub-install >/dev/null; then
   grub-install --removable --efi-directory=/boot/efi --no-nvram >/dev/null 2>&1 || echo "  (EFI fallback ไม่สำเร็จ ข้าม)"
 fi
+# update-grub also tidies the menu (t3-grub-names): Debian's own is kept as update-grub.debian
+if [[ -x /usr/sbin/update-grub ]] && ! dpkg-divert --list /usr/sbin/update-grub | grep -q update-grub.debian; then
+  dpkg-divert --local --rename --divert /usr/sbin/update-grub.debian --add /usr/sbin/update-grub >/dev/null
+fi
+[[ -x /usr/sbin/update-grub.debian ]] && install -m 0755 "$S/grub/update-grub" /usr/sbin/update-grub
 if command -v update-grub >/dev/null && [[ -e /boot/grub/grub.cfg ]]; then
   update-grub >/dev/null 2>&1 || echo "  (update-grub ไม่สำเร็จ: ลองรันเองภายหลัง)"
 fi
