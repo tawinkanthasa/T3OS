@@ -23,7 +23,14 @@ from aiohttp import WSMsgType, web
 from . import boards as B, logbook, pins as P, serialmon, settings as ST
 
 PORT = int(os.environ.get("BENCHD_PORT", "7300"))
-UI_DIR = Path(os.environ.get("T3_UI", Path(__file__).resolve().parents[2] / "ui"))
+def _ui_dir() -> Path:
+    if os.environ.get("T3_UI"):
+        return Path(os.environ["T3_UI"])
+    repo = Path(__file__).resolve().parents[2] / "ui"   # running from the repo
+    return repo if (repo / "index.html").exists() else Path("/usr/share/t3/ui")  # system install
+
+
+UI_DIR = _ui_dir()
 METRIC_RE = re.compile(r"(temp|vcc|hum)=([-\d.]+)")
 
 

@@ -1,7 +1,7 @@
 # T3 desktop: KDE Plasma 6, laid out Mac-style (top menu bar + floating dock + app grid).
 # Used by scripts/setup-desktop.sh and the live-build ISO.
 # -- Plasma core + login screen (kwallet unlocks with the login password, so Chrome never asks)
-kde-plasma-desktop plasma-workspace sddm sddm-theme-breeze kde-config-sddm libpam-kwallet5 kwalletmanager
+kde-plasma-desktop plasma-workspace sddm sddm-theme-breeze kde-config-sddm libpam-kwallet5 kwalletmanager systemd-timesyncd
 xdg-desktop-portal-kde xwayland appmenu-gtk3-module kde-config-gtk-style breeze-gtk-theme plasma-widgets-addons
 # -- system settings backends: Wi-Fi, sound, Bluetooth, power, screens, printers, phone link
 plasma-nm plasma-pa bluedevil powerdevil kscreen print-manager kdeconnect plasma-systemmonitor

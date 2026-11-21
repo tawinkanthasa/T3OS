@@ -10,6 +10,10 @@ rm -f /etc/sddm.conf.d/zz-t3-live.conf /etc/sudoers.d/zz-t3-live
 # groups for flashing boards / reading logs (users.conf adds them too; this covers manual installs)
 [ -n "$USER_NAME" ] && id "$USER_NAME" >/dev/null 2>&1 && usermod -aG dialout,plugdev,adm "$USER_NAME"
 
+# keyboard EN + TH (Alt+Shift) also on the login screen and text consoles
+sed -i 's/^XKBLAYOUT=.*/XKBLAYOUT="us,th"/; s/^XKBOPTIONS=.*/XKBOPTIONS="grp:alt_shift_toggle"/' /etc/default/keyboard 2>/dev/null
+grep -q '^XKBOPTIONS=' /etc/default/keyboard || echo 'XKBOPTIONS="grp:alt_shift_toggle"' >> /etc/default/keyboard
+
 # dual boot with Windows: keep the hardware clock in local time so Windows doesn't jump 7 hours
 if efibootmgr 2>/dev/null | grep -qi 'windows boot manager' || os-prober 2>/dev/null | grep -qi windows; then
   log "เจอ Windows: ตั้งนาฬิกาให้ใช้ร่วมกันได้"

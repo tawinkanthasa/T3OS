@@ -60,7 +60,7 @@ fi
 section "หน่วยความจำ"
 read -r mt ma < <(awk '/MemTotal/{t=$2}/MemAvailable/{a=$2}END{print int(t/1024), int(a/1024)}' /proc/meminfo)
 (( ma < mt / 10 )) && warn "RAM เหลือน้อย: ว่าง ${ma} MB จาก ${mt} MB" "ปิดแอป/แท็บที่ไม่ใช้; ดูว่าใครกิน RAM ด้วย: btop" || ok "RAM ว่าง ${ma} MB จาก ${mt} MB"
-swapon --show=NAME --noheadings 2>/dev/null | grep -q zram && ok "zram (swap บีบอัดใน RAM) ทำงาน" || info "ไม่มี zram swap"
+grep -q zram /proc/swaps && ok "zram (swap บีบอัดใน RAM) ทำงาน" || info "ไม่มี zram swap"
 
 # ---------------------------------------------------------------- network
 section "อินเทอร์เน็ต"
