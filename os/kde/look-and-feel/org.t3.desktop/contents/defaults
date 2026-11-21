@@ -18,6 +18,8 @@ library=org.kde.kwin.aurorae
 theme=__aurorae__svg__T3
 ButtonsOnLeft=XIA
 ButtonsOnRight=
+BorderSize=None
+BorderSizeAuto=false
 
 [ksplashrc][KSplash]
 Theme=org.t3.desktop

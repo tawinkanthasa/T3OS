@@ -4,6 +4,9 @@ library=org.kde.kwin.aurorae
 theme=__aurorae__svg__T3
 ButtonsOnLeft=XIA
 ButtonsOnRight=
+# no side/bottom frame: apps fill the window (the T3 frame only draws the title bar); the shadow marks the edge
+BorderSize=None
+BorderSizeAuto=false
 
 # Night light: warm screen after sunset (Bangkok)
 [NightColor]
