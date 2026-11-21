@@ -16,6 +16,10 @@ LongitudeFixed=100.5
 [Effect-overview]
 BorderActivate=7
 
+# Hot corner bottom-left: show the desktop (touch it again to bring the windows back)
+[ElectricBorders]
+BottomLeft=ShowDesktop
+
 [Windows]
 Placement=Centered
 
@@ -30,6 +34,8 @@ blurEnabled=true
 contrastEnabled=true
 slidingpopupsEnabled=true
 wobblywindowsEnabled=false
+# touch the bottom edge anywhere to bring up the dock (kwin-scripts/t3-dock-edge)
+t3-dock-edgeEnabled=true
 
 [Effect-magiclamp]
 AnimationDuration=260

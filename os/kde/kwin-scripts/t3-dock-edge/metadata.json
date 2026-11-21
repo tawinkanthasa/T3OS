@@ -1,0 +1,12 @@
+{
+    "KPackageStructure": "KWin/Script",
+    "KPlugin": {
+        "Id": "t3-dock-edge",
+        "Name": "T3 dock edge",
+        "Description": "Touch the bottom edge anywhere to bring up the dock",
+        "License": "MIT",
+        "EnabledByDefault": true
+    },
+    "X-Plasma-API": "javascript",
+    "X-Plasma-MainScript": "code/main.js"
+}
