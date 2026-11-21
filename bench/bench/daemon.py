@@ -346,7 +346,7 @@ async def api_launch(request: web.Request) -> web.Response:
 # ---- Wi-Fi / Bluetooth / sound / display / keyboard for T3 Settings (bench/system.py) ----
 SYS_GET = {"wifi": lambda q: SY.wifi_status(q.get("rescan") == "1"), "bt": lambda q: SY.bt_status(),
            "sound": lambda q: SY.sound_status(), "display": lambda q: SY.display_status(),
-           "keyboard": lambda q: SY.keyboard_status()}
+           "keyboard": lambda q: SY.keyboard_status(), "kcms": lambda q: SY.kcm_list()}
 SYS_POST = {
     "wifi/connect": lambda b: SY.wifi_connect(b.get("ssid"), b.get("password") or None),
     "wifi/disconnect": lambda b: SY.wifi_disconnect(b.get("device")),
@@ -359,6 +359,7 @@ SYS_POST = {
     "display/set": lambda b: SY.display_set(b.get("output"), b.get("scale"), b.get("mode")),
     "display/brightness": lambda b: SY.brightness_set(b.get("id"), b.get("percent", 100)),
     "keyboard/set": lambda b: SY.keyboard_set(b.get("lang_key")),
+    "kcm/open": lambda b: SY.kcm_open(b.get("id")),
 }
 
 

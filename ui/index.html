@@ -275,7 +275,7 @@ body.v .book{max-height:none!important}
             </div>
             <div class="s-quick" id="sQuick"></div>
             <div class="s-card" id="sRows"></div>
-            <div class="s-foot">ต้องการตั้งค่าละเอียด: <button type="button" data-app="system">เปิดการตั้งค่าขั้นสูงของ KDE</button></div>
+            <div class="s-foot">หาไม่เจอ หรืออยากตั้งละเอียดกว่านี้: <button type="button" data-go="more">ดูตั้งค่าทั้งหมด</button></div>
           </div>
 
           <div class="s-page" data-page="wifi" hidden>
@@ -356,6 +356,13 @@ body.v .book{max-height:none!important}
           <div class="s-page" data-page="keys" hidden>
             <div><h2>ปุ่มลัด</h2><p class="sub">Meta คือปุ่ม Windows</p></div>
             <div class="s-card keys" id="keys"></div>
+          </div>
+
+          <div class="s-page" data-page="more" hidden>
+            <div><h2>ตั้งค่าทั้งหมด</h2><p class="sub" id="moreSub">ทุกหน้าตั้งค่าของเครื่อง กดแล้วเปิดหน้านั้นเลย</p></div>
+            <input type="search" id="moreQ" placeholder="ค้นหา เช่น พลังงาน, เครื่องพิมพ์, เมาส์, เวลา" spellcheck="false" autocomplete="off" aria-label="ค้นหาในตั้งค่าทั้งหมด" style="height:40px;padding:0 14px;border-radius:10px;border:1px solid #2a2d31;background:var(--s-side);font-size:14px">
+            <div id="moreList" style="display:flex;flex-direction:column;gap:18px"></div>
+            <div class="res" id="moreRes" role="status"></div>
           </div>
 
           <div class="s-page" data-page="about" hidden>
@@ -569,7 +576,7 @@ function toastMsg(s){const t=document.createElement('div');t.className='toast';t
 
 /* ---------------- SETTINGS ---------------- */
 const post=(url,body)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-T3':'1'},body:JSON.stringify(body)}).then(r=>r.json());
-const CATS=[['home','ภาพรวม','#3fb950','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z','overview'],['wifi','Wi-Fi และเน็ต','#2f6fb3','M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0','wifi internet network'],['bt','บลูทูธ','#2f6fb3','M7 7l10 10-5 4V3l5 4L7 17','bluetooth'],['sound','เสียง','#c2410c','M4 9h4l5-4v14l-5-4H4z','sound audio'],['display','หน้าจอ','#6d28d9','M3 5h18v11H3zM8 20h8M12 16v4','display screen monitor'],['look','หน้าตา','#be185d','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18','wallpaper theme'],['kbd','ภาษาและแป้นพิมพ์','#4a4d52','M3 6h18v12H3zM7 14h10','keyboard thai language caps lock'],['@bench','บอร์ดและพอร์ต','#1f6f35','M7 7h10v10H7zM9 3v4M15 3v4M9 17v4M15 17v4','esp32 board usb'],['ai','AI','#0f7c7e','M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z','ai lm studio claude'],['update','อัปเดตและจุดกู้คืน','#3a3d42','M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4','update snapshot'],['@users','ผู้ใช้และรหัสผ่าน','#3a3d42','M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8M4 21a8 8 0 0 1 16 0','user password'],['keys','ปุ่มลัด','#3a3d42','M3 6h18v12H3z','shortcut keys'],['about','เกี่ยวกับเครื่อง','#3a3d42','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 11v5M12 8h.01','about system']];
+const CATS=[['home','ภาพรวม','#3fb950','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z','overview'],['wifi','Wi-Fi และเน็ต','#2f6fb3','M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0','wifi internet network'],['bt','บลูทูธ','#2f6fb3','M7 7l10 10-5 4V3l5 4L7 17','bluetooth'],['sound','เสียง','#c2410c','M4 9h4l5-4v14l-5-4H4z','sound audio'],['display','หน้าจอ','#6d28d9','M3 5h18v11H3zM8 20h8M12 16v4','display screen monitor'],['look','หน้าตา','#be185d','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18','wallpaper theme'],['kbd','ภาษาและแป้นพิมพ์','#4a4d52','M3 6h18v12H3zM7 14h10','keyboard thai language caps lock'],['@bench','บอร์ดและพอร์ต','#1f6f35','M7 7h10v10H7zM9 3v4M15 3v4M9 17v4M15 17v4','esp32 board usb'],['ai','AI','#0f7c7e','M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z','ai lm studio claude'],['update','อัปเดตและจุดกู้คืน','#3a3d42','M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4','update snapshot'],['@users','ผู้ใช้และรหัสผ่าน','#3a3d42','M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8M4 21a8 8 0 0 1 16 0','user password'],['keys','ปุ่มลัด','#3a3d42','M3 6h18v12H3z','shortcut keys'],['more','ตั้งค่าทั้งหมด','#3a3d42','M4 6h16M4 12h16M4 18h16','all settings kde advanced power notification printer mouse touchpad date time font default apps'],['about','เกี่ยวกับเครื่อง','#3a3d42','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 11v5M12 8h.01','about system']];
 const QUICK=[['wifi','Wi-Fi','เครือข่าย','M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0'],['bluetooth','บลูทูธ','อุปกรณ์ไร้สาย','M7 7l10 10-5 4V3l5 4L7 17'],['sound','เสียง','ลำโพง ไมค์','M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 0 1 0 6'],['display','หน้าจอ','ความสว่าง หลายจอ','M3 5h18v11H3zM8 20h8M12 16v4']];
 const UPD=[['t3update','อัปเดต T3','หน้าจอ Bench เครื่องมือ'],['update','อัปเดตระบบและแอป','Discover'],['snapshots','จุดกู้คืนระบบ','ดู สร้าง หรือย้อนกลับ'],['doctor','ตรวจเครื่อง','ให้ Claude ช่วยแก้ปัญหา'],['welcome','ติดตั้งเครื่องมือเพิ่ม','ESP-IDF Arduino NVIDIA']];
 const WALL=['#0a0d0b','#10241a','#1d3b2c','#141210','#1b1b2e','#2b1a14','#202020'];
@@ -581,7 +588,9 @@ function sBind(root){root.querySelectorAll('[data-app]').forEach(b=>b.onclick=()
 async function initSettings(){
   $('#sCats').innerHTML=CATS.map(([p,n,c,d,k])=>`<button class="s-cat" data-p="${p}" data-k="${n} ${k}"><i style="background:${c}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg></i>${n}${p[0]==='@'?'<span class="ext" aria-hidden="true">↗</span>':''}</button>`).join('');
   $$('.s-cat').forEach(b=>b.onclick=()=>b.dataset.p[0]==='@'?sLaunch(b.dataset.p.slice(1)):sPage(b.dataset.p));
-  $('#sQ').oninput=e=>{const q=e.target.value.toLowerCase();$$('.s-cat').forEach(b=>b.hidden=!!q&&!b.dataset.k.toLowerCase().includes(q))};
+  $('#sQ').oninput=async e=>{const q=e.target.value.toLowerCase();if(q&&!KCM){const d=await sget('kcms');if(!d.error)KCM=d}
+    const inMore=!!q&&!!KCM&&KCM.groups.some(g=>g.items.some(i=>(i.name+' '+i.desc+' '+i.id).toLowerCase().includes(q)));
+    $$('.s-cat').forEach(b=>b.hidden=!!q&&!b.dataset.k.toLowerCase().includes(q)&&!(b.dataset.p==='more'&&inMore));$('#moreQ').value=e.target.value};
   $('#sQuick').innerHTML=QUICK.map(([a,n,s,d])=>`<button class="s-q" data-go="${a==='bluetooth'?'bt':a}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg><span><b>${n}</b><small>${s}</small></span></button>`).join('');
   $('#sUpd').innerHTML=UPD.map(([a,t,d])=>sRow(a,t,d)).join('');
   $('#keys').innerHTML=KEYS.map(([k,v])=>`<kbd>${k}</kbd><span>${v}</span>`).join('');
@@ -681,7 +690,15 @@ $('#dispList').onchange=async e=>{const s=e.target;if(s.tagName!=='SELECT')retur
 async function loadKbd(){const d=await sget('keyboard');if(d.error){say('#kbdRes',d.error,true);return}
   $$('#kbdPick input').forEach(i=>i.checked=i.value===d.lang_key);if(d.lang_key==='other')say('#kbdRes','ตอนนี้ตั้งไว้แบบอื่น ('+d.options+')')}
 $('#kbdPick').onchange=async e=>{const r=await spost('keyboard/set',{lang_key:e.target.value});say('#kbdRes',r.error||'เปลี่ยนแล้ว ลองกดดูได้เลย',!!r.error);if(r.error)loadKbd()};
-const SYS={wifi:()=>loadWifi(),bt:loadBt,sound:loadSound,display:loadDisplay,kbd:loadKbd};
+let KCM=null;
+async function loadMore(){if(!KCM){const d=await sget('kcms');if(d.error){say('#moreRes',d.error,true);return}KCM=d}
+  $('#moreSub').textContent=`ทุกหน้าตั้งค่าของเครื่อง (${KCM.count} หน้า) กดแล้วเปิดหน้านั้นเลย`;drawMore()}
+function drawMore(){const q=$('#moreQ').value.trim().toLowerCase(),hit=i=>!q||(i.name+' '+i.desc+' '+i.id).toLowerCase().includes(q);
+  const html=KCM.groups.map(g=>{const it=g.items.filter(hit);return it.length?`<div><h3 class="sub" style="margin:0 0 8px">${esc(g.name)}</h3><div class="s-card">${it.map(i=>`<button class="s-row" data-kcm="${esc(i.id)}"><span class="t"><b>${esc(i.name)}</b><small>${esc(i.desc)}</small></span>›</button>`).join('')}</div></div>`:''}).join('');
+  $('#moreList').innerHTML=html||'<div class="s-empty">ไม่พบ ลองคำอื่น</div>'}
+$('#moreQ').oninput=()=>KCM&&drawMore();
+$('#moreList').onclick=async e=>{const b=e.target.closest('[data-kcm]');if(!b)return;const r=await spost('kcm/open',{id:b.dataset.kcm});say('#moreRes',r.error||'',!!r.error)};
+const SYS={wifi:()=>loadWifi(),bt:loadBt,sound:loadSound,display:loadDisplay,kbd:loadKbd,more:loadMore};
 
 /* ---------------- CLOCK ---------------- */
 function tick(){$('#clock').textContent=hhmm()}tick();setInterval(tick,15000);

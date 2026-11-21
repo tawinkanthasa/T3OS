@@ -35,3 +35,8 @@ def test_keyboard_rejects_unknown_choice():
 def test_short_wifi_password_rejected():
     with pytest.raises(SY.SysError):
         SY.wifi_connect("Home", "short")
+
+
+def test_kcm_open_rejects_unknown_module():
+    with pytest.raises(SY.SysError):
+        SY.kcm_open("kcm_bogus; rm -rf /")

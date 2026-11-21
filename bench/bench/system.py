@@ -341,3 +341,82 @@ def keyboard_set(lang_key) -> dict:
     # KWin re-reads kxkbrc on this signal (what KDE's own keyboard page sends)
     _run(["dbus-send", "--session", "--type=signal", "/Layouts", "org.kde.keyboard.reloadConfig"], check=False)
     return {"ok": True, "options": new}
+
+
+# ---- Every KDE settings page, so nothing is lost when KDE's System Settings is hidden ----------
+# Read live from `kcmshell6 --list` (new modules show up by themselves); Thai names and groups for the
+# known ones, KDE's own description for the rest.
+KCM_GROUPS = [
+    ("หน้าตา", {
+        "kcm_lookandfeel": "ธีมทั้งระบบ", "kcm_colors": "สี", "kcm_desktoptheme": "ธีมแถบเมนูและ Dock",
+        "kcm_icons": "ไอคอน", "kcm_cursortheme": "เคอร์เซอร์เมาส์", "kcm_fonts": "ตัวอักษร",
+        "kcm_fontinst": "ติดตั้งฟอนต์", "kcm_kwindecoration": "กรอบและปุ่มหน้าต่าง", "kcm_style": "สไตล์แอป",
+        "kcm_splashscreen": "หน้าจอตอนเปิดเครื่อง", "kcm_wallpaper": "วอลเปเปอร์", "kcm_soundtheme": "เสียงแจ้งเตือน",
+        "kcm_kwin_effects": "เอฟเฟกต์หน้าต่าง", "kwincompositing": "การวาดหน้าจอ (compositor)",
+        "kcm_nightlight": "แสงกลางคืน (ถนอมสายตา)", "kcm_kgamma": "ปรับสีจอ (gamma)"}),
+    ("หน้าต่างและเดสก์ท็อป", {
+        "kcm_kwinoptions": "การทำงานของหน้าต่าง", "kcm_kwinrules": "กฎของแต่ละหน้าต่าง",
+        "kcm_kwin_virtualdesktops": "เดสก์ท็อปเสมือน", "kcm_kwinscreenedges": "มุมและขอบจอ",
+        "kcm_kwintabbox": "สลับหน้าต่าง (Alt+Tab)", "kcm_kwintouchscreen": "ปัดจอสัมผัส",
+        "kcm_kwin_scripts": "สคริปต์ KWin", "kcm_activities": "Activities", "kcm_workspace": "การทำงานทั่วไป",
+        "kcm_plasmasearch": "การค้นหา (Meta+Space)", "kcm_recentFiles": "ประวัติไฟล์ที่เปิดล่าสุด",
+        "kcm_landingpage": "ตั้งค่าด่วนของ KDE", "kcm_baloofile": "ค้นหาไฟล์ (Baloo)"}),
+    ("อุปกรณ์", {
+        "kcm_mouse": "เมาส์", "kcm_touchpad": "ทัชแพด", "kcm_touchscreen": "จอสัมผัส", "kcm_tablet": "แท็บเล็ตวาดรูป",
+        "kcm_gamecontroller": "จอยเกม", "kcm_keyboard": "แป้นพิมพ์และภาษา (ละเอียด)", "kcm_keys": "ปุ่มลัด",
+        "kcm_kwinxwayland": "ปุ่มลัดสำหรับแอป X11", "kcm_virtualkeyboard": "แป้นพิมพ์บนจอ",
+        "kcm_printer_manager": "เครื่องพิมพ์", "kcm_kamera": "กล้อง", "kcm_bolt": "Thunderbolt",
+        "kcm_device_automounter": "เสียบดิสก์แล้วเปิดเอง", "kcm_solid_actions": "เมื่อเสียบอุปกรณ์ใหม่",
+        "kcm_kdeconnect": "ต่อกับมือถือ (KDE Connect)", "kcm_pulseaudio": "เสียง (ละเอียด)",
+        "kcm_bluetooth": "บลูทูธ (ละเอียด)", "kcm_kscreen": "หน้าจอ (หลายจอ หมุนจอ)"}),
+    ("เน็ต", {
+        "kcm_networkmanagement": "การเชื่อมต่อเครือข่าย (VPN, IP)", "kcm_netpref": "ตั้งค่าเครือข่ายทั่วไป",
+        "kcm_proxy": "Proxy", "kcm_firewall": "ไฟร์วอลล์", "kcm_webshortcuts": "คำค้นหาเว็บ"}),
+    ("ระบบ", {
+        "kcm_powerdevilprofilesconfig": "พลังงาน (พักเครื่อง ปิดจอ)", "kcm_notifications": "การแจ้งเตือน",
+        "kcm_clock": "วันที่และเวลา", "kcm_regionandlang": "ภาษาและรูปแบบตัวเลข วันที่ เงิน",
+        "kcm_componentchooser": "แอปเริ่มต้น (เบราว์เซอร์ อีเมล)", "kcm_filetypes": "เปิดไฟล์แต่ละชนิดด้วยแอปไหน",
+        "kcm_desktoppaths": "โฟลเดอร์ส่วนตัว", "kcm_autostart": "แอปที่เปิดเองตอนเข้าเครื่อง",
+        "kcm_users": "ผู้ใช้และรหัสผ่าน", "kcm_screenlocker": "ล็อกจอ", "kcm_sddm": "หน้าจอเข้าสู่ระบบ",
+        "kcm_smserver": "เข้าและออกจากระบบ", "kcm_access": "การช่วยเหลือการใช้งาน", "kcm_updates": "การอัปเดต",
+        "kcm_kup": "สำรองข้อมูล", "kcm_kwallet5": "กระเป๋ารหัสผ่าน (KWallet)", "kcmspellchecking": "ตรวจคำสะกด",
+        "kcm_kded": "บริการเบื้องหลัง", "kcm_feedback": "ส่งข้อมูลการใช้งานให้ KDE", "kcm_qtquicksettings": "Qt Quick"}),
+    ("ข้อมูลเครื่อง", {
+        "kcm_about-distro": "เกี่ยวกับเครื่อง", "kcm_energyinfo": "การใช้พลังงาน", "kcm_disks": "สุขภาพดิสก์",
+        "kcm_memory": "หน่วยความจำ", "kcm_cpu": "CPU", "kcm_pci": "PCI", "kcm_usb": "อุปกรณ์ USB",
+        "kcm_network": "การ์ดเครือข่าย", "kcm_block_devices": "ดิสก์และพาร์ทิชัน", "kcm_audio_information": "อุปกรณ์เสียง",
+        "kcm_edid": "ข้อมูลจอ (EDID)", "kcm_egl": "EGL", "kcm_glx": "GLX", "kcm_vulkan": "Vulkan", "kcm_opencl": "OpenCL",
+        "kcm_wayland": "Wayland", "kcm_xserver": "X Server", "kcm_kwinsupportinfo": "ข้อมูล KWin",
+        "kcm_interrupts": "Interrupts", "kcm_firmware_security": "ความปลอดภัยเฟิร์มแวร์", "kcm_samba": "แชร์ไฟล์ (Samba)"}),
+]
+_KCM_RE = re.compile(r"^(kcm[\w\-]*|kwin[\w\-]*)\s+-\s+(.*)$")
+
+
+def kcm_list() -> dict:
+    found = {}
+    for line in _run(["kcmshell6", "--list"], check=False).splitlines():
+        m = _KCM_RE.match(line.strip())
+        if m:
+            desc = m.group(2).strip()
+            found[m.group(1)] = "" if desc == "No description available" else desc
+    groups, used = [], set()
+    for name, names in KCM_GROUPS:
+        items = [{"id": k, "name": th, "desc": found[k]} for k, th in names.items() if k in found]
+        used.update(i["id"] for i in items)
+        if items:
+            groups.append({"name": name, "items": items})
+    rest = [{"id": k, "name": d or k, "desc": k} for k, d in sorted(found.items()) if k not in used]
+    if rest:
+        groups.append({"name": "อื่นๆ", "items": rest})
+    return {"groups": groups, "count": len(found)}
+
+
+def kcm_open(kcm) -> dict:
+    kcm = str(kcm or "")
+    if not _KCM_RE.match(kcm + " - x") or kcm not in {i["id"] for g in kcm_list()["groups"] for i in g["items"]}:
+        raise SysError("ไม่พบหน้าตั้งค่านี้")
+    p = subprocess.Popen(["kcmshell6", kcm], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         start_new_session=True)
+    import threading
+    threading.Thread(target=p.wait, daemon=True).start()
+    return {"ok": True}
