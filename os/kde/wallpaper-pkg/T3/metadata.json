@@ -1,0 +1,9 @@
+{
+  "KPlugin": {
+    "Id": "T3",
+    "Name": "T3",
+    "Description": "Dark green with faint circuit traces",
+    "Authors": [{ "Name": "T3" }],
+    "License": "CC-BY-SA-4.0"
+  }
+}

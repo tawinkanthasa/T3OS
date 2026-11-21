@@ -14,7 +14,7 @@ PlasmoidItem {
     property var ai: ({ text: "", tooltip: "", class: "ok" })
     property bool up: false
 
-    preferredRepresentation: compactRepresentation
+    preferredRepresentation: fullRepresentation
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
     toolTipMainText: up ? "T3 Bench" : "T3 Bench: benchd ไม่ทำงาน"
     toolTipSubText: (boards.tooltip || "ไม่มีบอร์ดเสียบอยู่") + (ai.tooltip ? "\nLocal AI: " + ai.tooltip : "")
@@ -44,7 +44,7 @@ PlasmoidItem {
         onNewData: (source) => disconnectSource(source)
     }
 
-    compactRepresentation: MouseArea {
+    fullRepresentation: MouseArea {
         Layout.minimumWidth: row.implicitWidth + Kirigami.Units.smallSpacing * 2
         Layout.preferredWidth: Layout.minimumWidth
         hoverEnabled: true

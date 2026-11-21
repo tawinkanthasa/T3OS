@@ -1,0 +1,6 @@
+# The T3 wallpaper is Plasma's default, so nothing can fall back to Debian's
+[Wallpapers]
+defaultWallpaperTheme=T3
+defaultFileSuffix=.svg
+defaultWidth=3840
+defaultHeight=2400

@@ -3,11 +3,13 @@
 LookAndFeelPackage=org.t3.desktop
 widgetStyle=Breeze
 SingleClick=false
+# animations: a touch quicker than default so they feel smooth, not slow
+AnimationDurationFactor=0.8
 
 [General]
 ColorScheme=T3Dark
 AccentColor=63,185,80
 
 [Icons]
-Theme=breeze-dark
+Theme=T3
 

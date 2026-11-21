@@ -1,7 +1,7 @@
-# Window buttons on the left (close, minimise, maximise), like macOS
+# T3 frame: red/yellow/green buttons on the left, like macOS
 [org.kde.kdecoration2]
-library=org.kde.breeze
-theme=Breeze
+library=org.kde.kwin.aurorae
+theme=__aurorae__svg__T3
 ButtonsOnLeft=XIA
 ButtonsOnRight=
 
@@ -18,3 +18,22 @@ BorderActivate=7
 
 [Windows]
 Placement=Centered
+
+# Smooth effects: windows genie into the dock, open/close with a soft scale,
+# blurred see-through menu bar and dock
+[Plugins]
+magiclampEnabled=true
+squashEnabled=false
+scaleEnabled=true
+fadeEnabled=false
+blurEnabled=true
+contrastEnabled=true
+slidingpopupsEnabled=true
+wobblywindowsEnabled=false
+
+[Effect-magiclamp]
+AnimationDuration=260
+
+[Effect-blur]
+BlurStrength=8
+NoiseStrength=2

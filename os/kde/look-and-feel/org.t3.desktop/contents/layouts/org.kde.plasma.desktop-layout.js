@@ -8,7 +8,7 @@ var T3 = "/usr/share/t3";
 desktopsForActivity(currentActivity()).forEach(function (d) {
     d.wallpaperPlugin = "org.kde.image";
     d.currentConfigGroup = ["Wallpaper", "org.kde.image", "General"];
-    d.writeConfig("Image", "file://" + T3 + "/wallpapers/t3.svg");
+    d.writeConfig("Image", "file:///usr/share/wallpapers/T3/");
 });
 
 // ---- top: menu bar ----
@@ -16,6 +16,7 @@ var bar = new Panel;
 bar.location = "top";
 bar.height = Math.round(gridUnit * 1.6);
 bar.floating = false;
+bar.hiding = "dodgewindows";                                // tucks away under a maximised window; touch the top edge to bring it back
 
 var menu = bar.addWidget("org.kde.plasma.kickoff");        // T3 menu: apps, places, sleep/restart/shut down
 menu.currentConfigGroup = ["General"];
@@ -30,6 +31,9 @@ var clock = bar.addWidget("org.kde.plasma.digitalclock");
 clock.currentConfigGroup = ["Appearance"];
 clock.writeConfig("showDate", "true");
 clock.writeConfig("dateDisplayFormat", "BesideTime");
+clock.writeConfig("dateFormat", "custom");
+clock.writeConfig("customDateFormat", "ddd d MMM");          // ส. 22 พ.ย.
+clock.writeConfig("use24hFormat", "2");
 
 // ---- bottom: floating dock ----
 var dock = new Panel;
@@ -42,7 +46,7 @@ dock.floating = true;
 
 var grid = dock.addWidget("org.kde.plasma.kickerdash");     // full-screen app grid
 grid.currentConfigGroup = ["General"];
-grid.writeConfig("icon", "view-app-grid-symbolic");
+grid.writeConfig("icon", "t3-apps");
 
 var tasks = dock.addWidget("org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];

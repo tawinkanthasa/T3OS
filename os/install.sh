@@ -10,7 +10,9 @@ T3="$ROOT/usr/share/t3"; SHARE="$ROOT/usr/share"; XDG="$ROOT/etc/xdg"
 
 install -d "$T3/bin" "$T3/wallpapers" "$SHARE/plasma/look-and-feel" "$SHARE/plasma/plasmoids" \
            "$SHARE/color-schemes" "$SHARE/applications" "$SHARE/icons/hicolor/scalable/apps" \
-           "$XDG/autostart" "$ROOT/etc/sddm.conf.d" "$SHARE/sddm/themes/breeze"            "$T3/udev" "$ROOT/etc/udev/rules.d" "$SHARE/wayland-sessions"
+           "$XDG/autostart" "$ROOT/etc/sddm.conf.d" "$SHARE/sddm/themes/breeze" \
+           "$T3/udev" "$ROOT/etc/udev/rules.d" "$SHARE/wayland-sessions" \
+           "$SHARE/icons" "$SHARE/aurorae/themes" "$SHARE/wallpapers"
 install -m 0755 "$SRC"/bin/* "$T3/bin/"
 cp -r "$REPO/ui" "$T3/"
 install -m 0644 "$K"/wallpapers/* "$T3/wallpapers/"
@@ -20,7 +22,13 @@ cp -r "$K/plasmoids/org.t3.boards" "$SHARE/plasma/plasmoids/"
 install -m 0644 "$K"/color-schemes/* "$SHARE/color-schemes/"
 install -m 0644 "$K"/applications/* "$SHARE/applications/"
 install -m 0644 "$K"/icons/* "$SHARE/icons/hicolor/scalable/apps/"
-for f in kwinrc kglobalshortcutsrc kxkbrc plasmanotifyrc; do install -m 0644 "$K/xdg/$f" "$XDG/$f"; done
+# the design's look: dock tiles (icon theme), red/yellow/green window buttons, wallpaper package
+rm -rf "$SHARE/icons/T3" "$SHARE/aurorae/themes/T3" "$SHARE/wallpapers/T3"
+cp -r "$K/icons-theme/T3" "$SHARE/icons/"
+cp -r "$K/aurorae/T3" "$SHARE/aurorae/themes/"
+cp -r "$K/wallpaper-pkg/T3" "$SHARE/wallpapers/"
+command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -qf "$SHARE/icons/T3" 2>/dev/null || true
+for f in kwinrc kglobalshortcutsrc kxkbrc plasmanotifyrc plasmarc; do install -m 0644 "$K/xdg/$f" "$XDG/$f"; done
 install -m 0644 "$K"/xdg/autostart/* "$XDG/autostart/"
 # KDE reads colours from kdeglobals itself, so the scheme's groups are appended to the defaults
 { cat "$K/xdg/kdeglobals"; grep -v '^\[General\]$\|^ColorScheme=\|^Name=\|^shadeSortColumn=' "$K/color-schemes/T3Dark.colors"; } > "$XDG/kdeglobals"
