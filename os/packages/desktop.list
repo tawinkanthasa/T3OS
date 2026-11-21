@@ -2,8 +2,8 @@
 # compositor + shell
 sway swaybg swaylock swayidle waybar fuzzel mako-notifier libnotify-bin
 xwayland xdg-desktop-portal-wlr xdg-desktop-portal-gtk lxpolkit xdg-utils
-# login screen
-greetd tuigreet
+# login screen; keyring unlocked by the login password (pam_gnome_keyring, wired up in the ISO)
+greetd tuigreet gnome-keyring libpam-gnome-keyring
 # T3 UI windows
 cog
 # everyday apps

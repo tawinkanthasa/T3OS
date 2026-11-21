@@ -15,7 +15,8 @@ cp -r "$REPO/os/." "$RUN/" && chmod +x "$RUN"/bin/*
 grep -rl /usr/share/t3 "$RUN" | xargs -r sed -i "s#/usr/share/t3#$RUN#g"
 sed -i "s#^set \$t3 .*#set \$t3 $RUN#; s#^set \$mod .*#set \$mod Mod1#" "$RUN/sway/config"
 # WSL-only: WSLg owns /tmp/.X11-unix (no Xwayland); no NetworkManager/gamma control in a nested window
-sed -i "/^exec nm-applet/d; /^exec gammastep/d" "$RUN/sway/config"
+#           and no logind session, so the polkit agent can only show an error
+sed -i "/^exec nm-applet/d; /^exec gammastep/d; /^exec lxpolkit/d" "$RUN/sway/config"
 echo "xwayland disable" >> "$RUN/sway/config"
 
 # same session environment as the real login (os/bin/t3-start)
