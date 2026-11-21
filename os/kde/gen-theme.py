@@ -68,25 +68,58 @@ GLYPH = {  # drawn on hover, 14px button
 }
 
 
+SHADOW = 20                   # px of soft shadow around every window (Aurorae "padding")
+SHADOW_A = {"decoration": 0.42, "decoration-inactive": 0.24}   # darkest, right at the window edge
+CW, TH = SHADOW + R, SHADOW + TITLE_H   # corner tile width, top row height
+
+
 def frame(prefix, fill):
-    """FrameSvg pieces for one state: rounded top corners, flat 1px sides and bottom."""
-    o = []
-    add = lambda name, x, y, w, h, body: o.append(
-        f'<g id="{prefix}-{name}" transform="translate({x} {y})">{body}</g>')
-    # top row (title bar)
-    add("topleft", 0, 0, R, TITLE_H,
-        f'<path d="M0 {R}A{R} {R} 0 0 1 {R} 0V{TITLE_H}H0z" fill="{fill}"/>')
-    add("top", 20, 0, 10, TITLE_H, f'<rect width="10" height="{TITLE_H}" fill="{fill}"/>')
-    add("topright", 40, 0, R, TITLE_H,
-        f'<path d="M0 0A{R} {R} 0 0 1 {R} {R}V{TITLE_H}H0z" fill="{fill}"/>')
-    # sides and bottom: a 1px hairline in the edge colour
-    add("left", 0, 50, 1, 10, f'<rect width="1" height="10" fill="{EDGE}"/>')
-    add("center", 20, 50, 10, 10, f'<rect width="10" height="10" fill="{fill}" fill-opacity="0"/>')
-    add("right", 40, 50, 1, 10, f'<rect width="1" height="10" fill="{EDGE}"/>')
-    add("bottomleft", 0, 70, 1, 1, f'<rect width="1" height="1" fill="{EDGE}"/>')
-    add("bottom", 20, 70, 10, 1, f'<rect width="10" height="1" fill="{EDGE}"/>')
-    add("bottomright", 40, 70, 1, 1, f'<rect width="1" height="1" fill="{EDGE}"/>')
-    return "\n".join(o)
+    """FrameSvg pieces for one state: rounded dark title bar on top, no side/bottom border (apps fill
+    the window), and a soft shadow all round so windows stand off the wallpaper and each other.
+    Left/right pieces are drawn once and mirrored."""
+    a, P = SHADOW_A[prefix], SHADOW
+    o, defs = [], []
+    gid = lambda n: f"{prefix}-g-{n}"
+
+    def lin(name, x1, y1, x2, y2):          # fades from transparent (x1,y1) to shadow (x2,y2)
+        defs.append(f'<linearGradient id="{gid(name)}" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}">'
+                    f'<stop offset="0" stop-color="#000" stop-opacity="0"/>'
+                    f'<stop offset="1" stop-color="#000" stop-opacity="{a}"/></linearGradient>')
+
+    def rad(name, cx, cy, inner):           # corner: shadow at the centre, fading out
+        defs.append(f'<radialGradient id="{gid(name)}" cx="{cx}" cy="{cy}" r="1" fx="{cx}" fy="{cy}">'
+                    f'<stop offset="{inner:.3f}" stop-color="#000" stop-opacity="{a}"/>'
+                    f'<stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>')
+
+    lin("h", 0, 0, 1, 0)        # left edge
+    lin("v", 0, 0, 0, 1)        # top edge
+    lin("vb", 0, 1, 0, 0)       # bottom edge
+    rad("tl", 1, 1, R / CW)     # top-left corner (around the rounded title corner)
+    rad("bl", 1, 0, 0)          # bottom-left corner
+    f = lambda n: f'url(#{gid(n)})'
+
+    def add(name, x, y, body, w=None):
+        if w is not None:   # mirrored copy for the right side
+            body = f'<g transform="translate({w} 0) scale(-1 1)">{body}</g>'
+        o.append(f'<g id="{prefix}-{name}" transform="translate({x} {y})">{body}</g>')
+
+    topleft = (f'<rect width="{CW}" height="{CW}" fill="{f("tl")}"/>'
+               f'<rect y="{CW}" width="{P}" height="{TH - CW}" fill="{f("h")}"/>'
+               f'<path d="M{P} {TH}V{P + R}A{R} {R} 0 0 1 {P + R} {P}H{CW}V{TH}z" fill="{fill}"/>')
+    left = f'<rect width="{P}" height="10" fill="{f("h")}"/><rect x="{P}" width="{R}" height="10" fill="none"/>'
+    bottomleft = (f'<rect width="{P}" height="{P}" fill="{f("bl")}"/>'
+                  f'<rect x="{P}" width="{R}" height="{P}" fill="{f("vb")}"/>')
+    add("topleft", 0, 0, topleft)
+    add("top", 40, 0, f'<rect width="10" height="{P}" fill="{f("v")}"/>'
+                      f'<rect y="{P}" width="10" height="{TITLE_H}" fill="{fill}"/>')
+    add("topright", 60, 0, topleft, CW)
+    add("left", 0, 70, left)
+    add("center", 40, 70, '<rect width="10" height="10" fill="none"/>')
+    add("right", 60, 70, left, CW)
+    add("bottomleft", 0, 90, bottomleft)
+    add("bottom", 40, 90, f'<rect width="10" height="{P}" fill="{f("vb")}"/>')
+    add("bottomright", 60, 90, bottomleft, CW)
+    return "<defs>" + "".join(defs) + "</defs>\n" + "\n".join(o)
 
 
 def button(kind):
@@ -111,8 +144,9 @@ def aurorae():
     out = K / "aurorae" / "T3"
     out.mkdir(parents=True, exist_ok=True)
     (out / "decoration.svg").write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="60" height="80" viewBox="0 0 60 80">\n'
-        + frame("decoration", ACTIVE) + "\n" + frame("decoration-inactive", INACTIVE) + "\n</svg>\n")
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="240" viewBox="0 0 100 240">\n'
+        + frame("decoration", ACTIVE) + "\n"
+        + f'<g transform="translate(0 120)">{frame("decoration-inactive", INACTIVE)}</g>' + "\n</svg>\n")
     for kind in BUTTONS:
         (out / f"{kind}.svg").write_text(button(kind))
     (out / "metadata.desktop").write_text("""[Desktop Entry]
@@ -134,9 +168,9 @@ HaloActive=false
 HaloInactive=false
 
 [Layout]
-BorderLeft=1
-BorderRight=1
-BorderBottom=1
+BorderLeft=0
+BorderRight=0
+BorderBottom=0
 TitleEdgeTop=0
 TitleEdgeBottom=0
 TitleEdgeLeft=12
@@ -149,10 +183,10 @@ ButtonHeight=14
 ButtonSpacing=8
 ButtonMarginTop={(TITLE_H - 14) // 2}
 ExplicitButtonSpacer=10
-PaddingTop=0
-PaddingBottom=0
-PaddingLeft=0
-PaddingRight=0
+PaddingTop={SHADOW}
+PaddingBottom={SHADOW}
+PaddingLeft={SHADOW}
+PaddingRight={SHADOW}
 """)
 
 

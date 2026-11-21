@@ -35,10 +35,11 @@ rm -rf "$SHARE/icons/T3" "$SHARE/aurorae/themes/T3" "$SHARE/wallpapers/T3"
 cp -r "$K/icons-theme/T3" "$SHARE/icons/"
 cp -r "$K/aurorae/T3" "$SHARE/aurorae/themes/"
 cp -r "$K/wallpaper-pkg/T3" "$SHARE/wallpapers/"
-install -d "$SHARE/kwin/scripts"
+install -d "$SHARE/kwin/scripts" "$SHARE/konsole"
+install -m 0644 "$K"/konsole/*.profile "$SHARE/konsole/"
 for d in "$K"/kwin-scripts/*/; do n=$(basename "$d"); rm -rf "$SHARE/kwin/scripts/$n"; cp -r "$d" "$SHARE/kwin/scripts/$n"; done
 command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -qf "$SHARE/icons/T3" 2>/dev/null || true
-for f in kwinrc kglobalshortcutsrc kxkbrc plasmanotifyrc plasmarc ksplashrc kscreenlockerrc kcm-about-distrorc; do install -m 0644 "$K/xdg/$f" "$XDG/$f"; done
+for f in kwinrc kglobalshortcutsrc kxkbrc plasmanotifyrc plasmarc ksplashrc kscreenlockerrc kcm-about-distrorc konsolerc; do install -m 0644 "$K/xdg/$f" "$XDG/$f"; done
 install -m 0644 "$K"/xdg/autostart/* "$XDG/autostart/"
 # KDE reads colours from kdeglobals itself, so the scheme's groups are appended to the defaults
 { cat "$K/xdg/kdeglobals"; grep -v '^\[General\]$\|^ColorScheme=\|^Name=\|^shadeSortColumn=' "$K/color-schemes/T3Dark.colors"; } > "$XDG/kdeglobals"
