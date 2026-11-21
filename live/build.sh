@@ -58,6 +58,6 @@ echo "== building T3 ISO in $WORK (log: $WORK/build.log) =="
 sudo lb build 2>&1 | tee build.log
 ISO=$(ls -1 "$WORK"/t3-*.iso 2>/dev/null | head -1)
 [[ -f "$ISO" ]] || { echo "!! ไม่ได้ไฟล์ ISO: ดูสาเหตุท้าย $WORK/build.log"; exit 1; }
-DEST="$OUT/t3-$(date +%Y%m%d)-amd64.iso"
+DEST="$OUT/t3-$(date +%Y%m%d-%H%M)-amd64.iso"   # time in the name: never clashes with an ISO a VM still holds
 cp "$ISO" "$DEST"; (cd "$OUT" && sha256sum "$(basename "$DEST")" > "$(basename "$DEST").sha256")
 echo "OK: $DEST ($(du -h "$DEST" | cut -f1))"
