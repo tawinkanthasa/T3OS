@@ -21,6 +21,14 @@ cp -r "$K/look-and-feel/org.t3.desktop" "$SHARE/plasma/look-and-feel/"
 cp -r "$K/plasmoids/org.t3.boards" "$SHARE/plasma/plasmoids/"
 install -m 0644 "$K"/color-schemes/* "$SHARE/color-schemes/"
 install -m 0644 "$K"/applications/* "$SHARE/applications/"
+# One settings app: T3 Settings. KDE's System Settings stays installed (T3 Settings links to it, and
+# KDE's own "Configure..." buttons use it) but is hidden from the menu and search. A copy in
+# /usr/local/share wins over /usr/share and survives KDE updates.
+if [[ -f "$SHARE/applications/systemsettings.desktop" ]]; then
+  install -d "$ROOT/usr/local/share/applications"
+  sed '0,/^\[Desktop Entry\]$/s//[Desktop Entry]\nNoDisplay=true/' "$SHARE/applications/systemsettings.desktop" \
+    > "$ROOT/usr/local/share/applications/systemsettings.desktop"
+fi
 install -m 0644 "$K"/icons/* "$SHARE/icons/hicolor/scalable/apps/"
 # the design's look: dock tiles (icon theme), red/yellow/green window buttons, wallpaper package
 rm -rf "$SHARE/icons/T3" "$SHARE/aurorae/themes/T3" "$SHARE/wallpapers/T3"

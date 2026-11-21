@@ -1,11 +1,15 @@
 [Desktop Entry]
 Type=Application
 Name=T3 Settings
-GenericName=T3 Settings
-Comment=AI, วอลเปเปอร์, ระบบ
+Name[th]=ตั้งค่า
+GenericName=System Settings
+GenericName[th]=ตั้งค่าระบบ
+Comment=Wi-Fi, Bluetooth, sound, display, keyboard, wallpaper, AI
+Comment[th]=Wi-Fi บลูทูธ เสียง หน้าจอ แป้นพิมพ์ วอลเปเปอร์ AI
 Exec=/usr/share/t3/bin/t3-open settings
 Icon=t3-settings
 StartupWMClass=t3.settings
-Categories=Settings;System;
-Keywords=t3;bench;esp32;arduino;
+Categories=Settings;
+Keywords=t3;settings;system settings;preferences;control center;wifi;bluetooth;sound;display;keyboard;wallpaper;ตั้งค่า;ตั้งค่าระบบ;
+Keywords[th]=t3;settings;system settings;ตั้งค่า;ตั้งค่าระบบ;เน็ต;บลูทูธ;เสียง;หน้าจอ;แป้นพิมพ์;วอลเปเปอร์;
 X-KDE-Shortcuts=Meta+,
