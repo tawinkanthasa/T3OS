@@ -33,7 +33,7 @@ grub)
   grub-mkfont -s 18 -o "$out/dejavu-bold-18.pf2" "$F/DejaVuSansMono-Bold.ttf"
   if [[ $mode == live ]]; then title="T3  LIVE USB"; hint="Up/Down select   Enter boot"
   else title="CHOOSE A SYSTEM"; hint="Up/Down select   Enter boot   e edit"; fi
-  sed -e "s/@TITLE@/$title/" -e "s/@HINT@/$hint/" "$B/grub/theme.txt.in" > "$out/theme.txt" ;;
+  sed -e "s|@TITLE@|$title|" -e "s|@HINT@|$hint|" "$B/grub/theme.txt.in" > "$out/theme.txt" ;;
 plymouth)
   install -m 0644 "$B/plymouth/t3.plymouth" "$B/plymouth/t3.script" "$out/"
   rsvg-convert -w 1920 -h 1080 -o "$out/background.png" "$B/background.svg"
