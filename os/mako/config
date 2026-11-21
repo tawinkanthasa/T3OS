@@ -1,0 +1,18 @@
+font=JetBrains Mono 10
+background-color=#0f1612f2
+text-color=#d3e6da
+border-color=#3fb950
+border-size=2
+border-radius=0
+width=340
+padding=10
+margin=10
+anchor=top-right
+default-timeout=8000
+
+[urgency=critical]
+border-color=#f85149
+default-timeout=0
+
+[app-name=T3]
+border-color=#ffb000

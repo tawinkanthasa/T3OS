@@ -125,6 +125,12 @@ button{cursor:pointer}
   .sbody{grid-template-columns:minmax(0,1fr)}
   .fkeys{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+/* single-panel windows inside the T3 desktop (?view=bench|scope|logbook): waybar replaces the top bar */
+body.v .top,body.v .fkeys{display:none}
+body.v .main{grid-template-columns:minmax(0,1fr)}
+body.v:not(.v-logbook) .book{display:none}
+body.v-logbook .stage{display:none}
+body.v-logbook .book{border-right:0}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -192,6 +198,8 @@ const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{re
 const WSBASE=(location.protocol==='https:'?'wss://':'ws://')+location.host;
 
 const S={boards:[],ai:{},flashes:0,errs:0,resets:{},metrics:{},lastNote:null,mode:'shell',hold:false};
+const VIEW=new URLSearchParams(location.search).get('view');  // bench | scope | logbook | shell | null (all-in-one)
+if(VIEW){document.body.classList.add('v','v-'+VIEW);document.title='T3 '+VIEW[0].toUpperCase()+VIEW.slice(1)}
 
 /* ---------------- MODES & KEYS ---------------- */
 function mode(m){S.mode=m;$$('.mode').forEach(x=>x.classList.toggle('on',x.id==='m-'+m));$$('.fkeys [data-m]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));
@@ -216,7 +224,8 @@ function connectPty(){
 }
 term.onData(d=>{if(!pty){if(d==='\r'){term.clear();connectPty()}return}pty.readyState===1&&pty.send(new TextEncoder().encode(d))});
 new ResizeObserver(()=>{if(S.mode==='shell')fit()}).observe($('#term'));
-connectPty();
+if(!VIEW||VIEW==='shell')connectPty();
+if(VIEW==='bench'||VIEW==='scope')mode(VIEW);
 
 /* ---------------- EVENTS (benchd) ---------------- */
 let evWs;

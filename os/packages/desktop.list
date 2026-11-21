@@ -1,0 +1,18 @@
+# T3 desktop packages (used by scripts/setup-desktop.sh and the live-build ISO)
+# compositor + shell
+sway swaybg swaylock swayidle waybar fuzzel mako-notifier libnotify-bin
+xwayland xdg-desktop-portal-wlr xdg-desktop-portal-gtk lxpolkit
+# T3 UI window
+cog
+# everyday apps
+foot firefox-esr thunar thunar-archive-plugin file-roller mousepad imv mpv
+# settings
+network-manager network-manager-gnome pavucontrol blueman brightnessctl wdisplays
+# screenshots / clipboard
+grim slurp wl-clipboard
+# fonts / theme
+fonts-jetbrains-mono fonts-noto-core fonts-noto-color-emoji fonts-thai-tlwg adwaita-icon-theme
+# apps beyond Debian
+flatpak
+# maker tools
+usbutils picocom

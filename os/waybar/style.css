@@ -1,0 +1,20 @@
+/* T3 bar: same palette as the T3 UI */
+* { font-family: "JetBrains Mono", "Noto Sans Thai", monospace; font-size: 12px; min-height: 0; border: none; border-radius: 0; }
+window#waybar { background: #152019; color: #76917f; }
+#custom-logo { color: #d3e6da; font-weight: bold; font-size: 14px; padding: 0 12px; }
+#workspaces button { color: #76917f; padding: 0 8px; background: transparent; }
+#workspaces button.focused { background: #3fb950; color: #04140a; }
+#workspaces button.urgent { background: #f85149; color: #fff; }
+#mode { background: #ffb000; color: #141210; padding: 0 8px; }
+#window { color: #d3e6da; }
+#custom-bench, #custom-ai, #pulseaudio, #network, #battery, #language, #clock, #tray { padding: 0 10px; }
+#custom-bench { color: #3fb950; }
+#custom-bench.off, #custom-bench.none { color: #76917f; }
+#custom-bench.alert { color: #f85149; }
+#custom-ai.down { color: #f85149; }
+#custom-ai { color: #d97757; }
+#battery.warning { color: #f0883e; }
+#battery.critical { color: #f85149; }
+#clock { color: #d3e6da; }
+tooltip { background: #0f1612; border: 1px solid #21362b; }
+tooltip label { color: #d3e6da; }

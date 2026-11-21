@@ -1,22 +1,110 @@
-# T3 desktop session: one fullscreen kiosk window showing benchd's UI.
-# Installed to /etc/sway/config.d/t3 or ~/.config/sway/config on the T3 image.
-
+# T3 desktop session (Sway).  $t3 = folder holding T3's configs and UI.
+# On the T3 image this is /usr/share/t3; scripts/t3-session.sh rewrites it for dev.
+set $t3 /usr/share/t3
 set $mod Mod4
+set $ui http://127.0.0.1:7300
+
+# ---------- look ----------
 output * bg #0a0d0b solid_color
-default_border none
-default_floating_border none
-focus_follows_mouse no
-seat * hide_cursor 8000
-input type:keyboard xkb_layout us,th
-input type:keyboard xkb_options grp:alt_shift_toggle
+font pango:JetBrains Mono 10
+default_border pixel 2
+default_floating_border pixel 2
+gaps inner 6
+smart_gaps on
+#                       border  bg      text    indicator child_border
+client.focused          #3fb950 #152019 #d3e6da #3fb950   #3fb950
+client.focused_inactive #21362b #0f1612 #76917f #21362b   #21362b
+client.unfocused        #21362b #0a0d0b #76917f #21362b   #21362b
+client.urgent           #f85149 #f85149 #ffffff #f85149   #f85149
 
-# hardware core + UI
+input type:keyboard {
+    xkb_layout us,th
+    xkb_options grp:alt_shift_toggle
+}
+input type:touchpad {
+    tap enabled
+    natural_scroll enabled
+}
+
+# ---------- session services ----------
 exec benchd
-exec sh -c 'for i in $(seq 50); do curl -sf http://127.0.0.1:7300/ >/dev/null && break; sleep 0.2; done; exec cog --platform=wl http://127.0.0.1:7300/'
-for_window [app_id="cog|com.igalia.Cog"] fullscreen enable
+exec mako --config $t3/mako/config
+exec lxpolkit
+exec nm-applet --indicator
+exec swayidle -w timeout 600 'swaylock -f -c 0a0d0b' before-sleep 'swaylock -f -c 0a0d0b'
+bar {
+    swaybar_command waybar -c $t3/waybar/config.jsonc -s $t3/waybar/style.css
+}
 
-# escape hatches: a plain terminal and a way out
+# ---------- T3 windows (cog = WebKit viewer for benchd's UI) ----------
+set $t3open sh -c 'for i in $(seq 50); do curl -sf $ui/ >/dev/null && break; sleep 0.2; done; exec cog --platform=wl "$0"'
+exec $t3open "$ui/?view=bench"
+for_window [app_id="cog|com.igalia.Cog"] border pixel 2
+bindsym $mod+b exec $t3open "$ui/?view=bench"
+bindsym $mod+s exec $t3open "$ui/?view=scope"
+bindsym $mod+l exec $t3open "$ui/?view=logbook"
+bindsym $mod+t exec $t3open "$ui/"
+
+# ---------- apps ----------
+bindsym $mod+space exec fuzzel --config $t3/fuzzel/fuzzel.ini
 bindsym $mod+Return exec foot
-bindsym $mod+Shift+r exec pkill -x cog; exec cog --platform=wl http://127.0.0.1:7300/
-bindsym $mod+Shift+e exec swaymsg exit
-bindsym $mod+Shift+q kill
+bindsym $mod+e exec thunar
+bindsym $mod+w exec firefox-esr
+bindsym Print exec grim -g "$(slurp)" - | wl-copy
+bindsym $mod+Shift+s exec grim -g "$(slurp)" ~/Pictures/shot-$(date +%H%M%S).png
+bindsym $mod+Escape exec swaylock -f -c 0a0d0b
+bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+bindsym XF86MonBrightnessUp exec brightnessctl set +10%
+bindsym XF86MonBrightnessDown exec brightnessctl set 10%-
+
+# ---------- windows ----------
+bindsym $mod+q kill
+bindsym $mod+f fullscreen toggle
+bindsym $mod+Shift+space floating toggle
+bindsym $mod+h splith
+bindsym $mod+v splitv
+bindsym $mod+Left focus left
+bindsym $mod+Right focus right
+bindsym $mod+Up focus up
+bindsym $mod+Down focus down
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Right move right
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Down move down
+floating_modifier $mod normal
+bindsym $mod+r mode "resize"
+mode "resize" {
+    bindsym Left resize shrink width 20px
+    bindsym Right resize grow width 20px
+    bindsym Up resize shrink height 20px
+    bindsym Down resize grow height 20px
+    bindsym Escape mode "default"
+    bindsym Return mode "default"
+}
+for_window [app_id="pavucontrol|blueman-manager|nm-connection-editor|wdisplays"] floating enable
+
+# ---------- workspaces ----------
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+bindsym $mod+5 workspace number 5
+bindsym $mod+6 workspace number 6
+bindsym $mod+7 workspace number 7
+bindsym $mod+8 workspace number 8
+bindsym $mod+9 workspace number 9
+bindsym $mod+Shift+1 move container to workspace number 1
+bindsym $mod+Shift+2 move container to workspace number 2
+bindsym $mod+Shift+3 move container to workspace number 3
+bindsym $mod+Shift+4 move container to workspace number 4
+bindsym $mod+Shift+5 move container to workspace number 5
+bindsym $mod+Shift+6 move container to workspace number 6
+bindsym $mod+Shift+7 move container to workspace number 7
+bindsym $mod+Shift+8 move container to workspace number 8
+bindsym $mod+Shift+9 move container to workspace number 9
+
+# ---------- session ----------
+bindsym $mod+Shift+c reload
+bindsym $mod+Shift+e exec swaynag -t warning -m 'ออกจาก T3?' -B 'ออก' 'swaymsg exit'

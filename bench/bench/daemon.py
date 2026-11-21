@@ -34,6 +34,7 @@ class Hub:
         self.readers: dict[str, asyncio.Task] = {}
         self.paused: set[str] = set()
         self.ai: dict = {}
+        self.last_notify: dict[str, float] = {}
 
     async def send(self, msg: dict) -> None:
         data = json.dumps(msg, ensure_ascii=False)
@@ -57,6 +58,7 @@ class Hub:
                 for p in added:
                     if not first:
                         logbook.write("plug", f"{now[p].name} connected", board=p, family=now[p].family)
+                        notify(f"{now[p].name} เชื่อมต่อแล้ว", f"{p} · Super+B เปิดโต๊ะ")
                     self.start_reader(now[p])
                 for p in removed:
                     logbook.write("unplug", f"{self.boards[p].name} removed", board=p)
@@ -96,8 +98,13 @@ class Hub:
                 if isinstance(item, Exception):
                     await self.send({"type": "serial", "port": board.port, "line": f"[bench] {item}", "err": True})
                     return
-                msg = {"type": "serial", "port": board.port, "line": item,
-                       "alert": any(p in item for p in serialmon.ALERT_PATTERNS)}
+                alert = any(p in item for p in serialmon.ALERT_PATTERNS)
+                msg = {"type": "serial", "port": board.port, "line": item, "alert": alert}
+                if alert:
+                    now = asyncio.get_running_loop().time()
+                    if now - self.last_notify.get(board.port, 0) > 30:  # don't spam
+                        self.last_notify[board.port] = now
+                        notify(f"{board.name}: มีปัญหา", item[:120], urgent=True)
                 await self.send(msg)
                 m = dict((k, float(v)) for k, v in METRIC_RE.findall(item))
                 if m:
@@ -261,6 +268,36 @@ async def api_release(request: web.Request) -> web.Response:
     return web.json_response({"released": port, "seconds": secs})
 
 
+async def api_waybar(request: web.Request) -> web.Response:
+    """JSON for waybar custom modules: ?part=ai for AI status, default = boards."""
+    hub: Hub = request.app["hub"]
+    if request.query.get("part") == "ai":
+        l = hub.ai.get("local", {})
+        c = hub.ai.get("claude", {})
+        parts = []
+        if l.get("configured"):
+            parts.append("local ●" if l.get("up") else "local ✕")
+        if c.get("installed"):
+            parts.append("claude ●")
+        return web.json_response({"text": "  ".join(parts), "tooltip": l.get("url") or "",
+                                  "class": "down" if l.get("configured") and not l.get("up") else "ok"})
+    bs = list(hub.boards.values())
+    names = {"esp32": "ESP32", "rp2040": "Pico", "avr": "AVR"}
+    text = "  ".join(f"{names.get(b.family, b.family)} ●" for b in bs) or "no board"
+    recent_alert = any(e["kind"] == "alert" for e in logbook.tail(5))
+    return web.json_response({"text": text, "tooltip": "\n".join(f"{b.port}  {b.name}" for b in bs),
+                              "class": "alert" if recent_alert else ("ok" if bs else "none")})
+
+
+def notify(title: str, body: str, urgent: bool = False) -> None:
+    """Desktop notification via notify-send (mako). Silently skipped if unavailable."""
+    if not shutil.which("notify-send"):
+        return
+    import subprocess
+    subprocess.Popen(["notify-send", "-a", "T3", "-u", "critical" if urgent else "normal", title, body],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 async def index(_: web.Request) -> web.FileResponse:
     return web.FileResponse(UI_DIR / "index.html", headers={"Cache-Control": "no-cache"})
 
@@ -280,7 +317,7 @@ def make_app() -> web.Application:
     app.on_startup.append(start_bg)
     app.on_cleanup.append(stop_bg)
     app.add_routes([web.get("/", index), web.get("/ws", ws_events), web.get("/pty", ws_pty),
-                    web.get("/api/pins/{family}", api_pins), web.post("/api/release", api_release),
+                    web.get("/api/pins/{family}", api_pins), web.get("/api/waybar", api_waybar), web.post("/api/release", api_release),
                     web.static("/", UI_DIR)])
     return app
 
