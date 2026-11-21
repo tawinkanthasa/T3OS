@@ -23,6 +23,9 @@ install -m 0755 $I/t3-postinstall /usr/share/t3/installer/t3-postinstall
 sed -i -e 's/^Name=.*/Name=ติดตั้ง T3/' -e 's/^Icon=.*/Icon=t3-logo/' -e 's/^Comment=.*/Comment=ติดตั้ง T3 ลงเครื่อง (คู่กับ Windows ได้)/' \
   /usr/share/applications/calamares-install-debian.desktop
 
+# ---- T3 has its own welcome (t3-welcome): no KDE Welcome Center on first login
+apt-get purge -y plasma-welcome >/dev/null 2>&1 || true
+
 # ---- live session: log straight into T3 (removed by the installer)
 install -d /etc/sddm.conf.d
 cat > /etc/sddm.conf.d/zz-t3-live.conf <<'CONF'

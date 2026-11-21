@@ -11,12 +11,12 @@ list() { grep -v '^\s*#' "$REPO/os/packages/$1.list" | tr ' ' '\n' | grep -v '^$
 
 command -v lb >/dev/null || sudo apt-get install -y live-build
 sudo apt-get install -y --no-install-recommends debootstrap squashfs-tools xorriso mtools dosfstools \
-  grub-efi-amd64-bin grub-pc-bin shim-signed grub-efi-amd64-signed >/dev/null
+  grub-efi-amd64-bin grub-pc-bin shim-signed grub-efi-amd64-signed librsvg2-bin fonts-dejavu-core >/dev/null
 
 if [[ -d "$WORK" ]]; then (cd "$WORK" && sudo lb clean --purge >/dev/null 2>&1 || true); sudo rm -rf "$WORK"; fi
 mkdir -p "$WORK" "$OUT"; cd "$WORK"
 
-BOOT="boot=live components quiet"
+BOOT="boot=live components quiet splash"
 BOOT+=" locales=th_TH.UTF-8 keyboard-layouts=us,th keyboard-options=grp:alt_shift_toggle timezone=Asia/Bangkok"
 BOOT+=" username=t3 user-fullname=T3 hostname=t3"
 BOOT+=" user-default-groups=audio,cdrom,dip,floppy,video,plugdev,netdev,powerdev,scanner,bluetooth,dialout,adm,sudo"
@@ -57,6 +57,43 @@ if [[ "$ORIGIN" == https://* ]]; then
 else
   echo "!! no https git remote 'origin': installed systems won't find updates (set repo= in /etc/t3/update.conf)"
 fi
+
+# ---- the USB's own boot menu in the T3 look (live-build copies this over its defaults)
+G=config/bootloaders/grub-pc
+mkdir -p "$G"
+bash "$REPO/os/boot/render.sh" grub "$G/live-theme" live >/dev/null
+cp "$G/live-theme/background.png" "$G/splash.png"
+cat > "$G/config.cfg" <<'CFG'
+set default=0
+set timeout=8
+insmod all_video
+insmod gfxterm
+insmod png
+set gfxmode=auto
+set gfxpayload=keep
+source /boot/grub/theme.cfg
+terminal_output gfxterm
+CFG
+{ echo 'set color_normal=light-gray/black'; echo 'set color_highlight=white/dark-gray'
+  for f in "$G"/live-theme/*.pf2; do echo "loadfont /boot/grub/live-theme/$(basename "$f")"; done
+  echo 'set theme=/boot/grub/live-theme/theme.txt'; } > "$G/theme.cfg"
+cat > "$G/grub.cfg" <<'CFG'
+source /boot/grub/config.cfg
+
+menuentry "Try or install T3" --hotkey=t {
+	linux	@KERNEL_LIVE@ @APPEND_LIVE@
+	initrd	@INITRD_LIVE@
+}
+menuentry "Try T3, safe graphics (if the screen stays black)" --hotkey=s {
+	linux	@KERNEL_LIVE@ @APPEND_LIVE@ nomodeset
+	initrd	@INITRD_LIVE@
+}
+if [ "${grub_platform}" = "efi" ]; then
+	menuentry "UEFI firmware settings" --hotkey=f {
+		fwsetup
+	}
+fi
+CFG
 
 # ---- hooks (run inside the image, in name order)
 # (lb config already put symlinks to its own root-owned hooks there: touch only ours)

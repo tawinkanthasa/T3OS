@@ -1,0 +1,5 @@
+[General]
+Name=T3
+LogoPath=/usr/share/icons/hicolor/scalable/apps/t3-logo.svg
+Website=https://github.com/tawinkanthasa/T3OS
+Variant=Debian 13

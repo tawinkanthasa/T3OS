@@ -28,12 +28,13 @@ cp -r "$K/icons-theme/T3" "$SHARE/icons/"
 cp -r "$K/aurorae/T3" "$SHARE/aurorae/themes/"
 cp -r "$K/wallpaper-pkg/T3" "$SHARE/wallpapers/"
 command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -qf "$SHARE/icons/T3" 2>/dev/null || true
-for f in kwinrc kglobalshortcutsrc kxkbrc plasmanotifyrc plasmarc; do install -m 0644 "$K/xdg/$f" "$XDG/$f"; done
+for f in kwinrc kglobalshortcutsrc kxkbrc plasmanotifyrc plasmarc ksplashrc kscreenlockerrc kcm-about-distrorc; do install -m 0644 "$K/xdg/$f" "$XDG/$f"; done
 install -m 0644 "$K"/xdg/autostart/* "$XDG/autostart/"
 # KDE reads colours from kdeglobals itself, so the scheme's groups are appended to the defaults
 { cat "$K/xdg/kdeglobals"; grep -v '^\[General\]$\|^ColorScheme=\|^Name=\|^shadeSortColumn=' "$K/color-schemes/T3Dark.colors"; } > "$XDG/kdeglobals"
 install -m 0644 "$K/sddm/t3.conf" "$ROOT/etc/sddm.conf.d/t3.conf"
 install -m 0644 "$K/sddm/theme.conf.user" "$SHARE/sddm/themes/breeze/theme.conf.user"
+rm -rf "$SHARE/sddm/themes/t3"; cp -r "$K/sddm-theme/t3" "$SHARE/sddm/themes/"   # T3 login screen
 install -m 0644 "$K"/sessions/* "$SHARE/wayland-sessions/"
 # boards/probes usable without sudo (also kept in /usr/share/t3 so T3 Doctor can reinstall it)
 install -m 0644 "$SRC/udev/99-t3-boards.rules" "$T3/udev/"

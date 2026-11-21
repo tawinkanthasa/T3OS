@@ -8,12 +8,12 @@ windowPlacement: center
 strings:
     productName:         T3
     shortProductName:    T3
-    version:             "1 (Debian 13)"
-    shortVersion:        "1"
-    versionedName:       T3 1
-    shortVersionedName:  T3 1
+    version:             "Debian 13"
+    shortVersion:        ""
+    versionedName:       T3
+    shortVersionedName:  T3
     bootloaderEntryName: T3
-    productUrl:          https://www.debian.org
+    productUrl:          https://github.com/tawinkanthasa/T3OS
     supportUrl:          https://www.debian.org/support
     knownIssuesUrl:      https://bugs.debian.org
     releaseNotesUrl:     https://www.debian.org/releases/trixie/releasenotes
@@ -26,7 +26,7 @@ images:
 slideshow:               "show.qml"
 slideshowAPI: 2
 style:
-   SidebarBackground:        "#17181a"
+   SidebarBackground:        "#141517"
    SidebarText:              "#e6e8ea"
    SidebarTextCurrent:       "#ffffff"
-   SidebarBackgroundCurrent: "#2f8f45"
+   SidebarBackgroundCurrent: "#1d3a26"

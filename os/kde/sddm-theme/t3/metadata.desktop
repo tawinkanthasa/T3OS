@@ -1,0 +1,9 @@
+[SddmGreeterTheme]
+Name=T3
+Description=T3 login: clock, one user, password, power buttons
+Author=T3
+Type=sddm-theme
+Version=1.0
+MainScript=Main.qml
+ConfigFile=theme.conf
+QtVersion=6

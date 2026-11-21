@@ -45,6 +45,19 @@ if [[ "$(findmnt -no FSTYPE / 2>/dev/null)" == btrfs && ! -s /etc/timeshift/time
   sed "s/@UUID@/$(findmnt -no UUID /)/" "$S/t3/timeshift.json.in" > /etc/timeshift/timeshift.json
 fi
 
+# ---- T3 look while booting: themed boot menu + Plymouth splash (chip logo)
+if command -v rsvg-convert >/dev/null && command -v grub-mkfont >/dev/null; then
+  rm -rf /boot/grub/themes/t3
+  bash "$REPO/os/boot/render.sh" grub /boot/grub/themes/t3 installed >/dev/null || echo "  (ธีมเมนูบูตไม่สำเร็จ ข้าม)"
+  if command -v plymouth-set-default-theme >/dev/null; then
+    rm -rf /usr/share/plymouth/themes/t3
+    bash "$REPO/os/boot/render.sh" plymouth /usr/share/plymouth/themes/t3 >/dev/null
+    plymouth-set-default-theme t3 && update-initramfs -u >/dev/null 2>&1 || echo "  (ตั้ง Plymouth ไม่สำเร็จ ข้าม)"
+  fi
+fi
+# "About this system" says T3 (KDE also reads /etc/xdg/kcm-about-distrorc)
+[[ -f /usr/lib/os-release ]] && sed -i 's/^PRETTY_NAME=.*/PRETTY_NAME="T3 (Debian 13)"/' /usr/lib/os-release
+
 # ---- the boot menu picks up the T3 name, Windows, snapshots
 GB=/etc/default/grub-btrfs/config   # snapshot submenu says "T3", not "Debian GNU/Linux"
 if [[ -f "$GB" ]]; then

@@ -127,28 +127,65 @@ button{cursor:pointer}
   .fkeys{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 /* settings */
-#m-settings{flex-direction:column;overflow:auto;padding:18px 22px 28px;gap:18px;background:var(--bg)}
-#m-settings h2{margin:0;font-family:var(--display);font-size:22px}
-.sgrp{border:1px solid var(--line);background:var(--panel);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
-.sgrp h3{margin:0;font-family:var(--display);font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.sgrp h3 small{font-family:var(--mono);font-size:11px;color:var(--mute);font-weight:400}
-.sgrp label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}
-.sgrp input[type=text],.sgrp select{background:var(--bg);border:1px solid var(--line);padding:6px 8px;font-family:var(--mono);font-size:13px;color:var(--fg);min-width:0}
-.sgrp .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-.chk{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--fg)!important;font-size:13px!important}
-.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
-.tile{border:1px solid var(--line);background:var(--bg);padding:10px;text-align:left;display:flex;flex-direction:column;gap:2px}
-.tile b{font-size:13px} .tile small{color:var(--mute);font-family:var(--mono);font-size:11px}
-.tile:hover{border-color:var(--acc)}
-.sw{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.sw button{width:34px;height:34px;border:2px solid var(--line)}
-.sw button[aria-pressed="true"]{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-ink) inset}
-.res{font-family:var(--mono);font-size:12px;min-height:18px}
+#m-settings .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* settings: sidebar of plain-language categories + one page at a time (T3 design board "Settings") */
+#m-settings{--s-bg:#1b1c1f;--s-side:#141517;--s-card:#17181b;--s-line:#25272b;--s-fg:#e6e8ea;--s-mute:#9aa0a6;
+  flex-direction:row;background:var(--s-bg);color:var(--s-fg);font-family:"Noto Sans Thai",var(--body);overflow:hidden}
+.s-side{width:270px;flex-shrink:0;background:var(--s-side);padding:18px 12px;display:flex;flex-direction:column;gap:2px;overflow:auto}
+.s-search{position:relative;margin-bottom:14px}
+.s-search input{width:100%;height:40px;padding:0 14px 0 38px;border-radius:10px;border:1px solid #2a2d31;background:var(--s-bg);font-size:14px}
+.s-search svg{position:absolute;left:13px;top:12px}
+#sCats{display:flex;flex-direction:column;gap:2px}
+.s-cat{width:100%;height:42px;display:flex;align-items:center;gap:12px;padding:0 10px;border-radius:8px;border:0;background:transparent;color:#c9cdd1;font-size:15px;text-align:left;transition:background .15s}
+.s-cat:hover{background:rgba(255,255,255,.05)}
+.s-cat[aria-current="page"]{background:rgba(63,185,80,.16);color:#fff;font-weight:600}
+.s-cat i{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.s-cat .ext{margin-left:auto;opacity:.45}
+.s-main{flex-grow:1;min-width:0;overflow:auto;padding:30px 40px 40px;display:flex;flex-direction:column;gap:22px}
+.s-page{display:flex;flex-direction:column;gap:22px;max-width:860px}
+.s-page[hidden]{display:none}
+.s-page h1{margin:0;font-size:28px;font-weight:700}
+.s-page h2{margin:0;font-size:22px;font-weight:700}
+.s-page .sub{margin:2px 0 0;font-size:14px;color:var(--s-mute)}
+.s-head{display:flex;align-items:center;gap:20px}
+.s-quick{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.s-q{height:88px;border-radius:12px;border:1px solid var(--s-line);background:var(--s-card);text-align:left;padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;transition:border-color .15s,background .15s}
+.s-q:hover{border-color:rgba(63,185,80,.5);background:rgba(63,185,80,.08)}
+.s-q b{font-size:15px;font-weight:600;display:block} .s-q small{font-size:12px;color:var(--s-mute)}
+.s-card{border-radius:12px;background:var(--s-card);border:1px solid var(--s-line);overflow:hidden}
+.s-row{width:100%;min-height:60px;display:flex;align-items:center;gap:16px;padding:10px 18px;border:0;border-top:1px solid var(--s-line);background:transparent;text-align:left}
+.s-row:first-child{border-top:0}
+button.s-row:hover{background:rgba(255,255,255,.03)}
+.s-row span.t{flex-grow:1;display:flex;flex-direction:column}
+.s-row span.t b{font-size:15px;font-weight:500} .s-row span.t small{font-size:13px;color:var(--s-mute)}
+.s-row .v{font-size:14px;color:#c9cdd1;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px}
+.s-form{padding:18px;display:flex;flex-direction:column;gap:14px}
+.s-form label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--s-mute)}
+.s-form input[type=text],.s-form select{height:40px;padding:0 12px;border-radius:8px;border:1px solid #2c3a32;background:var(--s-side);font-size:14px;min-width:0}
+.s-form input:focus,.s-form select:focus,.s-search input:focus{border-color:var(--acc);outline:0}
+.s-form .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.chk{flex-direction:row!important;align-items:center;gap:10px!important;color:var(--s-fg)!important;font-size:14px!important}
+.chk input{accent-color:var(--acc);width:18px;height:18px}
+.s-btns{display:flex;gap:10px;flex-wrap:wrap}
+.s-btn{height:40px;padding:0 22px;border-radius:8px;border:1px solid #2c3a32;background:transparent;font-size:15px}
+.s-btn:hover{background:#222a25}
+.s-btn.pri{background:var(--acc);color:#06210d;border:0;font-weight:600}
+.s-btn.pri:hover{background:#4cc85d}
+.sw{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.sw button{width:44px;height:44px;border-radius:10px;border:2px solid var(--s-line)}
+.sw button[aria-pressed="true"]{border-color:var(--acc);box-shadow:0 0 0 3px rgba(63,185,80,.25)}
+.res{font-size:13px;min-height:18px}
 .res.ok{color:var(--acc)} .res.bad{color:var(--bad)}
-.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-family:var(--mono);font-size:12px}
-.kv dt{color:var(--mute)} .kv dd{margin:0}
-.keys{display:grid;grid-template-columns:max-content 1fr;gap:3px 14px;font-size:12px}
-.keys kbd{font-family:var(--mono);font-size:11px;color:var(--acc);border:1px solid var(--line);padding:0 5px;justify-self:start}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:0;font-size:14px}
+.kv dt,.kv dd{padding:12px 18px;border-top:1px solid var(--s-line);margin:0}
+.kv dt{color:var(--s-mute)} .kv dt:first-of-type,.kv dd:first-of-type{border-top:0}
+.keys{display:grid;grid-template-columns:max-content 1fr;gap:0;font-size:14px}
+.keys kbd,.keys span{padding:10px 18px;border-top:1px solid var(--s-line)}
+.keys kbd{font-family:var(--mono);font-size:13px;color:var(--acc)}
+.keys kbd:first-child,.keys kbd:first-child+span{border-top:0}
+.s-foot{font-size:13px;color:#8b949e}
+.s-foot button{border:0;background:none;color:#7ee787;padding:0;font-size:13px;text-decoration:underline}
+@media (max-width:760px){#m-settings{flex-direction:column}.s-side{width:auto;max-height:40vh}.s-main{padding:20px 16px}}
 /* single-panel windows inside the T3 desktop (?view=bench|scope|logbook): the T3 menu bar widget replaces the top bar */
 body.v .top,body.v .fkeys{display:none}
 body.v .main{grid-template-columns:minmax(0,1fr)}
@@ -200,31 +237,69 @@ body.v .book{max-height:none!important}
         </div>
         <div class="sbtns"><button id="hold">หยุดกราฟ</button></div>
       </section>
-      <section class="mode" id="m-settings" aria-label="Settings">
-        <h2>ตั้งค่า T3</h2>
-        <form class="sgrp" id="aiForm">
-          <h3>AI <small id="aiStat"></small></h3>
-          <div class="two">
-            <label>LM Studio (เครื่องอื่น) · URL<input type="text" id="aiUrl" placeholder="http://192.168.1.50:1234/v1" spellcheck="false"></label>
-            <label>โมเดล local<select id="aiModel"><option value="">— กดทดสอบเพื่อดึงรายชื่อ —</option></select></label>
-            <label>โหมดเลือก AI<select id="aiMode"><option value="local">local อย่างเดียว (ข้อมูลไม่ออกจากบ้าน)</option><option value="auto">auto (local ก่อน งานยากส่ง Claude)</option><option value="claude">Claude อย่างเดียว</option></select></label>
-            <label>โมเดล Claude<input type="text" id="aiClaude" spellcheck="false"></label>
+      <section class="mode" id="m-settings" aria-label="ตั้งค่า">
+        <nav class="s-side" aria-label="หมวดการตั้งค่า">
+          <div class="s-search">
+            <label for="sQ" class="sr">ค้นหาการตั้งค่า</label>
+            <input id="sQ" type="search" placeholder="ค้นหา เช่น Wi-Fi, เสียง" spellcheck="false" autocomplete="off">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14M21 21l-5-5"/></svg>
           </div>
-          <label class="chk"><input type="checkbox" id="aiAsk"> ถามก่อนทุกครั้งที่จะส่งข้อมูลขึ้น cloud</label>
-          <div class="row"><button class="btn" type="button" id="aiTest">ทดสอบการเชื่อมต่อ</button><button class="btn pri">บันทึก</button></div>
-          <div class="res" id="aiRes" role="status"></div>
-        </form>
-        <div class="sgrp"><h3>ระบบ</h3>
-          <div class="tiles" id="sysTiles"></div>
-          <div class="res" id="launchRes" role="status"></div>
+          <div id="sCats"></div>
+        </nav>
+        <div class="s-main">
+          <div class="res" id="launchRes" role="status" hidden></div>
+
+          <div class="s-page" data-page="home">
+            <div class="s-head">
+              <svg width="72" height="72" viewBox="0 0 64 64" role="img" aria-label="T3"><g fill="#3fb950"><rect x="16" y="2" width="4" height="8" rx="1"/><rect x="30" y="2" width="4" height="8" rx="1"/><rect x="44" y="2" width="4" height="8" rx="1"/><rect x="16" y="54" width="4" height="8" rx="1"/><rect x="30" y="54" width="4" height="8" rx="1"/><rect x="44" y="54" width="4" height="8" rx="1"/><rect x="2" y="16" width="8" height="4" rx="1"/><rect x="2" y="30" width="8" height="4" rx="1"/><rect x="2" y="44" width="8" height="4" rx="1"/><rect x="54" y="16" width="8" height="4" rx="1"/><rect x="54" y="30" width="8" height="4" rx="1"/><rect x="54" y="44" width="8" height="4" rx="1"/></g><rect x="8" y="8" width="48" height="48" rx="9" fill="#1f6f35"/><circle cx="15" cy="15" r="2" fill="#3fb950"/><g transform="translate(14 14) scale(1.5)" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5h8M6.5 5v14"/><path d="M14 5.5h6l-3.6 5c2.6 0 4.1 1.6 4.1 3.9 0 2.6-2 4.4-4.6 4.4-1.4 0-2.6-.5-3.4-1.4"/></g></svg>
+              <div><h1 id="sWho">เครื่องนี้</h1><p class="sub" id="sOs">T3</p></div>
+            </div>
+            <div class="s-quick" id="sQuick"></div>
+            <div class="s-card" id="sRows"></div>
+            <div class="s-foot">ต้องการตั้งค่าละเอียด: <button type="button" data-app="system">เปิดการตั้งค่าขั้นสูงของ KDE</button></div>
+          </div>
+
+          <div class="s-page" data-page="look" hidden>
+            <div><h2>หน้าตา</h2><p class="sub">พื้นหลังจอ: สีพื้น หรือรูปของคุณเอง</p></div>
+            <div class="s-card s-form">
+              <div class="sw" id="wpSw"></div>
+              <div class="s-btns"><input type="text" id="wpPath" placeholder="~/Pictures/wall.jpg" spellcheck="false" style="flex:1;min-width:0;height:40px;padding:0 12px;border-radius:8px;border:1px solid #2c3a32;background:#141517"><button class="s-btn" id="wpSet" type="button">ใช้รูปนี้</button></div>
+              <div class="res" id="wpRes" role="status"></div>
+            </div>
+            <div class="s-card"><button class="s-row" data-app="appearance"><span class="t"><b>ธีม สี ไอคอน ตัวอักษร</b><small>ตั้งค่าหน้าตาทั้งหมดของ KDE</small></span>›</button>
+              <button class="s-row" data-app="reset"><span class="t"><b>รีเซ็ตหน้าจอกลับเป็นแบบ T3</b><small>ไฟล์ไม่หาย ย้อนกลับได้</small></span>›</button></div>
+          </div>
+
+          <div class="s-page" data-page="ai" hidden>
+            <div><h2>AI</h2><p class="sub" id="aiStat">LM Studio ในบ้าน + Claude</p></div>
+            <form class="s-card s-form" id="aiForm">
+              <div class="two">
+                <label>LM Studio (เครื่องอื่นในบ้าน) · URL<input type="text" id="aiUrl" placeholder="http://192.168.1.50:1234/v1" spellcheck="false"></label>
+                <label>โมเดลในบ้าน<select id="aiModel"><option value="">กดทดสอบเพื่อดึงรายชื่อ</option></select></label>
+                <label>ใช้ AI ตัวไหน<select id="aiMode"><option value="local">ในบ้านอย่างเดียว (ข้อมูลไม่ออกจากบ้าน)</option><option value="auto">อัตโนมัติ (ในบ้านก่อน งานยากส่ง Claude)</option><option value="claude">Claude อย่างเดียว</option></select></label>
+                <label>โมเดล Claude<input type="text" id="aiClaude" spellcheck="false"></label>
+              </div>
+              <label class="chk"><input type="checkbox" id="aiAsk"> ถามก่อนทุกครั้งที่จะส่งข้อมูลออกนอกบ้าน</label>
+              <div class="s-btns"><button class="s-btn" type="button" id="aiTest">ทดสอบการเชื่อมต่อ</button><button class="s-btn pri">บันทึก</button></div>
+              <div class="res" id="aiRes" role="status"></div>
+            </form>
+          </div>
+
+          <div class="s-page" data-page="update" hidden>
+            <div><h2>อัปเดตและจุดกู้คืน</h2><p class="sub">T3 สร้างจุดกู้คืนให้เองก่อนอัปเดตทุกครั้ง ถ้าพังเลือกย้อนได้จากเมนูตอนเปิดเครื่อง</p></div>
+            <div class="s-card" id="sUpd"></div>
+          </div>
+
+          <div class="s-page" data-page="keys" hidden>
+            <div><h2>ปุ่มลัด</h2><p class="sub">Meta คือปุ่ม Windows</p></div>
+            <div class="s-card keys" id="keys"></div>
+          </div>
+
+          <div class="s-page" data-page="about" hidden>
+            <div><h2>เกี่ยวกับเครื่องนี้</h2></div>
+            <dl class="s-card kv" id="about"></dl>
+          </div>
         </div>
-        <div class="sgrp"><h3>วอลเปเปอร์ <small>สีพื้น หรือ path รูป</small></h3>
-          <div class="sw" id="wpSw"></div>
-          <div class="row"><input type="text" id="wpPath" placeholder="~/Pictures/wall.jpg" spellcheck="false" style="flex:1;min-width:0"><button class="btn" id="wpSet" type="button">ใช้รูปนี้</button></div>
-          <div class="res" id="wpRes" role="status"></div>
-        </div>
-        <div class="sgrp"><h3>ปุ่มลัด</h3><div class="keys" id="keys"></div></div>
-        <div class="sgrp"><h3>เกี่ยวกับเครื่องนี้</h3><dl class="kv" id="about"></dl></div>
       </section>
     </div>
   </div>
@@ -423,22 +498,35 @@ function toastMsg(s){const t=document.createElement('div');t.className='toast';t
 
 /* ---------------- SETTINGS ---------------- */
 const post=(url,body)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-T3':'1'},body:JSON.stringify(body)}).then(r=>r.json());
-const TILES=[['wifi','WiFi / เครือข่าย','System Settings'],['bluetooth','Bluetooth','System Settings'],['sound','เสียง','System Settings'],['display','จอ','System Settings'],['thai','คีย์บอร์ด EN/TH','Alt+Shift สลับ'],['apps','ร้านแอป','Discover · Flathub'],['update','อัปเดตระบบ','Discover'],['snapshots','จุดกู้คืนระบบ','Timeshift'],['files','ไฟล์','Dolphin'],['doctor','ตรวจเครื่อง','T3 Doctor · ให้ Claude ช่วยแก้'],['t3update','อัปเดต T3','หน้าจอ, Bench, เครื่องมือ'],['welcome','ติดตั้งเครื่องมือเพิ่ม','ESP-IDF · Arduino · NVIDIA'],['reset','รีเซ็ตหน้าจอ','ไฟล์ไม่หาย ย้อนกลับได้'],['system','ตั้งค่าทั้งหมด','System Settings']];
+const CATS=[['home','ภาพรวม','#3fb950','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z','overview'],['@wifi','Wi-Fi และเน็ต','#2f6fb3','M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0','wifi internet network'],['@bluetooth','บลูทูธ','#2f6fb3','M7 7l10 10-5 4V3l5 4L7 17','bluetooth'],['@sound','เสียง','#c2410c','M4 9h4l5-4v14l-5-4H4z','sound audio'],['@display','หน้าจอ','#6d28d9','M3 5h18v11H3zM8 20h8M12 16v4','display screen monitor'],['look','หน้าตา','#be185d','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18','wallpaper theme'],['@thai','ภาษาและแป้นพิมพ์','#4a4d52','M3 6h18v12H3zM7 14h10','keyboard thai language'],['@bench','บอร์ดและพอร์ต','#1f6f35','M7 7h10v10H7zM9 3v4M15 3v4M9 17v4M15 17v4','esp32 board usb'],['ai','AI','#0f7c7e','M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z','ai lm studio claude'],['update','อัปเดตและจุดกู้คืน','#3a3d42','M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4','update snapshot'],['@users','ผู้ใช้และรหัสผ่าน','#3a3d42','M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8M4 21a8 8 0 0 1 16 0','user password'],['keys','ปุ่มลัด','#3a3d42','M3 6h18v12H3z','shortcut keys'],['about','เกี่ยวกับเครื่อง','#3a3d42','M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 11v5M12 8h.01','about system']];
+const QUICK=[['wifi','Wi-Fi','เครือข่าย','M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0'],['bluetooth','บลูทูธ','อุปกรณ์ไร้สาย','M7 7l10 10-5 4V3l5 4L7 17'],['sound','เสียง','ลำโพง ไมค์','M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 0 1 0 6'],['display','หน้าจอ','ความสว่าง หลายจอ','M3 5h18v11H3zM8 20h8M12 16v4']];
+const UPD=[['t3update','อัปเดต T3','หน้าจอ Bench เครื่องมือ'],['update','อัปเดตระบบและแอป','Discover'],['snapshots','จุดกู้คืนระบบ','ดู สร้าง หรือย้อนกลับ'],['doctor','ตรวจเครื่อง','ให้ Claude ช่วยแก้ปัญหา'],['welcome','ติดตั้งเครื่องมือเพิ่ม','ESP-IDF Arduino NVIDIA']];
 const WALL=['#0a0d0b','#10241a','#1d3b2c','#141210','#1b1b2e','#2b1a14','#202020'];
-const KEYS=[['Meta','เมนู T3'],['Meta+Space','ค้นหาแอป ไฟล์ คำนวณ'],['Meta+1…9','เปิดแอปตามลำดับใน Dock'],['Meta+W','ดูทุกหน้าต่าง'],['Meta+Enter','terminal'],['F12','terminal แบบดึงลง'],['Meta+E','ไฟล์'],['Meta+B / O / J','Bench / Scope / Logbook'],['Meta+T','T3 Shell'],['Meta+,','ตั้งค่า T3'],['Meta+V','ประวัติคลิปบอร์ด'],['Meta+.','อีโมจิ'],['Print','จับภาพหน้าจอ'],['Meta+Shift+S','จับภาพบางส่วน'],['Meta+Shift+R','อัดหน้าจอ'],['Meta+← / →','จัดหน้าต่างครึ่งจอ'],['Alt+F4','ปิดหน้าต่าง'],['Meta+L','ล็อกจอ'],['Ctrl+Alt+Del','ปิดเครื่อง / รีสตาร์ท'],['Alt+Shift','สลับ EN / TH']];
+const KEYS=[['Meta','เมนู T3'],['Meta+Space','ค้นหาแอป ไฟล์ คำนวณ'],['Meta+1…9','เปิดแอปตามลำดับใน Dock'],['Meta+W','ดูทุกหน้าต่าง'],['Meta+Enter','terminal'],['F12','terminal แบบดึงลง'],['Meta+E','ไฟล์'],['Meta+B / O / J','Bench / Scope / Logbook'],['Meta+,','ตั้งค่า T3'],['Meta+V','ประวัติคลิปบอร์ด'],['Print','จับภาพหน้าจอ'],['Meta+L','ล็อกจอ'],['Alt+Shift','สลับ EN / TH']];
+const sRow=(app,t,d,v='')=>`<button class="s-row" data-app="${app}"><span class="t"><b>${t}</b><small>${d}</small></span><span class="v">${esc(v)}</span>›</button>`;
+function sPage(p){$$('.s-page').forEach(x=>x.hidden=x.dataset.page!==p);$$('.s-cat').forEach(c=>c.dataset.p===p?c.setAttribute('aria-current','page'):c.removeAttribute('aria-current'))}
+async function sLaunch(app){let r;try{r=await post('/api/launch',{app})}catch{r={ok:false,error:'ต่อ benchd ไม่ได้'}}const e=$('#launchRes');e.hidden=r.ok;e.className='res bad';e.textContent=r.error||''}
+function sBind(root){root.querySelectorAll('[data-app]').forEach(b=>b.onclick=()=>sLaunch(b.dataset.app));root.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>sPage(b.dataset.go))}
 async function initSettings(){
+  $('#sCats').innerHTML=CATS.map(([p,n,c,d,k])=>`<button class="s-cat" data-p="${p}" data-k="${n} ${k}"><i style="background:${c}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg></i>${n}${p[0]==='@'?'<span class="ext" aria-hidden="true">↗</span>':''}</button>`).join('');
+  $$('.s-cat').forEach(b=>b.onclick=()=>b.dataset.p[0]==='@'?sLaunch(b.dataset.p.slice(1)):sPage(b.dataset.p));
+  $('#sQ').oninput=e=>{const q=e.target.value.toLowerCase();$$('.s-cat').forEach(b=>b.hidden=!!q&&!b.dataset.k.toLowerCase().includes(q))};
+  $('#sQuick').innerHTML=QUICK.map(([a,n,s,d])=>`<button class="s-q" data-app="${a}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg><span><b>${n}</b><small>${s}</small></span></button>`).join('');
+  $('#sUpd').innerHTML=UPD.map(([a,t,d])=>sRow(a,t,d)).join('');
+  $('#keys').innerHTML=KEYS.map(([k,v])=>`<kbd>${k}</kbd><span>${v}</span>`).join('');
+  sBind($('#m-settings'));sPage('home');
   let d;try{d=await fetch('/api/settings').then(r=>r.json())}catch{$('#aiRes').textContent='ต่อ benchd ไม่ได้';return}
-  const a=d.ai;$('#aiUrl').value=a.local.url;$('#aiMode').value=a.router.mode;$('#aiClaude').value=a.claude.model;$('#aiAsk').checked=a.router.ask_before_cloud;
+  const a=d.ai,s=d.system;$('#aiUrl').value=a.local.url;$('#aiMode').value=a.router.mode;$('#aiClaude').value=a.claude.model;$('#aiAsk').checked=a.router.ask_before_cloud;
   if(a.local.model)$('#aiModel').innerHTML=`<option>${esc(a.local.model)}</option>`;
-  $('#sysTiles').innerHTML=TILES.map(([k,t,s])=>`<button class="tile" data-app="${k}"><b>${t}</b><small>${s}</small></button>`).join('');
-  $$('#sysTiles .tile').forEach(b=>b.onclick=async()=>{const r=await post('/api/launch',{app:b.dataset.app});$('#launchRes').className='res '+(r.ok?'ok':'bad');$('#launchRes').textContent=r.ok?'เปิดแล้ว':r.error});
+  $('#sWho').textContent='เครื่องของ '+(s.user||s.hostname);$('#sOs').textContent=s.os||'T3';
+  $('#sRows').innerHTML=sRow('thai','ภาษาและแป้นพิมพ์','กด Alt+Shift เพื่อสลับพิมพ์ EN / TH ได้เสมอ','ไทย')+`<button class="s-row" data-go="ai"><span class="t"><b>AI ในบ้าน (LM Studio)</b><small>ข้อมูลไม่ออกจากบ้าน</small></span><span class="v">${esc(a.local.url||'ยังไม่ได้ตั้ง')}</span>›</button>`+sRow('t3update','อัปเดต T3','สร้างจุดกู้คืนให้ก่อนอัปเดตทุกครั้ง')+sRow('bench','บอร์ดและพอร์ต','ESP32, Pico, Arduino')+sRow('doctor','ตรวจเครื่อง','ให้ Claude ช่วยหาและแก้ปัญหา');
+  sBind($('#sRows'));
   const wp=d.prefs.wallpaper;
   $('#wpSw').innerHTML=WALL.map(c=>`<button style="background:${c}" data-c="${c}" aria-label="สี ${c}" aria-pressed="${c===wp}"></button>`).join('');
   if(!wp.startsWith('#'))$('#wpPath').value=wp;
-  const setWp=async v=>{const r=await post('/api/settings/prefs',{wallpaper:v});$$('#wpSw button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===v));$('#wpRes').className='res '+(r.applied?'ok':'bad');$('#wpRes').textContent=r.applied?'เปลี่ยนแล้ว':'บันทึกแล้ว · จะใช้ตอนเข้า T3 ครั้งหน้า (หรือไม่พบไฟล์)'};
+  const setWp=async v=>{const r=await post('/api/settings/prefs',{wallpaper:v});$$('#wpSw button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===v));$('#wpRes').className='res '+(r.applied?'ok':'bad');$('#wpRes').textContent=r.applied?'เปลี่ยนแล้ว':'บันทึกแล้ว จะใช้ตอนเข้า T3 ครั้งหน้า'};
   $$('#wpSw button').forEach(b=>b.onclick=()=>setWp(b.dataset.c));$('#wpSet').onclick=()=>$('#wpPath').value.trim()&&setWp($('#wpPath').value.trim());
-  $('#keys').innerHTML=KEYS.map(([k,v])=>`<kbd>${k}</kbd><span>${v}</span>`).join('');
-  const s=d.system;$('#about').innerHTML=[['ระบบ',s.os],['เครื่อง',s.hostname],['kernel',s.kernel],['RAM',s.mem_gb+' GB'],['ดิสก์ว่าง',`${s.disk_free_gb} / ${s.disk_total_gb} GB`],['เปิดมา',s.uptime_h+' ชม.'],['Claude Code',s.claude_code?'ติดตั้งแล้ว':'ยังไม่ติดตั้ง']].map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('');
+  $('#about').innerHTML=[['ระบบ',s.os],['ชื่อเครื่อง',s.hostname],['kernel',s.kernel],['RAM',s.mem_gb+' GB'],['ดิสก์ว่าง',`${s.disk_free_gb} / ${s.disk_total_gb} GB`],['เปิดมา',s.uptime_h+' ชม.'],['Claude Code',s.claude_code?'ติดตั้งแล้ว':'ยังไม่ติดตั้ง']].map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('');
   aiStatus(S.ai);
 }
 function aiStatus(ai){const l=ai?.local||{};if(!$('#aiStat'))return;$('#aiStat').textContent=!l.configured?'ยังไม่ได้ตั้ง local':l.up?'local ● ต่อได้':'local ✕ ต่อไม่ได้'}

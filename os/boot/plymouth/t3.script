@@ -1,0 +1,48 @@
+# T3 boot splash: chip logo, five dots with a wave of light running through them
+W = Window.GetWidth();
+H = Window.GetHeight();
+Window.SetBackgroundTopColor(0.04, 0.05, 0.05);
+Window.SetBackgroundBottomColor(0.04, 0.05, 0.05);
+bg = Sprite(Image("background.png").Scale(W, H));
+bg.SetZ(-10);
+
+logo_img = Image("logo.png");
+logo = Sprite(logo_img);
+logo.SetX(W / 2 - logo_img.GetWidth() / 2);
+logo.SetY(H * 0.45 - logo_img.GetHeight() / 2);
+
+dot_img = Image("dot.png");
+dots_y = H * 0.45 + logo_img.GetHeight() / 2 + 56;
+for (i = 0; i < 5; i++) {
+  dots[i] = Sprite(dot_img);
+  dots[i].SetX(W / 2 - 4 + (i - 2) * 22);
+  dots[i].SetY(dots_y);
+  dots[i].SetOpacity(0.25);
+}
+
+t = 0;
+fun refresh() {
+  t++;
+  pos = Math.Int(t / 6) % 8 - 1;      # the bright spot walks across, enters and leaves
+  for (i = 0; i < 5; i++) {
+    d = Math.Abs(pos - i);
+    o = 1 - d * 0.35;
+    if (o < 0.25) o = 0.25;
+    dots[i].SetOpacity(o);
+  }
+}
+Plymouth.SetRefreshFunction(refresh);
+
+# password prompt (encrypted disks): plain text centred under the dots
+fun password(prompt, bullets) {
+  s = "";
+  for (i = 0; i < bullets; i++) s += "*";
+  msg = Image.Text(prompt + "  " + s, 0.9, 0.91, 0.92);
+  pw = Sprite(msg);
+  pw.SetX(W / 2 - msg.GetWidth() / 2);
+  pw.SetY(dots_y + 40);
+  global.pw_sprite = pw;
+}
+Plymouth.SetDisplayPasswordFunction(password);
+fun normal() { global.pw_sprite = NULL; }
+Plymouth.SetDisplayNormalFunction(normal);

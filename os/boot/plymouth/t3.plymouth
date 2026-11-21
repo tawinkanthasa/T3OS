@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=T3
+Description=T3 chip logo with a wave of light while the system starts
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/t3
+ScriptFile=/usr/share/plymouth/themes/t3/t3.script

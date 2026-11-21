@@ -136,6 +136,9 @@ APPS = {
     "welcome": ["/usr/share/t3/bin/t3-welcome"],
     "t3update": ["konsole", "--hold", "-e", "/usr/share/t3/bin/t3-get", "t3"],
     "reset": ["/usr/share/t3/bin/t3-reset-desktop"],
+    "appearance": ["systemsettings", "kcm_lookandfeel"],
+    "users": ["systemsettings", "kcm_users"],
+    "bench": ["/usr/share/t3/bin/t3-open", "bench"],
 }
 
 
@@ -167,4 +170,5 @@ def system_info() -> dict:
     du = shutil.disk_usage(Path.home())
     info["disk_free_gb"], info["disk_total_gb"] = round(du.free / 1e9), round(du.total / 1e9)
     info["claude_code"] = shutil.which("claude") is not None
+    info["user"] = os.environ.get("USER", "")
     return info
