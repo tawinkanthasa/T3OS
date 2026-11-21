@@ -12,6 +12,13 @@ k() { kdialog --title "$TITLE" --icon t3-logo "$@"; }
 api() { curl -sf -m 8 -H 'Content-Type: application/json' -d "$2" "http://127.0.0.1:7300$1"; }
 
 if [[ "${1:-}" == "--first-run" ]]; then
+  # Plasma on Debian can override the layout's wallpaper with its default: set T3's once
+  if [[ ! -e "$STATE/wallpaper-set" ]]; then
+    sleep 3
+    grep -q 't3/wallpapers' "${XDG_CONFIG_HOME:-$HOME/.config}/plasma-org.kde.plasma.desktop-appletsrc" 2>/dev/null \
+      || plasma-apply-wallpaperimage "$T3/wallpapers/t3.svg" >/dev/null 2>&1
+    touch "$STATE/wallpaper-set"
+  fi
   [[ -e "$DONE" ]] && exit 0
   sleep 4   # let the desktop finish drawing
 fi
