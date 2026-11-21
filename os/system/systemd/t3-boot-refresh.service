@@ -1,0 +1,12 @@
+[Unit]
+Description=T3: rebuild the boot menu when this disk starts on a different computer (finds Windows there)
+After=local-fs.target
+ConditionPathExists=/usr/sbin/update-grub
+ConditionPathExists=/boot/grub/grub.cfg
+
+[Service]
+Type=oneshot
+ExecStart=/usr/share/t3/bin/t3-boot-refresh
+
+[Install]
+WantedBy=multi-user.target

@@ -104,6 +104,8 @@ get_t3() {
   sudo bash "$src.new/os/install.sh" || return 1
   sudo bash "$src.new/os/install-system.sh" --update || return 1
   sudo rm -rf "$src" && sudo mv "$src.new" "$src"
+  # the running T3 Bench still has the old code: restart it so Settings etc. show the update
+  if pgrep -x benchd >/dev/null; then pkill -x benchd; sleep 1; (setsid benchd >/dev/null 2>&1 &); fi
   echo "T3 เป็นเวอร์ชัน $(cat /usr/share/t3/VERSION) แล้ว (หน้าจอที่ตั้งเองไม่ถูกแตะ)"
 }
 

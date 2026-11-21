@@ -1,0 +1,12 @@
+#!/bin/sh
+# Run at boot (t3-boot-refresh.service). The menu was built on the computer T3 was
+# installed from, so on a new computer it lacks that computer's Windows. When the
+# hardware differs from last time: re-scan (os-prober) and keep the EFI fallback file.
+id=$(cat /sys/class/dmi/id/product_uuid /sys/class/dmi/id/board_serial 2>/dev/null | sha1sum | cut -c1-16)
+stamp=/var/lib/t3/boot-hw
+[ "$(cat "$stamp" 2>/dev/null)" = "$id" ] && exit 0
+if [ -d /sys/firmware/efi ] && mountpoint -q /boot/efi; then
+  grub-install --removable --efi-directory=/boot/efi --no-nvram >/dev/null 2>&1 || true
+fi
+update-grub >/dev/null 2>&1 || exit 1
+mkdir -p /var/lib/t3 && echo "$id" > "$stamp"

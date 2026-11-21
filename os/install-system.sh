@@ -15,7 +15,7 @@ install -m 0644 "$S/apt/20auto-upgrades" /etc/apt/apt.conf.d/20auto-upgrades
 install -m 0644 "$S/grub/t3.cfg" /etc/default/grub.d/t3.cfg
 install -m 0644 "$S/default/zramswap" /etc/default/zramswap
 install -m 0644 "$S/systemd/grub-btrfsd.conf" /etc/systemd/system/grub-btrfsd.service.d/t3.conf
-install -m 0644 "$S/systemd/t3-snapshot.service" "$S/systemd/t3-snapshot.timer" /etc/systemd/system/
+install -m 0644 "$S/systemd/t3-snapshot.service" "$S/systemd/t3-snapshot.timer" "$S/systemd/t3-boot-refresh.service" /etc/systemd/system/
 install -m 0644 "$S"/systemd-user/* /usr/lib/systemd/user/
 install -m 0644 "$S/profile.d/t3.sh" /etc/profile.d/t3.sh
 install -m 0644 "$S/t3/timeshift.json.in" /usr/share/t3/timeshift.json.in
@@ -36,6 +36,7 @@ en zramswap.service
 en systemd-oomd.service
 en unattended-upgrades.service
 en t3-snapshot.timer
+en t3-boot-refresh.service
 [[ -x /usr/bin/grub-btrfsd && "$(findmnt -no FSTYPE / 2>/dev/null)" == btrfs ]] && en grub-btrfsd.service
 systemctl --global enable t3-update-check.timer >/dev/null 2>&1 || true
 
@@ -63,6 +64,10 @@ GB=/etc/default/grub-btrfs/config   # snapshot submenu says "T3", not "Debian GN
 if [[ -f "$GB" ]]; then
   sed -i '/^#\?GRUB_BTRFS_SUBMENUNAME=/d' "$GB"
   echo 'GRUB_BTRFS_SUBMENUNAME="T3 restore points (snapshots)"' >> "$GB"
+fi
+# a copy of the boot loader at EFI/BOOT/BOOTX64.EFI: an external disk then boots on any PC (F12)
+if [[ -d /sys/firmware/efi ]] && mountpoint -q /boot/efi && command -v grub-install >/dev/null; then
+  grub-install --removable --efi-directory=/boot/efi --no-nvram >/dev/null 2>&1 || echo "  (EFI fallback ไม่สำเร็จ ข้าม)"
 fi
 if command -v update-grub >/dev/null && [[ -e /boot/grub/grub.cfg ]]; then
   update-grub >/dev/null 2>&1 || echo "  (update-grub ไม่สำเร็จ: ลองรันเองภายหลัง)"
