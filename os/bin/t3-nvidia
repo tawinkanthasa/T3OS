@@ -1,0 +1,59 @@
+#!/bin/sh
+# Install NVIDIA's own graphics driver (instead of the free "nouveau" one): full speed,
+# every refresh rate the screen offers (e.g. 180 Hz), smooth Wayland.
+#
+#     sudo t3-nvidia
+#
+# With Secure Boot on, the driver has to be signed by a key the computer trusts. DKMS makes that
+# key; this script asks the firmware to trust it. On the next restart a blue "MOK management"
+# screen appears once: Enroll MOK -> Continue -> Yes -> type the password you chose here -> Reboot.
+# If that screen is skipped, the computer still starts, just with the basic display driver;
+# run this again to get another chance.
+set -e
+[ "$(id -u)" = 0 ] || { echo "Run it with sudo:  sudo $0"; exit 1; }
+lspci | grep -qi 'vga.*nvidia\|3d.*nvidia' || { echo "No NVIDIA graphics card found."; exit 1; }
+
+say() { printf '\n\033[1;32m==> %s\033[0m\n' "$*"; }
+
+say "Enabling Debian's contrib and non-free sections (where the NVIDIA driver lives)"
+for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list; do
+    [ -f "$f" ] || continue
+    # "deb ... trixie main non-free-firmware" -> "... main contrib non-free non-free-firmware"
+    sed -i -E '/^deb(-src)? .*debian/{/ contrib( |$)/! s/ main( |$)/ main contrib\1/; / non-free( |$)/! s/ contrib( |$)/ contrib non-free\1/}' "$f"
+done
+for f in /etc/apt/sources.list.d/*.sources; do
+    [ -f "$f" ] || continue
+    sed -i -E '/^Components:/{/ contrib( |$)/! s/ main( |$)/ main contrib\1/; / non-free( |$)/! s/ contrib( |$)/ contrib non-free\1/}' "$f"
+done
+apt-get update
+
+say "Installing the driver (this builds it for your kernel, a few minutes)"
+DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    linux-headers-amd64 "linux-headers-$(uname -r)" nvidia-kernel-dkms nvidia-driver firmware-misc-nonfree
+
+say "Turning on kernel modesetting (needed for Wayland and the login screen)"
+cat > /etc/modprobe.d/t3-nvidia.conf <<'CONF'
+# T3: NVIDIA driver drives the screens itself (Wayland), and keeps video memory across sleep
+options nvidia-drm modeset=1 fbdev=1
+options nvidia NVreg_PreserveVideoMemoryAllocations=1
+CONF
+for s in nvidia-suspend nvidia-resume nvidia-hibernate; do
+    systemctl enable "$s.service" 2>/dev/null || true
+done
+update-initramfs -u
+
+if mokutil --sb-state 2>/dev/null | grep -q 'SecureBoot enabled'; then
+    key=/var/lib/dkms/mok.pub
+    [ -f "$key" ] || { echo "The DKMS signing key ($key) is missing; the driver was not signed."; exit 1; }
+    if mokutil --test-key "$key" 2>/dev/null | grep -q 'already enrolled'; then
+        say "Secure Boot already trusts the driver key"
+    else
+        say "Secure Boot: choose a one-time password (you type it once on the blue screen after restart)"
+        mokutil --import "$key"
+        echo
+        echo "Now restart. On the blue 'Perform MOK management' screen:"
+        echo "   Enroll MOK -> Continue -> Yes -> type that password -> Reboot"
+    fi
+fi
+
+say "Done. Restart the computer to switch to the NVIDIA driver."

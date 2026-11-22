@@ -122,6 +122,14 @@ def frame(prefix, fill):
     return "<defs>" + "".join(defs) + "</defs>\n" + "\n".join(o)
 
 
+def maximized(prefix, fill, y):
+    """Maximized windows: a plain solid title bar, square corners, no shadow. Without these pieces
+    Aurorae draws the normal frame with no borders, which leaves the title bar see-through."""
+    names = ["topleft", "top", "topright", "left", "center", "right", "bottomleft", "bottom", "bottomright"]
+    return "\n".join(f'<rect id="{prefix}-{n}" x="{(i % 3) * 12}" y="{y + (i // 3) * 6}" '
+                      f'width="10" height="4" fill="{fill}"/>' for i, n in enumerate(names))
+
+
 def button(kind):
     c = BUTTONS[kind]
     states = {
@@ -144,9 +152,11 @@ def aurorae():
     out = K / "aurorae" / "T3"
     out.mkdir(parents=True, exist_ok=True)
     (out / "decoration.svg").write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="240" viewBox="0 0 100 240">\n'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="280" viewBox="0 0 100 280">\n'
         + frame("decoration", ACTIVE) + "\n"
-        + f'<g transform="translate(0 120)">{frame("decoration-inactive", INACTIVE)}</g>' + "\n</svg>\n")
+        + f'<g transform="translate(0 120)">{frame("decoration-inactive", INACTIVE)}</g>' + "\n"
+        + maximized("decoration-maximized", ACTIVE, 240) + "\n"
+        + maximized("decoration-maximized-inactive", INACTIVE, 260) + "\n</svg>\n")
     for kind in BUTTONS:
         (out / f"{kind}.svg").write_text(button(kind))
     (out / "metadata.desktop").write_text("""[Desktop Entry]
@@ -183,6 +193,11 @@ ButtonHeight=14
 ButtonSpacing=8
 ButtonMarginTop={(TITLE_H - 14) // 2}
 ExplicitButtonSpacer=10
+TitleEdgeTopMaximized=0
+TitleEdgeBottomMaximized=0
+TitleEdgeLeftMaximized=12
+TitleEdgeRightMaximized=12
+ButtonMarginTopMaximized={(TITLE_H - 14) // 2}
 PaddingTop={SHADOW}
 PaddingBottom={SHADOW}
 PaddingLeft={SHADOW}
