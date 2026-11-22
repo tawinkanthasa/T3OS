@@ -8,7 +8,7 @@ ColorScheme=T3Dark
 Theme=T3
 
 [plasmarc][Theme]
-name=breeze-dark
+name=T3
 
 [kcminputrc][Mouse]
 cursorTheme=breeze_cursors

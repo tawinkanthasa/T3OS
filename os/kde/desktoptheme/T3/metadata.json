@@ -1,0 +1,16 @@
+{
+  "KPlugin": {
+    "Id": "T3",
+    "Name": "T3",
+    "Description": "T3: Breeze Dark with a rounded dock",
+    "Authors": [
+      {
+        "Name": "T3"
+      }
+    ],
+    "License": "GPL-2.0+",
+    "Version": "1.0",
+    "Website": "https://github.com/tawinkanthasa/T3OS"
+  },
+  "X-Plasma-API": "5.0"
+}

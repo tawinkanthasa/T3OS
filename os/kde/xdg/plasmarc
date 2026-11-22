@@ -1,3 +1,7 @@
+# Plasma theme: T3 (Breeze Dark with a rounded dock)
+[Theme]
+name=T3
+
 # The T3 wallpaper is Plasma's default, so nothing can fall back to Debian's
 [Wallpapers]
 defaultWallpaperTheme=T3

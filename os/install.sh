@@ -18,6 +18,8 @@ cp -r "$REPO/ui" "$T3/"
 install -m 0644 "$K"/wallpapers/* "$T3/wallpapers/"
 rm -rf "$SHARE/plasma/look-and-feel/org.t3.desktop"
 cp -r "$K/look-and-feel/org.t3.desktop" "$SHARE/plasma/look-and-feel/"
+install -d "$SHARE/plasma/desktoptheme"                 # T3 Plasma theme: rounded dock, bar under open apps
+rm -rf "$SHARE/plasma/desktoptheme/T3"; cp -r "$K/desktoptheme/T3" "$SHARE/plasma/desktoptheme/"
 for p in "$K"/plasmoids/*/; do                      # T3 widgets: boards, music, Control Center
   rm -rf "$SHARE/plasma/plasmoids/$(basename "$p")"; cp -r "$p" "$SHARE/plasma/plasmoids/"
 done

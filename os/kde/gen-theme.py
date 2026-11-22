@@ -3,6 +3,7 @@
 red/yellow/green buttons) from the T3 Desktop design. Re-run after changing a colour:
     python3 os/kde/gen-theme.py
 Writes os/kde/icons-theme/T3/ and os/kde/aurorae/T3/ (installed by os/install.sh)."""
+import json
 from pathlib import Path
 
 K = Path(__file__).resolve().parent
@@ -205,7 +206,100 @@ PaddingRight={SHADOW}
 """)
 
 
+# ---- Plasma theme (desktoptheme T3) ---------------------------------------------------------------
+# Only what T3 draws differently from Breeze Dark; every other piece falls back to the default theme.
+#   panel-background: dock and menu bar with round corners (floating dock = a rounded island)
+#   tasks:            no box behind open apps; a short bar under the icon (green = the app in front),
+#                     a soft rounded highlight on hover
+DOCK_R, DOCK_FILL, DOCK_EDGE = 18, "#1e1f22", "#ffffff"
+
+
+def rounded(prefix, ox, oy, R, fill, op, edge_op=0.0, E=10):
+    """FrameSvg pieces of a rounded rectangle, each drawn on its own (no clipping: Qt sizes an
+    element by what is drawn in it). Corners R x R, edges E long, placed in a grid at (ox, oy)."""
+    pid = (prefix + "-") if prefix else ""
+    f = f'fill="{fill}" fill-opacity="{op}"'
+    st = f'fill="none" stroke="#ffffff" stroke-opacity="{edge_op}" stroke-width="1"' if edge_op else ""
+    corner = (f'<path d="M{R} {R}H0A{R} {R} 0 0 1 {R} 0z" {f}/>'
+              + (f'<path d="M0.5 {R}A{R - .5} {R - .5} 0 0 1 {R} 0.5" {st}/>' if st else ""))
+    top = (f'<rect width="{E}" height="{R}" {f}/>'
+           + (f'<path d="M0 0.5H{E}" {st}/>' if st else ""))
+    G = R + E + 4                                    # grid pitch
+    def put(name, col, row, body, rot=0, w=R, h=R):
+        x, y = ox + col * G, oy + row * G
+        if rot:   # rotate the drawing about its own box so it stays at (x, y)
+            body = f'<g transform="rotate({rot} {w / 2} {h / 2})">{body}</g>'
+        return f'<g id="{pid}{name}" transform="translate({x} {y})">{body}</g>'
+    side = (f'<rect width="{R}" height="{E}" {f}/>' + (f'<path d="M0.5 0V{E}" {st}/>' if st else ""))
+    parts = [
+        put("topleft", 0, 0, corner),
+        put("top", 1, 0, top, w=E, h=R),
+        put("topright", 2, 0, corner, 90),
+        put("left", 0, 1, side, w=R, h=E),
+        put("center", 1, 1, f'<rect width="{E}" height="{E}" {f}/>'),
+        put("right", 2, 1, f'<g transform="translate({R} {E}) rotate(180)">{side}</g>'),
+        put("bottomleft", 0, 2, corner, 270),
+        put("bottom", 1, 2, f'<g transform="translate({E} {R}) rotate(180)">{top}</g>'),
+        put("bottomright", 2, 2, corner, 180),
+    ]
+    return "\n".join(parts)
+
+
+def bar_frame(prefix, ox, oy, SIDE, BAR, color, op, E=10):
+    """Open-app indicator: transparent frame whose stretched bottom edge is the bar. The bottom
+    corners are SIDE wide and see-through, so the bar is the item width minus 2 x SIDE, centred."""
+    clear = 'fill="#000" fill-opacity="0"'
+    def g(name, x, y, w, h, body=None):
+        return (f'<g id="{prefix}-{name}" transform="translate({ox + x} {oy + y})">'
+                f'{body or f"<rect width=\"{w}\" height=\"{h}\" {clear}/>"}</g>')
+    bar = f'<rect width="{E}" height="{BAR}" fill="{color}" fill-opacity="{op}"/>'
+    return "\n".join([
+        g("topleft", 0, 0, SIDE, 1), g("top", 30, 0, E, 1), g("topright", 45, 0, SIDE, 1),
+        g("left", 0, 5, SIDE, E), g("center", 30, 5, E, E), g("right", 45, 5, SIDE, E),
+        g("bottomleft", 0, 20, SIDE, BAR), g("bottom", 30, 20, E, BAR, bar), g("bottomright", 45, 20, SIDE, BAR),
+    ])
+
+
+def desktoptheme():
+    out = K / "desktoptheme" / "T3"
+    (out / "widgets").mkdir(parents=True, exist_ok=True)
+    (out / "metadata.json").write_text(json.dumps({
+        "KPlugin": {"Id": "T3", "Name": "T3", "Description": "T3: Breeze Dark with a rounded dock",
+                    "Authors": [{"Name": "T3"}], "License": "GPL-2.0+", "Version": "1.0",
+                    "Website": "https://github.com/tawinkanthasa/T3OS"},
+        "X-Plasma-API": "5.0"}, indent=2) + "\n")
+    (out / "plasmarc").write_text("[ContrastEffect]\nenabled=true\ncontrast=0.2\nintensity=0.6\nsaturation=1.6\n\n"
+                                  "[AdaptiveTransparency]\nenabled=true\n")
+
+    # panel background: rounded, faint light edge; mask = same shape (blur region)
+    R = DOCK_R
+    hints = "".join(f'<rect id="{n}" x="{300 + i * 12}" y="0" width="{w}" height="{h}" fill="#000" fill-opacity="0"/>'
+                    for i, (n, w, h) in enumerate([("hint-top-margin", 1, 5), ("hint-bottom-margin", 1, 5),
+                                                   ("hint-left-margin", 8, 1), ("hint-right-margin", 8, 1),
+                                                   ("hint-stretch-borders", 1, 1), ("mask-hint-stretch-borders", 1, 1)]))
+    (out / "widgets" / "panel-background.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="420" height="120" viewBox="0 0 420 120">\n'
+        + rounded("", 0, 0, R, DOCK_FILL, 0.86, 0.08) + "\n"
+        + rounded("mask", 140, 0, R, "#000000", 1) + "\n" + hints + "\n</svg>\n")
+
+    # tasks: a short bar under each open app (green = the one in front); a soft rounded box on hover
+    SIDE, BAR = 22, 3
+    states = [("normal", "#9aa0a6", 0.9), ("focus", "#3fb950", 1), ("minimized", "#9aa0a6", 0.45),
+              ("attention", "#d29922", 1)]
+    parts = [bar_frame(n, i * 80, 0, SIDE, BAR, c, o) for i, (n, c, o) in enumerate(states)]
+    parts.append(rounded("hover", 0, 40, 12, "#ffffff", 0.10))
+    margins = "".join(f'<rect id="{st}-hint-{side}-margin" x="{340 + i * 3}" y="{40 + j * 4}" width="2" height="2" '
+                      f'fill="#000" fill-opacity="0"/>'
+                      for j, st in enumerate(["normal", "focus", "minimized", "attention", "hover"])
+                      for i, side in enumerate(["top", "bottom", "left", "right"]))
+    margins += '<rect id="hint-stretch-borders" x="390" y="110" width="1" height="1" fill="#000" fill-opacity="0"/>'
+    (out / "widgets" / "tasks.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120" viewBox="0 0 400 120">\n'
+        + "\n".join(parts) + "\n" + margins + "\n</svg>\n")
+
+
 if __name__ == "__main__":
     icon_theme()
     aurorae()
+    desktoptheme()
     print("ok:", K / "icons-theme" / "T3", K / "aurorae" / "T3")
