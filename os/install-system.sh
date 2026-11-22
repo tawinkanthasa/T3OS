@@ -44,6 +44,25 @@ en t3-boot-refresh.service
 [[ -x /usr/bin/grub-btrfsd && "$(findmnt -no FSTYPE / 2>/dev/null)" == btrfs ]] && en grub-btrfsd.service
 systemctl --global enable t3-update-check.timer >/dev/null 2>&1 || true
 
+# ---- faster start: switch off what a desktop PC without these things doesn't need (same look, same apps)
+# waiting for the internet held the boot ~6 s; apps that need the net wait for it themselves
+systemctl disable NetworkManager-wait-online.service >/dev/null 2>&1 || true
+# phone-modem service: started on every boot even with no modem (turn back on: sudo systemctl enable --now ModemManager)
+command -v mmcli >/dev/null && ! mmcli -L 2>/dev/null | grep -q /Modem/ && systemctl disable ModemManager.service >/dev/null 2>&1 || true
+# ext4 snapshot cleanup: T3 is on Btrfs, nothing to clean
+[[ "$(findmnt -no FSTYPE / 2>/dev/null)" == btrfs ]] && systemctl mask e2scrub_reap.service >/dev/null 2>&1 || true
+# drivers for printers on the old 25-pin parallel port (cups loads them on every boot); USB/network
+# printers don't use them
+if [[ -f /etc/modules-load.d/cups-filters.conf ]] && ! grep -q '^# T3' /etc/modules-load.d/cups-filters.conf; then
+  sed -i 's/^\(lp\|ppdev\|parport_pc\)$/# \1/; 1i # T3: parallel-port printer drivers off (USB/network printers are unaffected)' /etc/modules-load.d/cups-filters.conf
+fi
+
+# ---- Windows on the same PC keeps the hardware clock in local time; T3 does the same, otherwise
+# Windows shows the wrong time (7 h off in Thailand) after every T3 session
+if command -v efibootmgr >/dev/null && efibootmgr 2>/dev/null | grep -qi 'windows boot manager'; then
+  timedatectl set-local-rtc 1 >/dev/null 2>&1 || true
+fi
+
 # ---- Timeshift on a Btrfs root (an ISO chroot isn't one; the installer does this step there)
 if [[ "$(findmnt -no FSTYPE / 2>/dev/null)" == btrfs && ! -s /etc/timeshift/timeshift.json ]]; then
   install -d /etc/timeshift

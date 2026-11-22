@@ -1,0 +1,3 @@
+# T3: the person at the computer may talk to the monitors over DDC/CI (i2c), so the panel's
+# brightness slider also works for desktop monitors, not just laptop screens (powerdevil)
+SUBSYSTEM=="i2c-dev", KERNEL=="i2c-[0-9]*", TAG+="uaccess"

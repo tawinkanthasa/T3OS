@@ -82,7 +82,7 @@ if has nmcli; then
 else
   info "ไม่มี nmcli"
 fi
-fw=$(kernlog | grep -iE 'firmware: failed to load|direct firmware load for .* failed' | sed -E 's/.*(load|for) ([^ ]+).*/\2/' | sort -u | head -5 | tr '\n' ' ')
+fw=$(kernlog | grep -iE 'firmware: failed to load|direct firmware load for .* failed' | sed -E 's/.*(load|for) ([^ ]+).*/\2/' | grep -v 'iwl-debug-yoyo' | sort -u | head -5 | tr '\n' ' ')
 [[ -n "$fw" ]] && warn "ไดรเวอร์หา firmware ไม่เจอ: $fw" "ค้นว่าไฟล์อยู่แพ็กเกจไหน: apt-file search <ชื่อไฟล์> (มักเป็น firmware-misc-nonfree / firmware-realtek / firmware-iwlwifi)"
 
 # ---------------------------------------------------------------- sound, bluetooth, graphics
