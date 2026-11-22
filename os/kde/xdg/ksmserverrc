@@ -1,0 +1,3 @@
+# T3: start every login with a clean desktop; apps from last time are not reopened
+[General]
+loginMode=emptySession
