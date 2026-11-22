@@ -44,6 +44,7 @@ for d in "$K"/kwin-decoration/*/; do n=$(basename "$d"); rm -rf "$SHARE/kwin/dec
 cp -r "$K/wallpaper-pkg/T3" "$SHARE/wallpapers/"
 install -d "$SHARE/kwin/scripts" "$SHARE/konsole"
 install -m 0644 "$K"/konsole/*.profile "$SHARE/konsole/"
+install -D -m 0644 "$K/konsole/kxmlgui/sessionui.rc" "$SHARE/kxmlgui5/konsole/sessionui.rc"   # Ctrl+V pastes in Konsole
 for d in "$K"/kwin-scripts/*/; do n=$(basename "$d"); rm -rf "$SHARE/kwin/scripts/$n"; cp -r "$d" "$SHARE/kwin/scripts/$n"; done
 command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -qf "$SHARE/icons/T3" 2>/dev/null || true
 for f in kwinrc kglobalshortcutsrc kxkbrc plasmanotifyrc plasmarc ksplashrc kscreenlockerrc kcm-about-distrorc konsolerc ksmserverrc; do install -m 0644 "$K/xdg/$f" "$XDG/$f"; done
