@@ -42,7 +42,7 @@ clock.writeConfig("use24hFormat", "2");
 // ---- bottom: floating dock: [music] apps | trash [Control Center] ----
 var dock = new Panel;
 dock.location = "bottom";
-dock.height = Math.round(gridUnit * 3.2);
+dock.height = Math.round(gridUnit * 3.1);                    // about 56 px: icons about half the dock height
 dock.lengthMode = "fit";
 dock.alignment = "center";
 dock.hiding = "dodgewindows";                               // slides away when a window touches it
@@ -69,6 +69,7 @@ tasks.writeConfig("launchers", [
 ].join(","));
 tasks.writeConfig("groupingStrategy", "1");                 // one icon per app
 tasks.writeConfig("indicateAudioStreams", "true");
+tasks.writeConfig("iconSpacing", "0");                       // icons close together, like the design
 
 dock.addWidget("org.kde.plasma.marginsseparator");
 dock.addWidget("org.kde.plasma.trash");

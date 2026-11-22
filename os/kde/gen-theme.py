@@ -271,16 +271,16 @@ def desktoptheme():
     (out / "plasmarc").write_text("[ContrastEffect]\nenabled=true\ncontrast=0.2\nintensity=0.6\nsaturation=1.6\n\n"
                                   "[AdaptiveTransparency]\nenabled=true\n")
 
-    # panel background: rounded, faint light edge; mask = same shape (blur region)
+    # panel background: rounded, faint light edge
     R = DOCK_R
     hints = "".join(f'<rect id="{n}" x="{300 + i * 12}" y="0" width="{w}" height="{h}" fill="#000" fill-opacity="0"/>'
-                    for i, (n, w, h) in enumerate([("hint-top-margin", 1, 5), ("hint-bottom-margin", 1, 5),
-                                                   ("hint-left-margin", 8, 1), ("hint-right-margin", 8, 1),
-                                                   ("hint-stretch-borders", 1, 1), ("mask-hint-stretch-borders", 1, 1)]))
+                    for i, (n, w, h) in enumerate([("hint-top-margin", 1, 10), ("hint-bottom-margin", 1, 10),
+                                                   ("hint-left-margin", 12, 1), ("hint-right-margin", 12, 1),
+                                                   ("hint-stretch-borders", 1, 1)]))
     (out / "widgets" / "panel-background.svg").write_text(
         '<svg xmlns="http://www.w3.org/2000/svg" width="420" height="120" viewBox="0 0 420 120">\n'
         + rounded("", 0, 0, R, DOCK_FILL, 0.86, 0.08) + "\n"
-        + rounded("mask", 140, 0, R, "#000000", 1) + "\n" + hints + "\n</svg>\n")
+        + hints + "\n</svg>\n")      # no mask-*: Plasma then takes the blur shape from the drawing itself
 
     # tasks: a short bar under each open app (green = the one in front); a soft rounded box on hover
     SIDE, BAR = 22, 3
@@ -288,7 +288,7 @@ def desktoptheme():
               ("attention", "#d29922", 1)]
     parts = [bar_frame(n, i * 80, 0, SIDE, BAR, c, o) for i, (n, c, o) in enumerate(states)]
     parts.append(rounded("hover", 0, 40, 12, "#ffffff", 0.10))
-    margins = "".join(f'<rect id="{st}-hint-{side}-margin" x="{340 + i * 3}" y="{40 + j * 4}" width="2" height="2" '
+    margins = "".join(f'<rect id="{st}-hint-{side}-margin" x="{340 + i * 6}" y="{40 + j * 6}" width="5" height="5" '
                       f'fill="#000" fill-opacity="0"/>'
                       for j, st in enumerate(["normal", "focus", "minimized", "attention", "hover"])
                       for i, side in enumerate(["top", "bottom", "left", "right"]))
