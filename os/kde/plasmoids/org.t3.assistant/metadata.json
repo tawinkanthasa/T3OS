@@ -1,0 +1,14 @@
+{
+  "KPackageStructure": "Plasma/Applet",
+  "KPlugin": {
+    "Id": "org.t3.assistant",
+    "Name": "T3 Assistant",
+    "Description": "Ask about this PC in your own words. It checks the machine for real (temperatures, disk, errors, boot) and asks before changing anything. Uses the AI server you set (Ollama, LM Studio, any OpenAI-style link).",
+    "Icon": "t3-assistant",
+    "Category": "System Information",
+    "Authors": [{ "Name": "T3" }],
+    "License": "GPL-2.0+",
+    "Version": "1.0"
+  },
+  "X-Plasma-API-Minimum-Version": "6.0"
+}

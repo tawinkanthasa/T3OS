@@ -1,4 +1,4 @@
-// Control Center: the button at the right end of the dock. One popup with the switches people reach
+// Control Center: the button at the right end of the dock. One sheet at the right edge of the screen with the switches people reach
 // for every day: Wi-Fi, Bluetooth, Night Light, Do Not Disturb, screenshot, display settings,
 // brightness of every screen, volume, where the sound goes, and the song playing.
 import QtQuick
@@ -28,7 +28,7 @@ PlasmoidItem {
     PlasmaNM.Handler { id: nm }
     PlasmaNM.EnabledConnections { id: nmOn }
     NightLightControl { id: night }
-    ScreenBrightnessControl { id: screens; isSilent: root.expanded }
+    ScreenBrightnessControl { id: screens; isSilent: root.open }
     NotificationManager.Settings { id: notif }
     Mpris.Mpris2Model { id: mpris }
     SinkModel { id: sinkModel }
@@ -100,12 +100,12 @@ PlasmoidItem {
             Layout.fillHeight: true
             Layout.preferredWidth: Math.max(Kirigami.Units.gridUnit * 2, dockPart.height)
             Layout.rightMargin: Kirigami.Units.smallSpacing
-            onClicked: root.expanded = !root.expanded
+            onClicked: root.toggle()
             Rectangle {
                 anchors.centerIn: parent
                 width: Math.round(Math.min(parent.width, parent.height) * 0.85); height: width
                 radius: Math.round(width * 0.3)
-                color: root.expanded ? Qt.rgba(0.247, 0.725, 0.314, 0.28)
+                color: root.open ? Qt.rgba(0.247, 0.725, 0.314, 0.28)
                      : btn.containsMouse ? Qt.rgba(1, 1, 1, 0.14) : Qt.rgba(1, 1, 1, 0.07)
                 Behavior on color { ColorAnimation { duration: 150 } }
                 Kirigami.Icon {
@@ -117,178 +117,204 @@ PlasmoidItem {
         }
     }
 
-    // ---- popup ----
-    fullRepresentation: PlasmaExtras.Representation {
-        Layout.preferredWidth: Kirigami.Units.gridUnit * 21
-        Layout.minimumWidth: Kirigami.Units.gridUnit * 21
-        Layout.preferredHeight: col.implicitHeight + Kirigami.Units.largeSpacing * 2
-        Layout.minimumHeight: Layout.preferredHeight
-        collapseMarginsHint: true
+    // ---- the sheet: slides in at the right edge of the screen (like macOS), not above the button ----
+    preferredRepresentation: compactRepresentation
+    // Plasma only shows the dock button when the applet also has a popup; ours is the sheet below, so
+    // this one stays empty and never opens
+    fullRepresentation: Item { Layout.preferredWidth: 1; Layout.preferredHeight: 1 }
+    activationTogglesExpanded: false
+    onExpandedChanged: if (expanded) Qt.callLater(() => { root.expanded = false; })
+    property bool open: false
+    property double closedAt: 0      // a click on the button also closes the sheet (focus leaves it); don't reopen at once
+    function toggle() {
+        if (open) open = false;
+        else if (Date.now() - closedAt > 250) open = true;
+    }
+    Plasmoid.onActivated: toggle()
 
-        ColumnLayout {
-            id: col
-            anchors.fill: parent
-            anchors.margins: Kirigami.Units.largeSpacing
-            spacing: Kirigami.Units.largeSpacing
+    PlasmaCore.Dialog {
+        id: sheet
+        readonly property rect scr: Plasmoid.containment ? Plasmoid.containment.screenGeometry : Qt.rect(0, 0, 1920, 1080)
+        readonly property int gap: Kirigami.Units.largeSpacing
+        visible: root.open
+        location: PlasmaCore.Types.RightEdge          // KWin slides it in from the right
+        flags: Qt.WindowStaysOnTopHint
+        hideOnWindowDeactivate: true
+        x: scr.x + scr.width - width - gap
+        y: scr.y + Math.round(Kirigami.Units.gridUnit * 1.6) + gap   // just under the top bar
+        onVisibleChanged: if (!visible) { root.open = false; root.closedAt = Date.now(); } else requestActivate()
 
-            RowLayout {
-                PC3.Label { text: "Control Center"; font.weight: Font.DemiBold; Layout.fillWidth: true }
-                PC3.Label {
-                    opacity: 0.6
-                    text: Qt.formatDate(clock.now, "ddd d MMM")
-                    Timer { id: clock; property date now: new Date(); interval: 60000; running: true; repeat: true; onTriggered: now = new Date() }
-                }
-            }
+        mainItem: Item {
+            width: Kirigami.Units.gridUnit * 21
+            height: col.implicitHeight + Kirigami.Units.largeSpacing * 2
+            Keys.onEscapePressed: root.open = false
+            focus: true
 
-            // switches
-            GridLayout {
-                columns: 3
-                columnSpacing: Kirigami.Units.smallSpacing * 2
-                rowSpacing: Kirigami.Units.smallSpacing * 2
-                Layout.fillWidth: true
+            ColumnLayout {
+                id: col
+                width: Kirigami.Units.gridUnit * 21 - Kirigami.Units.largeSpacing * 2
+                x: Kirigami.Units.largeSpacing; y: Kirigami.Units.largeSpacing
+                spacing: Kirigami.Units.largeSpacing
 
-                Tile {
-                    icon: "network-wireless"; title: "Wi-Fi"
-                    visible: nmOn.wirelessHwEnabled
-                    on: nmOn.wirelessEnabled
-                    sub: on ? "On" : "Off"
-                    onToggled: nm.enableWireless(!nmOn.wirelessEnabled)
-                }
-                Tile {
-                    icon: "network-bluetooth"; title: "Bluetooth"
-                    visible: BluezQt.Manager.adapters.length > 0
-                    on: BluezQt.Manager.bluetoothOperational
-                    sub: !on ? "Off" : BluezQt.Manager.connectedDevices.length > 0
-                         ? BluezQt.Manager.connectedDevices[0].name : "On"
-                    onToggled: {
-                        const enable = !BluezQt.Manager.bluetoothOperational;
-                        BluezQt.Manager.bluetoothBlocked = !enable;
-                        BluezQt.Manager.adapters.forEach(a => a.powered = enable);
-                    }
-                }
-                Tile {
-                    icon: "redshift-status-on"; title: "Night Light"
-                    visible: night.available && night.enabled
-                    on: night.running && !night.inhibited
-                    sub: on ? "On" : "Paused"
-                    onToggled: night.toggleInhibition()
-                }
-                Tile {
-                    icon: "notifications-disabled-symbolic"; title: "Do Not Disturb"
-                    on: root.dnd
-                    sub: on ? "On" : "Off"
-                    onToggled: root.setDnd(!root.dnd)
-                }
-                Tile {
-                    icon: "spectacle"; title: "Screenshot"; sub: "Pick an area"
-                    onToggled: { root.expanded = false; run.exec("spectacle --region --launchonly"); }
-                }
-                Tile {
-                    icon: "video-display"; title: "Displays"; sub: "Settings"
-                    onToggled: { root.expanded = false; run.exec("systemsettings kcm_kscreen"); }
-                }
-            }
-
-            // brightness, one slider per screen that allows it (external monitors via DDC)
-            Repeater {
-                model: screens.displays
-                delegate: SliderRow {
-                    required property string displayName
-                    required property string label
-                    required property int brightness
-                    required property int maxBrightness
-                    icon: "video-display-brightness"
-                    hint: label
-                    from: 0; to: maxBrightness
-                    value: brightness
-                    onMoved: v => screens.setBrightness(displayName, v)
-                }
-            }
-
-            // volume
-            SliderRow {
-                visible: !!root.sink
-                icon: root.sink && root.sink.muted ? "audio-volume-muted"
-                    : !root.sink ? "audio-volume-high"
-                    : root.sink.volume / PulseAudio.NormalVolume < 0.34 ? "audio-volume-low"
-                    : root.sink.volume / PulseAudio.NormalVolume < 0.67 ? "audio-volume-medium" : "audio-volume-high"
-                from: 0; to: PulseAudio.NormalVolume
-                value: root.sink ? root.sink.volume : 0
-                iconClick: true
-                onIconClicked: if (root.sink) root.sink.muted = !root.sink.muted
-                onMoved: v => { if (root.sink) { root.sink.muted = false; root.sink.volume = v; } }
-            }
-
-            // where the sound goes
-            Flow {
-                Layout.fillWidth: true
-                spacing: Kirigami.Units.smallSpacing
-                visible: outputs.count > 1
-                Repeater {
-                    model: outputs
-                    delegate: PC3.Button {
-                        required property var model
-                        text: root.shortName(model.PulseObject.description || model.PulseObject.name)
-                        checkable: true
-                        checked: model.PulseObject.default
-                        flat: !checked
-                        onClicked: model.PulseObject.default = true
-                    }
-                }
-            }
-
-            // the song playing
-            Rectangle {
-                visible: !!root.player
-                Layout.fillWidth: true
-                Layout.preferredHeight: np.implicitHeight + Kirigami.Units.largeSpacing * 2
-                radius: Kirigami.Units.cornerRadius * 2
-                color: Qt.rgba(1, 1, 1, 0.06)
                 RowLayout {
-                    id: np
-                    anchors.fill: parent
-                    anchors.margins: Kirigami.Units.largeSpacing
-                    spacing: Kirigami.Units.largeSpacing
-                    Rectangle {
-                        Layout.preferredWidth: Kirigami.Units.gridUnit * 3
-                        Layout.preferredHeight: Kirigami.Units.gridUnit * 3
-                        radius: Kirigami.Units.cornerRadius * 2
-                        color: Qt.rgba(1, 1, 1, 0.08)
-                        clip: true
-                        Kirigami.Icon {
-                            anchors.centerIn: parent
-                            width: parent.width * 0.5; height: width
-                            source: root.player && root.player.iconName ? root.player.iconName : "view-media-track"
-                            visible: npArt.status !== Image.Ready
-                        }
-                        Image {
-                            id: npArt
-                            anchors.fill: parent
-                            source: root.player ? root.player.artUrl : ""
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
+                    PC3.Label { text: "Control Center"; font.weight: Font.DemiBold; Layout.fillWidth: true }
+                    PC3.Label {
+                        opacity: 0.6
+                        text: Qt.formatDate(clock.now, "ddd d MMM")
+                        Timer { id: clock; property date now: new Date(); interval: 60000; running: true; repeat: true; onTriggered: now = new Date() }
+                    }
+                }
+
+                // switches
+                GridLayout {
+                    columns: 3
+                    columnSpacing: Kirigami.Units.smallSpacing * 2
+                    rowSpacing: Kirigami.Units.smallSpacing * 2
+                    Layout.fillWidth: true
+
+                    Tile {
+                        icon: "network-wireless"; title: "Wi-Fi"
+                        visible: nmOn.wirelessHwEnabled
+                        on: nmOn.wirelessEnabled
+                        sub: on ? "On" : "Off"
+                        onToggled: nm.enableWireless(!nmOn.wirelessEnabled)
+                    }
+                    Tile {
+                        icon: "network-bluetooth"; title: "Bluetooth"
+                        visible: BluezQt.Manager.adapters.length > 0
+                        on: BluezQt.Manager.bluetoothOperational
+                        sub: !on ? "Off" : BluezQt.Manager.connectedDevices.length > 0
+                             ? BluezQt.Manager.connectedDevices[0].name : "On"
+                        onToggled: {
+                            const enable = !BluezQt.Manager.bluetoothOperational;
+                            BluezQt.Manager.bluetoothBlocked = !enable;
+                            BluezQt.Manager.adapters.forEach(a => a.powered = enable);
                         }
                     }
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 0
-                        PC3.Label {
-                            Layout.fillWidth: true; elide: Text.ElideRight; font.weight: Font.DemiBold
-                            textFormat: Text.PlainText
-                            text: root.player ? (root.player.track || root.player.identity) : ""
-                        }
-                        PC3.Label {
-                            Layout.fillWidth: true; elide: Text.ElideRight; opacity: 0.6
-                            textFormat: Text.PlainText
-                            text: root.player ? [root.player.artist, root.player.identity].filter(s => s).join(" · ") : ""
+                    Tile {
+                        icon: "redshift-status-on"; title: "Night Light"
+                        visible: night.available && night.enabled
+                        on: night.running && !night.inhibited
+                        sub: on ? "On" : "Paused"
+                        onToggled: night.toggleInhibition()
+                    }
+                    Tile {
+                        icon: "notifications-disabled-symbolic"; title: "Do Not Disturb"
+                        on: root.dnd
+                        sub: on ? "On" : "Off"
+                        onToggled: root.setDnd(!root.dnd)
+                    }
+                    Tile {
+                        icon: "spectacle"; title: "Screenshot"; sub: "Pick an area"
+                        onToggled: { root.open = false; run.exec("spectacle --region --launchonly"); }
+                    }
+                    Tile {
+                        icon: "video-display"; title: "Displays"; sub: "Settings"
+                        onToggled: { root.open = false; run.exec("systemsettings kcm_kscreen"); }
+                    }
+                }
+
+                // brightness, one slider per screen that allows it (external monitors via DDC)
+                Repeater {
+                    model: screens.displays
+                    delegate: SliderRow {
+                        required property string displayName
+                        required property string label
+                        required property int brightness
+                        required property int maxBrightness
+                        icon: "video-display-brightness"
+                        hint: label
+                        from: 0; to: maxBrightness
+                        value: brightness
+                        onMoved: v => screens.setBrightness(displayName, v)
+                    }
+                }
+
+                // volume
+                SliderRow {
+                    visible: !!root.sink
+                    icon: root.sink && root.sink.muted ? "audio-volume-muted"
+                        : !root.sink ? "audio-volume-high"
+                        : root.sink.volume / PulseAudio.NormalVolume < 0.34 ? "audio-volume-low"
+                        : root.sink.volume / PulseAudio.NormalVolume < 0.67 ? "audio-volume-medium" : "audio-volume-high"
+                    from: 0; to: PulseAudio.NormalVolume
+                    value: root.sink ? root.sink.volume : 0
+                    iconClick: true
+                    onIconClicked: if (root.sink) root.sink.muted = !root.sink.muted
+                    onMoved: v => { if (root.sink) { root.sink.muted = false; root.sink.volume = v; } }
+                }
+
+                // where the sound goes
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+                    visible: outputs.count > 1
+                    Repeater {
+                        model: outputs
+                        delegate: PC3.Button {
+                            required property var model
+                            text: root.shortName(model.PulseObject.description || model.PulseObject.name)
+                            checkable: true
+                            checked: model.PulseObject.default
+                            flat: !checked
+                            onClicked: model.PulseObject.default = true
                         }
                     }
-                    PC3.ToolButton { icon.name: "media-skip-backward"; onClicked: root.player.Previous(); enabled: root.player && root.player.canGoPrevious }
-                    PC3.ToolButton {
-                        icon.name: root.player && root.player.playbackStatus === Mpris.PlaybackStatus.Playing ? "media-playback-pause" : "media-playback-start"
-                        onClicked: root.player.PlayPause()
+                }
+
+                // the song playing
+                Rectangle {
+                    visible: !!root.player
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: np.implicitHeight + Kirigami.Units.largeSpacing * 2
+                    radius: Kirigami.Units.cornerRadius * 2
+                    color: Qt.rgba(1, 1, 1, 0.06)
+                    RowLayout {
+                        id: np
+                        anchors.fill: parent
+                        anchors.margins: Kirigami.Units.largeSpacing
+                        spacing: Kirigami.Units.largeSpacing
+                        Rectangle {
+                            Layout.preferredWidth: Kirigami.Units.gridUnit * 3
+                            Layout.preferredHeight: Kirigami.Units.gridUnit * 3
+                            radius: Kirigami.Units.cornerRadius * 2
+                            color: Qt.rgba(1, 1, 1, 0.08)
+                            clip: true
+                            Kirigami.Icon {
+                                anchors.centerIn: parent
+                                width: parent.width * 0.5; height: width
+                                source: root.player && root.player.iconName ? root.player.iconName : "view-media-track"
+                                visible: npArt.status !== Image.Ready
+                            }
+                            Image {
+                                id: npArt
+                                anchors.fill: parent
+                                source: root.player ? root.player.artUrl : ""
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                            }
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+                            PC3.Label {
+                                Layout.fillWidth: true; elide: Text.ElideRight; font.weight: Font.DemiBold
+                                textFormat: Text.PlainText
+                                text: root.player ? (root.player.track || root.player.identity) : ""
+                            }
+                            PC3.Label {
+                                Layout.fillWidth: true; elide: Text.ElideRight; opacity: 0.6
+                                textFormat: Text.PlainText
+                                text: root.player ? [root.player.artist, root.player.identity].filter(s => s).join(" · ") : ""
+                            }
+                        }
+                        PC3.ToolButton { icon.name: "media-skip-backward"; onClicked: root.player.Previous(); enabled: root.player && root.player.canGoPrevious }
+                        PC3.ToolButton {
+                            icon.name: root.player && root.player.playbackStatus === Mpris.PlaybackStatus.Playing ? "media-playback-pause" : "media-playback-start"
+                            onClicked: root.player.PlayPause()
+                        }
+                        PC3.ToolButton { icon.name: "media-skip-forward"; onClicked: root.player.Next(); enabled: root.player && root.player.canGoNext }
                     }
-                    PC3.ToolButton { icon.name: "media-skip-forward"; onClicked: root.player.Next(); enabled: root.player && root.player.canGoNext }
                 }
             }
         }

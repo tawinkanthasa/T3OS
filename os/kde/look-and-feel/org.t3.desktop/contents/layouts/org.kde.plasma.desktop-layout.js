@@ -39,7 +39,7 @@ clock.writeConfig("dateFormat", "custom");
 clock.writeConfig("customDateFormat", "ddd d MMM");          // ส. 22 พ.ย.
 clock.writeConfig("use24hFormat", "2");
 
-// ---- bottom: floating dock: [music] apps | trash [Control Center] ----
+// ---- bottom: floating dock: [T3 Assistant] [music] apps | trash [Control Center] ----
 var dock = new Panel;
 dock.location = "bottom";
 dock.height = Math.round(gridUnit * 3.1);                    // about 56 px: icons about half the dock height
@@ -48,6 +48,8 @@ dock.alignment = "center";
 dock.hiding = "dodgewindows";                               // slides away when a window touches it
 dock.floating = true;
 
+var ai = dock.addWidget("org.t3.assistant");                // ask about this PC; opens at the left edge (Meta+Space)
+ai.globalShortcut = "Meta+Space";
 dock.addWidget("org.t3.media");                             // takes no room until music plays, then the dock grows open
 var grid = dock.addWidget("org.kde.plasma.kickerdash");     // full-screen app grid
 grid.currentConfigGroup = ["General"];

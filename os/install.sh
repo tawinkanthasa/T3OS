@@ -21,6 +21,7 @@ rm -rf "$SHARE/plasma/look-and-feel/org.t3.desktop"
 cp -r "$K/look-and-feel/org.t3.desktop" "$SHARE/plasma/look-and-feel/"
 install -d "$SHARE/plasma/desktoptheme"                 # T3 Plasma theme: rounded dock, bar under open apps
 rm -rf "$SHARE/plasma/desktoptheme/T3"; cp -r "$K/desktoptheme/T3" "$SHARE/plasma/desktoptheme/"
+install -D -m 0644 "$K/scripts/add-assistant.js" "$T3/plasma/add-assistant.js"   # t3-get puts T3 Assistant in an existing dock
 for p in "$K"/plasmoids/*/; do                      # T3 widgets: boards, music, Control Center
   rm -rf "$SHARE/plasma/plasmoids/$(basename "$p")"; cp -r "$p" "$SHARE/plasma/plasmoids/"
 done

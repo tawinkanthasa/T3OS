@@ -121,6 +121,13 @@ get_t3() {
       qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1
     fi
   fi
+  # T3 widgets: per-user copies (from trying things out) would hide the ones just installed
+  for p in /usr/share/plasma/plasmoids/org.t3.*/; do rm -rf "$HOME/.local/share/plasma/plasmoids/$(basename "$p")"; done
+  if pgrep -x plasmashell >/dev/null && command -v qdbus6 >/dev/null; then
+    # T3 Assistant button at the left end of the dock (Meta+Space), once
+    qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$(cat /usr/share/t3/plasma/add-assistant.js)" >/dev/null 2>&1
+    systemctl --user restart plasma-plasmashell 2>/dev/null   # the panel picks up the new widget code
+  fi
   echo "T3 เป็นเวอร์ชัน $(cat /usr/share/t3/VERSION) แล้ว (หน้าจอที่ตั้งเองไม่ถูกแตะ)"
 }
 
