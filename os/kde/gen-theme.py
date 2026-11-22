@@ -274,8 +274,10 @@ def desktoptheme():
     # panel background: rounded, faint light edge
     R = DOCK_R
     hints = "".join(f'<rect id="{n}" x="{300 + i * 12}" y="0" width="{w}" height="{h}" fill="#000" fill-opacity="0"/>'
-                    for i, (n, w, h) in enumerate([("hint-top-margin", 1, 10), ("hint-bottom-margin", 1, 10),
-                                                   ("hint-left-margin", 12, 1), ("hint-right-margin", 12, 1),
+                    for i, (n, w, h) in enumerate([("hint-top-margin", 1, 2), ("hint-bottom-margin", 1, 2),     # thin menu bar
+                                                   ("hint-left-margin", 4, 1), ("hint-right-margin", 4, 1),
+                                                   ("thick-hint-top-margin", 1, 10), ("thick-hint-bottom-margin", 1, 10),   # dock
+                                                   ("thick-hint-left-margin", 4, 1), ("thick-hint-right-margin", 4, 1),
                                                    ("hint-stretch-borders", 1, 1)]))
     (out / "widgets" / "panel-background.svg").write_text(
         '<svg xmlns="http://www.w3.org/2000/svg" width="420" height="120" viewBox="0 0 420 120">\n'

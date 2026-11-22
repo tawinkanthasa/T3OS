@@ -31,7 +31,7 @@ PlasmoidItem {
 
     fullRepresentation: Item {
         id: box
-        readonly property real full: row.implicitWidth + Kirigami.Units.smallSpacing * 2
+        readonly property real full: row.implicitWidth + Kirigami.Units.smallSpacing * 3
         Layout.fillHeight: true
         Layout.preferredWidth: root.shown ? full : 0
         Layout.minimumWidth: Layout.preferredWidth
@@ -44,7 +44,7 @@ PlasmoidItem {
         RowLayout {
             id: row
             anchors.verticalCenter: parent.verticalCenter
-            x: Kirigami.Units.smallSpacing
+            x: Kirigami.Units.smallSpacing * 2
             spacing: Kirigami.Units.smallSpacing * 2
 
             // cover: click to bring the player's window up
@@ -148,7 +148,7 @@ PlasmoidItem {
                 Layout.preferredWidth: 1
                 Layout.preferredHeight: Math.round(box.height * 0.5)
                 Layout.leftMargin: Kirigami.Units.smallSpacing
-                color: Qt.rgba(1, 1, 1, 0.12)
+                color: Qt.rgba(1, 1, 1, 0.18)
             }
         }
     }

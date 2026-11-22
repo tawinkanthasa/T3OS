@@ -62,25 +62,57 @@ PlasmoidItem {
         notif.save();
     }
 
-    // ---- dock button ----
-    compactRepresentation: MouseArea {
-        id: btn
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        Layout.minimumWidth: height
-        Layout.preferredWidth: height
-        onClicked: root.expanded = !root.expanded
-        Rectangle {
-            anchors.centerIn: parent
-            width: Math.round(parent.height * 0.78); height: width
-            radius: Math.round(width * 0.3)
-            color: root.expanded ? Qt.rgba(0.247, 0.725, 0.314, 0.28)
-                 : btn.containsMouse ? Qt.rgba(1, 1, 1, 0.14) : Qt.rgba(1, 1, 1, 0.07)
-            Behavior on color { ColorAnimation { duration: 150 } }
-            Kirigami.Icon {
+    // ---- in the dock:  | 12:40  Sun 22 Nov  [Control Center] ----
+    compactRepresentation: RowLayout {
+        id: dockPart
+        spacing: Kirigami.Units.smallSpacing * 2
+        Layout.minimumWidth: implicitWidth
+        Layout.preferredWidth: implicitWidth
+        Layout.maximumWidth: implicitWidth
+
+        Rectangle {        // divider between the apps and the clock
+            Layout.preferredWidth: 1
+            Layout.preferredHeight: Math.round(dockPart.height * 0.55)
+            Layout.leftMargin: Kirigami.Units.smallSpacing
+            color: Qt.rgba(1, 1, 1, 0.18)
+        }
+        ColumnLayout {     // clock, like the design: time over date
+            spacing: 0
+            Layout.leftMargin: Kirigami.Units.smallSpacing
+            Timer { id: tick; property date now: new Date(); interval: 1000; running: true; repeat: true; onTriggered: now = new Date() }
+            PC3.Label {
+                Layout.alignment: Qt.AlignRight
+                text: Qt.formatTime(tick.now, "HH:mm")
+                font.weight: Font.DemiBold
+                font.features: { "tnum": 1 }
+            }
+            PC3.Label {
+                Layout.alignment: Qt.AlignRight
+                text: Qt.formatDate(tick.now, "ddd d MMM")
+                opacity: 0.6
+                font.pointSize: Kirigami.Theme.smallFont.pointSize
+            }
+        }
+        MouseArea {
+            id: btn
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            Layout.fillHeight: true
+            Layout.preferredWidth: Math.max(Kirigami.Units.gridUnit * 2, dockPart.height)
+            Layout.rightMargin: Kirigami.Units.smallSpacing
+            onClicked: root.expanded = !root.expanded
+            Rectangle {
                 anchors.centerIn: parent
-                width: Math.round(parent.width * 0.5); height: width
-                source: "adjustlevels"
+                width: Math.round(Math.min(parent.width, parent.height) * 0.85); height: width
+                radius: Math.round(width * 0.3)
+                color: root.expanded ? Qt.rgba(0.247, 0.725, 0.314, 0.28)
+                     : btn.containsMouse ? Qt.rgba(1, 1, 1, 0.14) : Qt.rgba(1, 1, 1, 0.07)
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Kirigami.Icon {
+                    anchors.centerIn: parent
+                    width: Math.round(parent.width * 0.55); height: width
+                    source: "adjustlevels"
+                }
             }
         }
     }
