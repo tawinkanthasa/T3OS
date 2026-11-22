@@ -16,9 +16,11 @@ install -d "$T3/bin" "$T3/wallpapers" "$SHARE/plasma/look-and-feel" "$SHARE/plas
 install -m 0755 "$SRC"/bin/* "$T3/bin/"
 cp -r "$REPO/ui" "$T3/"
 install -m 0644 "$K"/wallpapers/* "$T3/wallpapers/"
-rm -rf "$SHARE/plasma/look-and-feel/org.t3.desktop" "$SHARE/plasma/plasmoids/org.t3.boards"
+rm -rf "$SHARE/plasma/look-and-feel/org.t3.desktop"
 cp -r "$K/look-and-feel/org.t3.desktop" "$SHARE/plasma/look-and-feel/"
-cp -r "$K/plasmoids/org.t3.boards" "$SHARE/plasma/plasmoids/"
+for p in "$K"/plasmoids/*/; do                      # T3 widgets: boards, music, Control Center
+  rm -rf "$SHARE/plasma/plasmoids/$(basename "$p")"; cp -r "$p" "$SHARE/plasma/plasmoids/"
+done
 install -m 0644 "$K"/color-schemes/* "$SHARE/color-schemes/"
 install -m 0644 "$K"/applications/* "$SHARE/applications/"
 # One settings app: T3 Settings. KDE's System Settings stays installed (T3 Settings links to it, and

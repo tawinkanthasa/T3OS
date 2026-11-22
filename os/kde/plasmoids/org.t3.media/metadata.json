@@ -1,0 +1,14 @@
+{
+  "KPackageStructure": "Plasma/Applet",
+  "KPlugin": {
+    "Id": "org.t3.media",
+    "Name": "T3 Music",
+    "Description": "What's playing, in the dock: cover, title, previous / play / next. Hidden when nothing plays.",
+    "Icon": "view-media-track",
+    "Category": "Multimedia",
+    "Authors": [{ "Name": "T3" }],
+    "License": "GPL-2.0+",
+    "Version": "1.0"
+  },
+  "X-Plasma-API-Minimum-Version": "6.0"
+}
