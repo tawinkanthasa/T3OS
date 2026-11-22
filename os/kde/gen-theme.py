@@ -215,34 +215,39 @@ DOCK_R, DOCK_FILL, DOCK_EDGE = 18, "#1e1f22", "#ffffff"
 
 
 def rounded(prefix, ox, oy, R, fill, op, edge_op=0.0, E=10):
-    """FrameSvg pieces of a rounded rectangle, each drawn on its own (no clipping: Qt sizes an
-    element by what is drawn in it). Corners R x R, edges E long, placed in a grid at (ox, oy)."""
+    """FrameSvg pieces of a rounded rectangle. Every piece is drawn directly in its own box with no
+    transforms (Qt sizes an element by its drawing, and rotated groups confuse that), corners R x R,
+    edges E long, laid out in a grid at (ox, oy). edge_op > 0 adds a faint 1px light outline."""
     pid = (prefix + "-") if prefix else ""
     f = f'fill="{fill}" fill-opacity="{op}"'
-    st = f'fill="none" stroke="#ffffff" stroke-opacity="{edge_op}" stroke-width="1"' if edge_op else ""
-    corner = (f'<path d="M{R} {R}H0A{R} {R} 0 0 1 {R} 0z" {f}/>'
-              + (f'<path d="M0.5 {R}A{R - .5} {R - .5} 0 0 1 {R} 0.5" {st}/>' if st else ""))
-    top = (f'<rect width="{E}" height="{R}" {f}/>'
-           + (f'<path d="M0 0.5H{E}" {st}/>' if st else ""))
-    G = R + E + 4                                    # grid pitch
-    def put(name, col, row, body, rot=0, w=R, h=R):
-        x, y = ox + col * G, oy + row * G
-        if rot:   # rotate the drawing about its own box so it stays at (x, y)
-            body = f'<g transform="rotate({rot} {w / 2} {h / 2})">{body}</g>'
-        return f'<g id="{pid}{name}" transform="translate({x} {y})">{body}</g>'
-    side = (f'<rect width="{R}" height="{E}" {f}/>' + (f'<path d="M0.5 0V{E}" {st}/>' if st else ""))
-    parts = [
-        put("topleft", 0, 0, corner),
-        put("top", 1, 0, top, w=E, h=R),
-        put("topright", 2, 0, corner, 90),
-        put("left", 0, 1, side, w=R, h=E),
-        put("center", 1, 1, f'<rect width="{E}" height="{E}" {f}/>'),
-        put("right", 2, 1, f'<g transform="translate({R} {E}) rotate(180)">{side}</g>'),
-        put("bottomleft", 0, 2, corner, 270),
-        put("bottom", 1, 2, f'<g transform="translate({E} {R}) rotate(180)">{top}</g>'),
-        put("bottomright", 2, 2, corner, 180),
-    ]
-    return "\n".join(parts)
+    st = f'fill="none" stroke="#ffffff" stroke-opacity="{edge_op}" stroke-width="1"'
+    r = R - 0.5
+    corners = {   # filled quarter disc, and its outline arc
+        "topleft":     (f"M{R} {R}H0A{R} {R} 0 0 1 {R} 0z",     f"M0.5 {R}A{r} {r} 0 0 1 {R} 0.5"),
+        "topright":    (f"M0 {R}V0A{R} {R} 0 0 1 {R} {R}z",     f"M0 0.5A{r} {r} 0 0 1 {R - .5} {R}"),
+        "bottomright": (f"M0 0H{R}A{R} {R} 0 0 1 0 {R}z",       f"M{R - .5} 0A{r} {r} 0 0 1 0 {R - .5}"),
+        "bottomleft":  (f"M{R} 0V{R}A{R} {R} 0 0 1 0 0z",       f"M{R} {R - .5}A{r} {r} 0 0 1 0.5 0"),
+    }
+    edges = {     # name: (w, h, outline path)
+        "top": (E, R, f"M0 0.5H{E}"), "bottom": (E, R, f"M0 {R - .5}H{E}"),
+        "left": (R, E, f"M0.5 0V{E}"), "right": (R, E, f"M{R - .5} 0V{E}"), "center": (E, E, ""),
+    }
+    G = R + E + 4
+    cell = {"topleft": (0, 0), "top": (1, 0), "topright": (2, 0), "left": (0, 1), "center": (1, 1),
+            "right": (2, 1), "bottomleft": (0, 2), "bottom": (1, 2), "bottomright": (2, 2)}
+    out = []
+    for name, (c, rw) in cell.items():
+        x, y = ox + c * G, oy + rw * G
+        if name in corners:
+            d, arc = corners[name]
+            body = f'<path d="{d}" {f}/>' + (f'<path d="{arc}" {st}/>' if edge_op else "")
+            box = f'<rect width="{R}" height="{R}" fill="#000" fill-opacity="0"/>'
+        else:
+            w, h, line = edges[name]
+            body = f'<rect width="{w}" height="{h}" {f}/>' + (f'<path d="{line}" {st}/>' if edge_op and line else "")
+            box = ""
+        out.append(f'<g id="{pid}{name}" transform="translate({x} {y})">{box}{body}</g>')
+    return "\n".join(out)
 
 
 def bar_frame(prefix, ox, oy, SIDE, BAR, color, op, E=10):
@@ -278,11 +283,22 @@ def desktoptheme():
                                                    ("hint-left-margin", 4, 1), ("hint-right-margin", 4, 1),
                                                    ("thick-hint-top-margin", 1, 10), ("thick-hint-bottom-margin", 1, 10),   # dock
                                                    ("thick-hint-left-margin", 4, 1), ("thick-hint-right-margin", 4, 1),
-                                                   ("hint-stretch-borders", 1, 1)]))
+                                                   ("hint-stretch-borders", 1, 1), ("thick-hint-stretch-borders", 1, 1),
+                                                   # draw the middle under the edges too, so 115 % scaling leaves no seams
+                                                   ("hint-compose-over-border", 1, 1), ("thick-hint-compose-over-border", 1, 1)]))
     (out / "widgets" / "panel-background.svg").write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="420" height="120" viewBox="0 0 420 120">\n'
-        + rounded("", 0, 0, R, DOCK_FILL, 0.86, 0.08) + "\n"
-        + hints + "\n</svg>\n")      # no mask-*: Plasma then takes the blur shape from the drawing itself
+        '<svg xmlns="http://www.w3.org/2000/svg" width="420" height="250" viewBox="0 0 420 250">\n'
+        + rounded("", 0, 0, R, DOCK_FILL, 1, 0.08) + "\n"
+        + rounded("thick", 0, 130, R, DOCK_FILL, 1, 0.08) + "\n"  # thick panels (the dock) use their own set
+        + rounded("mask", 140, 0, R, "#000000", 1) + "\n"       # blur/contrast area: same round shape
+        + rounded("thick-mask", 140, 130, R, "#000000", 1) + "\n"
+        + hints + "\n</svg>\n")
+    # Plasma swaps in the "solid" / "opaque" variants when a window is near the dock (adaptive
+    # transparency); without our own copies it would lay Breeze's square panel over ours.
+    for variant in ("solid", "opaque"):
+        (out / variant / "widgets").mkdir(parents=True, exist_ok=True)
+        (out / variant / "widgets" / "panel-background.svg").write_text(
+            (out / "widgets" / "panel-background.svg").read_text())
 
     # tasks: a short bar under each open app (green = the one in front); a soft rounded box on hover
     SIDE, BAR = 22, 3
