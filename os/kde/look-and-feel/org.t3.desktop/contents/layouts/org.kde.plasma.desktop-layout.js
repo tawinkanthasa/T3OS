@@ -16,7 +16,7 @@ var bar = new Panel;
 bar.location = "top";
 bar.height = Math.round(gridUnit * 1.6);
 bar.floating = false;
-bar.hiding = "none";                                        // always there: Wi-Fi, language, clock stay in sight
+bar.hiding = "dodgewindows";                                // tucks away under a maximised window; move the mouse to the top edge to bring it back
 
 var menu = bar.addWidget("org.kde.plasma.kickoff");        // T3 menu: apps, places, sleep/restart/shut down
 menu.currentConfigGroup = ["General"];
