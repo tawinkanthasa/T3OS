@@ -1,0 +1,9 @@
+#!/bin/sh
+# At login: give apps that draw their own top row (Chrome, GTK apps) the T3 window buttons
+# (red / yellow / green dots). KDE rewrites gtk.css when colours change, so the import is re-added.
+for v in gtk-3.0 gtk-4.0; do
+    d="${XDG_CONFIG_HOME:-$HOME/.config}/$v"
+    mkdir -p "$d"
+    cp -f /usr/share/t3/gtk/t3-titlebuttons.css "$d/t3-titlebuttons.css"
+    grep -qs "t3-titlebuttons.css" "$d/gtk.css" || printf "\n@import 't3-titlebuttons.css';\n" >> "$d/gtk.css"
+done

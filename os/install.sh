@@ -15,6 +15,7 @@ install -d "$T3/bin" "$T3/wallpapers" "$SHARE/plasma/look-and-feel" "$SHARE/plas
            "$SHARE/icons" "$SHARE/aurorae/themes" "$SHARE/wallpapers"
 install -m 0755 "$SRC"/bin/* "$T3/bin/"
 cp -r "$REPO/ui" "$T3/"
+install -d "$T3/gtk"; install -m 0644 "$K"/gtk/* "$T3/gtk/"           # T3 window buttons for Chrome / GTK apps
 install -m 0644 "$K"/wallpapers/* "$T3/wallpapers/"
 rm -rf "$SHARE/plasma/look-and-feel/org.t3.desktop"
 cp -r "$K/look-and-feel/org.t3.desktop" "$SHARE/plasma/look-and-feel/"

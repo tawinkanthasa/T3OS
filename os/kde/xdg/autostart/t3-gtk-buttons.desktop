@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=T3 window buttons for GTK apps
+Exec=/usr/share/t3/bin/t3-gtk-buttons
+NoDisplay=true
+X-KDE-autostart-phase=1

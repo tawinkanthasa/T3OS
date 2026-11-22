@@ -1,0 +1,13 @@
+/* T3 window buttons for apps that draw their own top row (Chrome, GTK apps):
+   the same red / yellow / green dots as the T3 window frame, a mark appears on hover. */
+headerbar button.titlebutton, .titlebar button.titlebutton {
+  min-width: 14px; min-height: 14px; padding: 0; margin: 0 4px;
+  border: none; border-radius: 50%; box-shadow: none; background-image: none; color: transparent;
+  -gtk-icon-source: none; }
+headerbar button.titlebutton.close, .titlebar button.titlebutton.close { background-color: #f85149; }
+headerbar button.titlebutton.minimize, .titlebar button.titlebutton.minimize { background-color: #d29922; }
+headerbar button.titlebutton.maximize, .titlebar button.titlebutton.maximize { background-color: #3fb950; }
+headerbar button.titlebutton:hover, .titlebar button.titlebutton:hover { color: rgba(0, 0, 0, 0.6); -gtk-icon-source: -gtk-icontheme("window-close-symbolic"); }
+headerbar button.titlebutton.minimize:hover, .titlebar button.titlebutton.minimize:hover { -gtk-icon-source: -gtk-icontheme("window-minimize-symbolic"); }
+headerbar button.titlebutton.maximize:hover, .titlebar button.titlebutton.maximize:hover { -gtk-icon-source: -gtk-icontheme("window-maximize-symbolic"); }
+headerbar button.titlebutton:active, .titlebar button.titlebutton:active { opacity: 0.75; }
