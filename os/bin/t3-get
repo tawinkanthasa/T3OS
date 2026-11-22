@@ -111,6 +111,8 @@ get_t3() {
     local lib theme
     lib=$(kreadconfig6 --file kwinrc --group org.kde.kdecoration2 --key library)
     theme=$(kreadconfig6 --file kwinrc --group org.kde.kdecoration2 --key theme)
+    # the old T3 frame (plain dots) moves to the new one (dots that stretch into labelled capsules)
+    [[ "$theme" == __aurorae__svg__T3 ]] && theme=kwin4_decoration_qml_t3
     if [[ "$lib" == org.kde.kwin.aurorae ]]; then
       kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key library org.kde.breeze
       qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1; sleep 1

@@ -15,7 +15,7 @@ cursorTheme=breeze_cursors
 
 [kwinrc][org.kde.kdecoration2]
 library=org.kde.kwin.aurorae
-theme=__aurorae__svg__T3
+theme=kwin4_decoration_qml_t3
 ButtonsOnLeft=XIA
 ButtonsOnRight=
 BorderSize=None

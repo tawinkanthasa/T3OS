@@ -39,6 +39,8 @@ install -m 0644 "$K"/icons/* "$SHARE/icons/hicolor/scalable/apps/"
 rm -rf "$SHARE/icons/T3" "$SHARE/aurorae/themes/T3" "$SHARE/wallpapers/T3"
 cp -r "$K/icons-theme/T3" "$SHARE/icons/"
 cp -r "$K/aurorae/T3" "$SHARE/aurorae/themes/"
+install -d "$SHARE/kwin/decorations"                 # T3 window frame: buttons stretch into a labelled capsule
+for d in "$K"/kwin-decoration/*/; do n=$(basename "$d"); rm -rf "$SHARE/kwin/decorations/$n"; cp -r "$d" "$SHARE/kwin/decorations/$n"; done
 cp -r "$K/wallpaper-pkg/T3" "$SHARE/wallpapers/"
 install -d "$SHARE/kwin/scripts" "$SHARE/konsole"
 install -m 0644 "$K"/konsole/*.profile "$SHARE/konsole/"

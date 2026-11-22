@@ -1,7 +1,7 @@
 # T3 frame: red/yellow/green buttons on the left, like macOS
 [org.kde.kdecoration2]
 library=org.kde.kwin.aurorae
-theme=__aurorae__svg__T3
+theme=kwin4_decoration_qml_t3
 ButtonsOnLeft=XIA
 ButtonsOnRight=
 # no side/bottom frame: apps fill the window (the T3 frame only draws the title bar); the shadow marks the edge

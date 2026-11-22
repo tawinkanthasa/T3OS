@@ -2,8 +2,11 @@
 """Generate the T3 icon theme (dock tiles) and the T3 window decoration (Aurorae,
 red/yellow/green buttons) from the T3 Desktop design. Re-run after changing a colour:
     python3 os/kde/gen-theme.py
-Writes os/kde/icons-theme/T3/ and os/kde/aurorae/T3/ (installed by os/install.sh)."""
+Writes os/kde/icons-theme/T3/, os/kde/aurorae/T3/, the shadow of the QML window frame
+(os/kde/kwin-decoration/) and os/kde/desktoptheme/T3/ (installed by os/install.sh)."""
 import json
+import struct
+import zlib
 from pathlib import Path
 
 K = Path(__file__).resolve().parent
@@ -206,6 +209,38 @@ PaddingRight={SHADOW}
 """)
 
 
+# ---- shadow for the QML window frame (os/kde/kwin-decoration/kwin4_decoration_qml_t3) --------------
+# A 9-slice picture: a window-shaped hole (round top corners) with a soft shadow fading out round it.
+# Drawn as a picture instead of a live blur so it works however KWin draws the frame.
+def png(path, w, h, rgba):
+    raw = b"".join(b"\0" + bytes(rgba[y * w * 4:(y + 1) * w * 4]) for y in range(h))
+    chunk = lambda t, d: struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d))
+    path.write_bytes(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0))
+                     + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
+
+
+def deco_shadow():
+    S, Rc, A = SHADOW, R, 0.5          # spread, window corner radius, darkest alpha at the edge
+    n = 2 * (S + Rc) + 1
+    px = bytearray(n * n * 4)
+    x0, y0, x1, y1 = S, S, n - S, n - S          # the window
+    for y in range(n):
+        for x in range(n):
+            # distance from the window outline (top corners round, bottom square)
+            cx = min(max(x + 0.5, x0), x1); cy = min(max(y + 0.5, y0), y1)
+            if y + 0.5 < y0 + Rc and (x + 0.5 < x0 + Rc or x + 0.5 > x1 - Rc):
+                ccx = x0 + Rc if x + 0.5 < x0 + Rc else x1 - Rc
+                d = max(0.0, ((x + 0.5 - ccx) ** 2 + (y + 0.5 - (y0 + Rc)) ** 2) ** 0.5 - Rc)
+            else:
+                d = ((x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2) ** 0.5
+            inside = x0 <= x + 0.5 <= x1 and y0 <= y + 0.5 <= y1 and d == 0
+            a = 0 if inside else A * max(0.0, 1 - d / S) ** 2.2
+            px[(y * n + x) * 4 + 3] = round(a * 255)
+    out = K / "kwin-decoration" / "kwin4_decoration_qml_t3" / "contents" / "ui"
+    out.mkdir(parents=True, exist_ok=True)
+    png(out / "shadow.png", n, n, px)
+
+
 # ---- Plasma theme (desktoptheme T3) ---------------------------------------------------------------
 # Only what T3 draws differently from Breeze Dark; every other piece falls back to the default theme.
 #   panel-background: dock and menu bar with round corners (floating dock = a rounded island)
@@ -319,5 +354,6 @@ def desktoptheme():
 if __name__ == "__main__":
     icon_theme()
     aurorae()
+    deco_shadow()
     desktoptheme()
     print("ok:", K / "icons-theme" / "T3", K / "aurorae" / "T3")

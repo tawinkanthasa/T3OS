@@ -1,0 +1,10 @@
+{
+    "KPackageStructure": "KWin/Decoration",
+    "KPlugin": {
+        "Authors": [{ "Name": "T3" }],
+        "Description": "T3 window frame: dark title bar, red/yellow/green buttons that stretch into a labelled capsule under the mouse",
+        "Id": "kwin4_decoration_qml_t3",
+        "License": "GPL",
+        "Name": "T3"
+    }
+}
