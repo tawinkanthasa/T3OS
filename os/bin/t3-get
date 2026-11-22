@@ -82,9 +82,9 @@ get_chrome() {
   apt_repo google-chrome https://dl.google.com/linux/linux_signing_key.pub \
     "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" || return 1
   sudo apt-get update && sudo apt-get install -y google-chrome-stable || return 1
-  # new profiles: Chrome draws its own top row, so the window buttons sit on the same row as the tabs
-  # (like Chrome on a Mac) instead of a separate T3 title bar above them
-  echo '{"browser": {"custom_chrome_frame": true}}' | sudo tee /opt/google/chrome/initial_preferences >/dev/null
+  # new profiles: Chrome draws its own top row with the GTK theme, so T3's red/yellow/green buttons
+  # (t3-titlebuttons.css) sit on the same row as the tabs instead of a separate title bar above them
+  echo '{"browser": {"custom_chrome_frame": true}, "extensions": {"theme": {"system_theme": 1}}}' | sudo tee /opt/google/chrome/initial_preferences >/dev/null
 }
 
 get_nvidia() {
