@@ -29,7 +29,7 @@ apt-get update
 
 say "Installing the driver (this builds it for your kernel, a few minutes)"
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    linux-headers-amd64 "linux-headers-$(uname -r)" nvidia-kernel-dkms nvidia-driver firmware-misc-nonfree
+    linux-headers-amd64 "linux-headers-$(uname -r)" nvidia-kernel-dkms nvidia-driver firmware-nvidia-graphics firmware-misc-nonfree
 
 say "Turning on kernel modesetting (needed for Wayland and the login screen)"
 cat > /etc/modprobe.d/t3-nvidia.conf <<'CONF'

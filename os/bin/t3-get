@@ -87,11 +87,8 @@ get_chrome() {
 get_nvidia() {
   say "ไดรเวอร์ NVIDIA"
   lspci | grep -qi 'nvidia' || { echo "เครื่องนี้ไม่มีการ์ด NVIDIA"; return 0; }
-  if mokutil --sb-state 2>/dev/null | grep -qi enabled; then
-    echo "Secure Boot เปิดอยู่: หลังติดตั้ง ระบบจะให้ตั้งรหัสผ่าน MOK, รีบูตแล้วเลือก 'Enroll MOK' ใส่รหัสเดิม (ทำครั้งเดียว)"
-  fi
-  sudo apt-get install -y linux-headers-amd64 nvidia-driver firmware-nvidia-graphics || return 1
-  echo "รีบูตเครื่องเพื่อใช้ไดรเวอร์ใหม่"
+  # t3-nvidia: turns on non-free, installs the driver, modeset for Wayland, Secure Boot key (MOK)
+  sudo "$(dirname "$(readlink -f "$0")")/t3-nvidia" || return 1
 }
 
 get_t3() {
@@ -106,6 +103,19 @@ get_t3() {
   sudo rm -rf "$src" && sudo mv "$src.new" "$src"
   # the running T3 Bench still has the old code: restart it so Settings etc. show the update
   if pgrep -x benchd >/dev/null; then pkill -x benchd; sleep 1; (setsid benchd >/dev/null 2>&1 &); fi
+  # windows already open keep the old frame cached: switch the frame off and on to reload it
+  if pgrep -x kwin_wayland >/dev/null && command -v qdbus6 >/dev/null; then
+    local lib theme
+    lib=$(kreadconfig6 --file kwinrc --group org.kde.kdecoration2 --key library)
+    theme=$(kreadconfig6 --file kwinrc --group org.kde.kdecoration2 --key theme)
+    if [[ "$lib" == org.kde.kwin.aurorae ]]; then
+      kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key library org.kde.breeze
+      qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1; sleep 1
+      kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key library "$lib"
+      kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key theme "$theme"
+      qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1
+    fi
+  fi
   echo "T3 เป็นเวอร์ชัน $(cat /usr/share/t3/VERSION) แล้ว (หน้าจอที่ตั้งเองไม่ถูกแตะ)"
 }
 
